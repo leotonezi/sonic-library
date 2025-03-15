@@ -11,8 +11,10 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+alembic/versions/__pycache__/
 downloads/
 eggs/
+logfile
 .eggs/
 lib/
 lib64/
