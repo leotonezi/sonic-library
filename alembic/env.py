@@ -1,7 +1,7 @@
 import os
 import sys
 import importlib
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 from alembic import context
 from logging.config import fileConfig
 
@@ -30,15 +30,13 @@ for filename in os.listdir(models_dir):
 # Assign metadata to Alembic
 target_metadata = Base.metadata
 
-# Database connection setup
-def run_migrations_online():
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+# ✅ Use DATABASE_URL from the environment
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:password@db/fastlibrary")
 
-    with connectable.connect() as connection:
+def run_migrations_online():
+    engine = create_engine(DATABASE_URL, poolclass=pool.NullPool)
+
+    with engine.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
