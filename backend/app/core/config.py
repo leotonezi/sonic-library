@@ -1,7 +1,9 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+from pathlib import Path
+root_env_path = Path(__file__).resolve().parents[2] / ".env"
+load_dotenv(dotenv_path=root_env_path)
 
 class Settings:
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "SonicLibrary")

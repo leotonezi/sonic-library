@@ -11,11 +11,10 @@ class BookCreate(BookBase):
 
 class BookResponse(BookBase):
     id: int
-    short_description: str
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.short_description = (self.description[:50] + "...") if self.description else "No description available"
+    @property
+    def short_description(self) -> str:
+        return (self.description[:50] + "...") if self.description else "No description available"
 
     class Config:
         from_attributes = True
