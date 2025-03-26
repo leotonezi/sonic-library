@@ -13,7 +13,7 @@ def get_book_service(db: Session = Depends(get_db)) -> BookService:
 @router.post("/", response_model=BookResponse)
 def create(book: BookCreate, book_service: BookService = Depends(get_book_service)):
     """Create a new book"""
-    return book_service.create(book.dict())
+    return book_service.create(book.model_dump())
 
 @router.get("/", response_model=list[BookResponse])
 def index(book_service: BookService = Depends(get_book_service)):
