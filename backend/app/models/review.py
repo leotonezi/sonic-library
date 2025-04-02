@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, CheckConstraint, DateTime, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -13,7 +13,7 @@ class Review(Base):
     __table_args__ = (
         CheckConstraint('rate BETWEEN 1 AND 5', name='check_rate_range'),
     )    
-    created_at = Column(String, nullable=False)
-    updated_at = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
     book = relationship("Book", back_populates="reviews")

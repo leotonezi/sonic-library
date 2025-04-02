@@ -27,3 +27,8 @@ def get(review_id: int, review_service: ReviewService = Depends(get_review_servi
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
     return review
+
+@router.get("/book/{book_id}", response_model=list[ReviewResponse])
+def get_by_book(book_id: int, review_service: ReviewService = Depends(get_review_service)):
+    """Get reviews by book ID"""
+    return review_service.get_by_book(book_id)

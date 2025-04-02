@@ -3,24 +3,24 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
+  --accent: #FFCE00;
+  --card-bg: #0F52BA;
+  --border: #3F8EF3;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Optional: font vars if using Geist */
+  --font-sans: var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif);
+  --font-mono: var(--font-geist-mono, ui-monospace, SFMono-Regular, monospace);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0a1128;
+    --foreground: #FFFFFF;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: sans-serif;
+  font-family: var(--font-sans);
 }

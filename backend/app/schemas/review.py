@@ -5,8 +5,6 @@ class ReviewBase(BaseModel):
     user_id: int
     content: str
     rate: int
-    created_at: str
-    updated_at: str
 
 class ReviewCreate(ReviewBase):
     pass
