@@ -4,6 +4,7 @@ class ReviewBase(BaseModel):
     book_id: int
     user_id: int
     content: str
+    rate: int
 
 class ReviewCreate(ReviewBase):
     pass
