@@ -2,17 +2,17 @@ name: Sonic Library CI
 
 on:
   push:
-    branches: [ main, development ]
+    branches: [main, development]
   pull_request:
-    branches: [ main, development ]
+    branches: [main, development]
 
 jobs:
-  backend:
+  ci:
     runs-on: ubuntu-latest
-    name: BE - FastAPI Test & Build
+
     services:
       postgres:
-        image: postgres:15
+        image: postgres:14
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -26,51 +26,22 @@ jobs:
           --health-retries=5
 
     env:
-      DATABASE_URL: postgresql+psycopg2://postgres:password@localhost:5432/fastlibrary
+      DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.13
+      - name: Set up Docker Compose
+        run: docker-compose -f docker-compose.yml up -d --build
 
-      - name: Install dependencies
-        run: |
-          pip install -r backend/requirements.txt
+      - name: Wait for services to be healthy
+        run: sleep 25
 
-      - name: Run migrations
-        run: |
-          cd backend
-          alembic upgrade head
-
-      - name: Run tests
-        run: |
-          cd backend
-          pytest
-
-  frontend:
-    name: FE - NextJS Build
-    runs-on: ubuntu-latest
-    env:
-      NEXT_PUBLIC_BACKEND_URL: http://127.0.0.1:8000
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '23'
-
-      - name: Install frontend dependencies
-        working-directory: ./frontend
-        run: npm install
+      - name: Run backend tests
+        run: docker-compose exec -T fastapi pytest
 
       - name: Build frontend
-        working-directory: ./frontend
-        run: npm run build
+        run: docker-compose exec -T frontend npm run build
