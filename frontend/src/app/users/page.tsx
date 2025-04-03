@@ -9,7 +9,9 @@ interface User {
 export const revalidate = 60
 
 async function getUsers(): Promise<User[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/`, {
+  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  const res = await fetch(`${BASE_URL}/users/`, {
     cache: 'force-cache',
   });
   

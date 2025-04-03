@@ -27,13 +27,14 @@ services:
       - "8000:8000"
 
   frontend:
-    build: 
+    build:
       context: ./frontend
+      dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
     environment:
       NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
-    depends_on:
-      - fastapi
     ports:
       - "3000:3000"
+    depends_on:
+      - fastapi
