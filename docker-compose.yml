@@ -15,6 +15,7 @@ services:
 
   fastapi:
     build: ./backend
+    dockerfile: ./backend/Dockerfile
     depends_on:
       db:
         condition: service_healthy
