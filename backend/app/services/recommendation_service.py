@@ -4,8 +4,14 @@ from app.schemas.review import ReviewResponse
 from app.schemas.book import BookResponse
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+
+openai_key = os.getenv("OPENAI_API_KEY")
+if openai_key:
+    os.environ["OPENAI_API_KEY"] = openai_key
+else:
+    raise ValueError("OPENAI_API_KEY not set in environment")
 
 llm = ChatOpenAI(temperature=0.3, model="gpt-3.5-turbo")
 
