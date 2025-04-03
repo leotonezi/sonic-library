@@ -12,7 +12,7 @@ export default function NewBookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch(`${process.env.BACKEND_URL}/books/`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/books/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
