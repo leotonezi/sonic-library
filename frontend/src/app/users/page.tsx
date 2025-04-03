@@ -9,7 +9,7 @@ interface User {
 export const revalidate = 60
 
 async function getUsers(): Promise<User[]> {
-  const res = await fetch('http://localhost:8000/users', {
+  const res = await fetch(`${process.env.BACKEND_URL}/users/`, {
     cache: 'force-cache',
   });
   

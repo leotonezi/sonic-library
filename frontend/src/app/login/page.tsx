@@ -13,7 +13,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    const res = await fetch('http://127.0.0.1:8000/auth/token', {
+    const res = await fetch(`${process.env.BACKEND_URL}/auth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
