@@ -19,23 +19,34 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
-    op.alter_column(
-        'reviews',
-        'created_at',
-        existing_type=sa.VARCHAR(),
-        type_=sa.DateTime(timezone=True),
-        nullable=True,
-        postgresql_using="created_at::timestamp with time zone"
-    )
-    op.alter_column(
-        'reviews',
-        'updated_at',
-        existing_type=sa.VARCHAR(),
-        type_=sa.DateTime(timezone=True),
-        nullable=True,
-        postgresql_using="updated_at::timestamp with time zone"
-    )
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+
+    columns = [col["name"] for col in inspector.get_columns("reviews")]
+
+    if "created_at" not in columns:
+        op.add_column("reviews", sa.Column("created_at", sa.DateTime(timezone=True), nullable=True))
+    else:
+        op.alter_column(
+            'reviews',
+            'created_at',
+            existing_type=sa.VARCHAR(),
+            type_=sa.DateTime(timezone=True),
+            nullable=True,
+            postgresql_using="created_at::timestamp with time zone"
+        )
+
+    if "updated_at" not in columns:
+        op.add_column("reviews", sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True))
+    else:
+        op.alter_column(
+            'reviews',
+            'updated_at',
+            existing_type=sa.VARCHAR(),
+            type_=sa.DateTime(timezone=True),
+            nullable=True,
+            postgresql_using="updated_at::timestamp with time zone"
+        )
 
 
 def downgrade() -> None:

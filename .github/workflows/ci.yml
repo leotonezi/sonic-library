@@ -9,6 +9,7 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    name: BE - FastAPI Test & Build
     services:
       postgres:
         image: postgres:15
@@ -52,8 +53,10 @@ jobs:
           pytest
 
   frontend:
-    name: Next.js Frontend Build
+    name: FE - NextJS Build
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_BACKEND_URL: http://127.0.0.1:8000
 
     steps:
       - name: Checkout code
