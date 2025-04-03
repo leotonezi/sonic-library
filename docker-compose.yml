@@ -27,10 +27,13 @@ services:
       - "8000:8000"
 
   frontend:
-    build: ./frontend
-    depends_on:
-      - fastapi
+    build: 
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
     environment:
       NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
+    depends_on:
+      - fastapi
     ports:
       - "3000:3000"
