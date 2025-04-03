@@ -35,13 +35,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Docker Compose
-        run: docker-compose -f docker-compose.yml up -d --build
+        run: docker compose -f docker-compose.yml up -d --build
 
       - name: Wait for services to be healthy
         run: sleep 25
 
       - name: Run backend tests
-        run: docker-compose exec -T fastapi pytest
+        run: docker compose exec -T fastapi pytest
 
       - name: Build frontend
-        run: docker-compose exec -T frontend npm run build
+        run: docker compose exec -T frontend npm run build
