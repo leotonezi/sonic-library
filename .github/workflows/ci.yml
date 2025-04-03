@@ -10,21 +10,6 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: fastlibrary
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     env:
       DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -42,9 +27,6 @@ jobs:
 
       - name: Run backend tests
         run: docker compose exec -T fastapi pytest
-
-      - name: Run backend
-        run: docker compose up -d db fastapi
 
       - name: Build frontend
         run: docker compose exec -T frontend npm run build
