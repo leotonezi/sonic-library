@@ -1,3 +1,4 @@
+import { apiFetch } from '@/utils/api';
 import { notFound } from 'next/navigation';
 
 interface User {
@@ -6,31 +7,24 @@ interface User {
   email: string;
 }
 
-export const revalidate = 60
+export const revalidate = 60;
 
 async function getUsers(): Promise<User[]> {
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-  const res = await fetch(`${BASE_URL}/users/`, {
-    cache: 'force-cache',
-  });
-  
-
-  if (!res.ok) {
-    notFound();
-  }
-
-  const users = await res.json();
-
-  if (!users || users.length === 0) {
-    notFound();
-  }
-
-  return users;
+  const users = await apiFetch<User[]>('/users/');
+  return users ?? [];
 }
 
-export default async function usersPage() {
+export default async function UsersPage() {
   const users = await getUsers();
+
+  if (!users || users.length === 0) {
+    return (
+      <main className="p-6">
+        <h1 className="text-3xl font-bold mb-4">Users</h1>
+        <p className="text-gray-500">No users found.</p>
+      </main>
+    );
+  }
 
   return (
     <main className="p-6">
