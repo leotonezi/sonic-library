@@ -1,5 +1,4 @@
 import { apiFetch } from '@/utils/api';
-import { notFound } from 'next/navigation';
 
 interface User {
   id: number;
