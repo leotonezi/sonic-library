@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { apiFetch } from '@/utils/api';
 
 interface Book {
   id: number;
@@ -10,16 +11,8 @@ interface Book {
 
 export const revalidate = 60;
 
-async function getBooks(): Promise<Book[]> {
-  const res = await fetch('http://localhost:8000/books', {
-    cache: 'force-cache',
-  });
-
-  if (!res.ok) {
-    notFound();
-  }
-
-  const books = await res.json();
+export async function getBooks(): Promise<Book[]> {
+  const books = await apiFetch<Book[]>('/books');
 
   if (!books || books.length === 0) {
     notFound();

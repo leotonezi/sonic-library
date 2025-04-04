@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { apiPost } from "@/utils/api";
 
 interface Book {
   id: string;
@@ -55,17 +56,11 @@ export default function BookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        content: review,
-        rate: Number(rate),
-        book_id: Number(params.id),
-        user_id: 1,
-      }),
+    const response = await apiPost<any>('/reviews', {
+      content: review,
+      rate: Number(rate),
+      book_id: Number(params.id),
+      user_id: 1,
     });
 
     if (response.ok) {

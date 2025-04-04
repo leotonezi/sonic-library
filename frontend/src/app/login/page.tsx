@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiPost } from '@/utils/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -13,18 +14,20 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        username: email,
-        password,
-      }),
+    const formData = new URLSearchParams({
+      username: email,
+      password,
     });
-
-    const data = await res.json();
+    
+    const res = await apiPost<any>(
+      '/auth/token',
+      formData.toString(),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
 
     if (!res.ok) {
       setError('Invalid credentials');
