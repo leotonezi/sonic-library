@@ -25,9 +25,9 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit): Prom
   }
 }
 
-export async function apiPost<T>(
+export async function apiPost<T, D = unknown>(
   endpoint: string,
-  data: any,
+  data: D,
   options?: RequestInit
 ): Promise<T> {
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -48,7 +48,7 @@ export async function apiPost<T>(
       headers,
       body:
         headers['Content-Type'] === 'application/x-www-form-urlencoded'
-          ? data // already stringified
+          ? (data as string) // already stringified
           : JSON.stringify(data),
       ...options,
     });
