@@ -23,7 +23,10 @@ jobs:
         run: docker compose -f docker-compose.yml up -d --build
 
       - name: Wait for services to be healthy
-        run: sleep 25
+        run: |
+          for i in {1..10}; do
+            docker compose ps | grep "healthy" && break || sleep 5;
+          done
 
       - name: Run backend tests
         run: docker compose exec -T fastapi pytest

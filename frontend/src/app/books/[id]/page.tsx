@@ -3,21 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiPost } from "@/utils/api";
-
-interface Book {
-  id: string;
-  title: string;
-  author: string;
-  description?: string;
-}
-
-interface Review {
-  id: number;
-  content: string;
-  rate: number;
-  user_id: number;
-  created_at?: string;
-}
+import Book from "@/types/book";
+import Review from "@/types/review";
+import { ApiResponse } from "@/types/auth";
 
 export default function BookPage() {
   const [book, setBook] = useState<Book | null>(null);
@@ -56,14 +44,14 @@ export default function BookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await apiPost<any>('/reviews', {
+    const response = await apiPost<ApiResponse<Review>>('/reviews', {
       content: review,
       rate: Number(rate),
       book_id: Number(params.id),
       user_id: 1,
     });
 
-    if (response.ok) {
+    if (response?.ok) {
       setReview("");
       setRate("");
       router.refresh(); // Refresh route to get new reviews

@@ -1,10 +1,5 @@
+import User from '@/types/user';
 import { apiFetch } from '@/utils/api';
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
 
 export const revalidate = 60;
 
