@@ -27,47 +27,39 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit): Prom
 
 export async function apiPost<T>(
   endpoint: string,
-  data: T | unknown,
+  data: any,
   options?: RequestInit
-): Promise<T | null> {
+): Promise<T> {
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   if (!BASE_URL) {
-    console.warn('⚠️ NEXT_PUBLIC_BACKEND_URL is not defined.');
-    return null;
+    throw new Error('NEXT_PUBLIC_BACKEND_URL is not defined.');
   }
 
+  // Ensure headers are treated as a plain object for indexing
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options?.headers || {}),
+  } as Record<string, string>;
+
   try {
-    const headers = new Headers({
-      'Content-Type': 'application/json',
-    });
-
-    // Add additional headers from options
-    if (options?.headers) {
-      Object.entries(options.headers).forEach(([key, value]) => {
-        headers.set(key, value as string);
-      });
-    }
-
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
       headers,
       body:
-        headers.get('Content-Type') === 'application/x-www-form-urlencoded'
+        headers['Content-Type'] === 'application/x-www-form-urlencoded'
           ? data // already stringified
           : JSON.stringify(data),
       ...options,
     });
 
     if (!res.ok) {
-      console.warn(`⚠️ API error ${res.status} on POST ${endpoint}`);
-      return null;
+      throw new Error(`API error ${res.status} on POST ${endpoint}`);
     }
 
-    const responseData = await res.json();
-    return responseData;
-  } catch (err) {
-    console.error(`❌ Failed to POST to ${endpoint}:`, err);
-    return null;
+    return await res.json();
+  } catch (error) {
+    console.error(`Error in apiPost: ${error}`);
+    throw error; // Re-throw the error after logging it
   }
 }

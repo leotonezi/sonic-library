@@ -14,12 +14,13 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-
+  
     const formData = new URLSearchParams({
       username: email,
       password,
     });
-
+  
+    // Call the API and handle the possibility of a null response
     const res = await apiPost<ApiResponse<AuthResponse>>(
       '/auth/token',
       formData.toString(),
@@ -29,22 +30,28 @@ export default function LoginPage() {
         },
       }
     );
-
+  
+    // Handle the case where the response is null
+    if (res === null) {
+      setError('An unexpected error occurred. Please try again.');
+      return;
+    }
+  
     // Check if the response is not OK or if data is null
     if (!res.ok || !res.data) {
       setError('Invalid credentials');
       return;
     }
-
-    // Safely access res.data without using the non-null assertion operator
+  
+    // Safely access res.data
     const { access_token } = res.data;
-
+  
     // Save the access token to localStorage
     localStorage.setItem('access_token', access_token);
-
+  
     // Redirect to the books page
     router.push('/books');
-  }
+  }  
 
   return (
     <main className="min-h-screen bg-[#0a1128] text-[#e0f0ff] flex items-center justify-center px-4">
