@@ -27,7 +27,7 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit): Prom
 
 export async function apiPost<T>(
   endpoint: string,
-  data: any,
+  data: T | unknown,
   options?: RequestInit
 ): Promise<T | null> {
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
