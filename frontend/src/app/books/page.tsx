@@ -1,19 +1,7 @@
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { apiFetch } from '@/utils/api';
-import Book from '@/types/book';
+import { getBooks } from '@/services/bookService';
 
 export const revalidate = 60;
-
-export async function getBooks(): Promise<Book[]> {
-  const books = await apiFetch<Book[]>('/books');
-
-  if (!books || books.length === 0) {
-    notFound();
-  }
-
-  return books;
-}
 
 export default async function BooksPage() {
   const books = await getBooks();
