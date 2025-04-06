@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiPost } from '@/utils/api';
+import { ApiResponse, AuthResponse } from '@/types/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,8 +19,8 @@ export default function LoginPage() {
       username: email,
       password,
     });
-    
-    const res = await apiPost<any>(
+
+    const res = await apiPost<ApiResponse<AuthResponse>>(
       '/auth/token',
       formData.toString(),
       {
@@ -29,12 +30,19 @@ export default function LoginPage() {
       }
     );
 
-    if (!res.ok) {
+    // Check if the response is not OK or if data is null
+    if (!res.ok || !res.data) {
       setError('Invalid credentials');
       return;
     }
 
-    localStorage.setItem('access_token', data.access_token);
+    // Safely access res.data without using the non-null assertion operator
+    const { access_token } = res.data;
+
+    // Save the access token to localStorage
+    localStorage.setItem('access_token', access_token);
+
+    // Redirect to the books page
     router.push('/books');
   }
 

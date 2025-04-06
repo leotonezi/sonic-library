@@ -38,14 +38,22 @@ export async function apiPost<T>(
   }
 
   try {
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+    });
+
+    // Add additional headers from options
+    if (options?.headers) {
+      Object.entries(options.headers).forEach(([key, value]) => {
+        headers.set(key, value as string);
+      });
+    }
+
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options?.headers || {}),
-      },
+      headers,
       body:
-        options?.headers?.['Content-Type'] === 'application/x-www-form-urlencoded'
+        headers.get('Content-Type') === 'application/x-www-form-urlencoded'
           ? data // already stringified
           : JSON.stringify(data),
       ...options,

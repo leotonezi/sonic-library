@@ -1,13 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch } from '@/utils/api';
-
-interface Book {
-  id: number;
-  title: string;
-  author: string;
-  description?: string;
-}
+import Book from '@/types/book';
 
 export const revalidate = 60;
 
