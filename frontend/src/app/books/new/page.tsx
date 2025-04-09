@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function NewBookPage() {
   const [author, setAuthor] = useState('');
@@ -21,8 +22,9 @@ export default function NewBookPage() {
     });
 
     if (res.ok) {
+      toast.success('Book created!');
+      
       const book = await res.json();
-      console.log(book)
       router.push(`/books/${book.id}`);
     } else {
       alert('Failed to create book.');
@@ -30,33 +32,33 @@ export default function NewBookPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-6 bg-gray-800 rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Add a New Book</h1>
+    <div className="max-w-xl mx-auto mt-10 p-6 bg-blue-900 border border-blue-600 rounded-lg shadow">
+      <h1 className="text-2xl font-bold mb-4 text-blue-500">Add a New Book</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium">Author</label>
+          <label className="block text-sm font-medium text-blue-400">Author</label>
           <input
             type="text"
-            className="mt-1 w-full border px-3 py-2 rounded"
+            className="mt-1 w-full border border-blue-600 text-blue-300 focus:border-blue-400 focus:outline-none px-3 py-2 rounded"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">Title</label>
+          <label className="block text-sm font-medium text-blue-400">Title</label>
           <input
             type="text"
-            className="mt-1 w-full border px-3 py-2 rounded"
+            className="mt-1 w-full border border-blue-600 text-blue-300 focus:border-blue-400 focus:outline-none px-3 py-2 rounded"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium">Description</label>
+          <label className="block text-sm font-medium text-blue-400">Description</label>
           <textarea
-            className="mt-1 w-full border px-3 py-2 rounded"
+            className="mt-1 w-full border border-blue-600 text-blue-300 focus:border-blue-400 focus:outline-none px-3 py-2 rounded"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
@@ -65,7 +67,7 @@ export default function NewBookPage() {
         </div>
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          className="btn-primary"
         >
           Create Book
         </button>

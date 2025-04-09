@@ -1,4 +1,4 @@
-export async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T | null> {
+export async function apiFetch<T>(endpoint: string, options?: RequestInit & { noCache?: boolean }): Promise<T | null> {
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
   if (!BASE_URL) {
@@ -6,10 +6,12 @@ export async function apiFetch<T>(endpoint: string, options?: RequestInit): Prom
     return null;
   }
 
+  const noCache = (options as any)?.noCache;
+
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
-      cache: 'force-cache',
       ...options,
+      cache: noCache ? "no-store" : "force-cache",
     });
 
     if (!res.ok) {

@@ -7,7 +7,7 @@
   --card-bg: #0F52BA;
   --border: #3F8EF3;
 
-  /* Optional: font vars if using Geist */
+  
   --font-sans: var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif);
   --font-mono: var(--font-geist-mono, ui-monospace, SFMono-Regular, monospace);
 }
@@ -16,11 +16,52 @@
   :root {
     --background: #0a1128;
     --foreground: #FFFFFF;
+
+    /* Custom Blue (full scale) */
+    --color-blue-50:  #cceeff;
+    --color-blue-100: #66ccff;
+    --color-blue-200: #ade0ff;
+    --color-blue-300: #7fcfff;
+    --color-blue-400: #52bfff;
+    --color-blue-500: #00aaff;
+    --color-blue-600: #0077cc;
+    --color-blue-700: #005fa3;
+    --color-blue-800: #004777;
+    --color-blue-900: #001f3f;
+    --color-blue-950: #0a1128;
+
+    /* Indigo (full scale used) */
+    --color-indigo-50:  #f5f8ff;
+    --color-indigo-100: #e0e7ff;
+    --color-indigo-200: #c7d2fe;
+    --color-indigo-300: #a5b4fc;
+    --color-indigo-400: #818cf8;
+    --color-indigo-500: #4f46e5;
+    --color-indigo-600: #6366f1;
+    --color-indigo-700: #4338ca;
+    --color-indigo-800: #3730a3;
+    --color-indigo-900: #1e1b4b;
+
+    --color-orange-500: #fc9957;
+    --color-orange-500: #fc9957;
+  }
+
+  .btn-primary {
+    cursor: pointer;
+    background-color: #fa8537; /* matches your custom blue-500 */
+    color: white;
+    padding: 0.5rem 1rem; /* px-4 py-2 */
+    border-radius: 0.5rem; /* rounded */
+    transition: background-color 0.2s ease-in-out; /* transition duration-200 */
+  }
+  
+  .btn-primary:hover {
+    background-color: #fc9957; /* matches your custom blue-600 */
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: var(--font-merriweather);
 }
