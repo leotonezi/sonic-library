@@ -9,7 +9,7 @@ client = TestClient(app)
 def test_get_books():
     response = client.get("/books")
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    assert isinstance(response.json()["data"], list)
 
 def test_create_book():
     new_book = {
@@ -18,8 +18,8 @@ def test_create_book():
         "description": fake.text(max_nb_chars=100)
     }
     response = client.post("/books", json=new_book)
-    assert response.status_code == 200
-    data = response.json()
+    assert response.status_code == 201
+    data = response.json()["data"]
     assert data["title"] == new_book["title"]
     assert data["author"] == new_book["author"]
     assert data["description"] == new_book["description"]
