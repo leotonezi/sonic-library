@@ -91,7 +91,7 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          className="bg-[#00aaff] hover:bg-[#0077cc] transition duration-300 text-white font-semibold py-2 px-4 w-full rounded"
+          className="btn-primary w-full"
         >
           Sign In
         </button>

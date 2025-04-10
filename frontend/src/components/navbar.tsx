@@ -3,10 +3,11 @@ import Image from "next/image";
 
 export default function NavBar() {
   return (
-    <nav className="shadow-md flex bg-[#0F52BA] justify-between h-16">
+    <nav className="shadow-md flex bg-[#0a1f44] justify-between h-16">
       <Link href="/" className="flex items-center h-full">
         <Image
           src="/sonic-library-logo.png"
+          priority
           alt="Home Logo"
           width={80}
           height={80}

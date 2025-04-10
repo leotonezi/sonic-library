@@ -1,27 +1,29 @@
-# Etapa de build
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
-# Variável de ambiente para build (precisa ser passada no docker-compose)
+WORKDIR /app
+
+# Set the backend URL if needed
 ARG NEXT_PUBLIC_BACKEND_URL
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 
-WORKDIR /app
-
+# Copy only deps first
 COPY package.json package-lock.json ./
+
+# Install deps (will also run postinstall)
 RUN npm install
 
+# Copy rest of project
 COPY . .
 
-# Garante que as variáveis de ambiente públicas estejam disponíveis em tempo de build
+# Patch swc and lightningcss deps again
+RUN npm install --force
+
+# Now that all deps and native binaries are available
 RUN npm run build
 
-# Etapa de produção
-FROM node:20-alpine
-
+# Production
+FROM node:20-slim
 WORKDIR /app
-
 COPY --from=builder /app ./
-
 EXPOSE 3000
-
 CMD ["npm", "start"]
