@@ -7,12 +7,17 @@ ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 
 WORKDIR /app
 
+# 1. Instala dependências base (cache de node_modules)
 COPY package.json package-lock.json ./
 RUN npm install
 
+# 2. Copia o restante do código
 COPY . .
 
-# Garante que as variáveis de ambiente públicas estejam disponíveis em tempo de build
+# 3. Instala novamente para baixar dependências nativas do Next.js e Tailwind (como lightningcss)
+RUN npm install --force
+
+# 4. Executa o build
 RUN npm run build
 
 # Etapa de produção
