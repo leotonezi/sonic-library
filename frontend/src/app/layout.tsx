@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Merriweather, Playfair_Display, Lora, EB_Garamond } from "next/font/google";
+import { Merriweather } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/navbar";
 import { Toaster } from 'sonner';
