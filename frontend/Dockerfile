@@ -1,26 +1,27 @@
-# Etapa de build
 FROM node:20-slim AS builder
-
-ARG NEXT_PUBLIC_BACKEND_URL
-ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 
 WORKDIR /app
 
+# Set the backend URL if needed
+ARG NEXT_PUBLIC_BACKEND_URL
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+
+# Copy only deps first
 COPY package.json package-lock.json ./
 
-# 👇 First install just base deps
+# Install deps (will also run postinstall)
 RUN npm install
 
-# 👇 Now copy the rest of the project
+# Copy rest of project
 COPY . .
 
-# 👇 Reinstall to run postinstall hook and patch lightningcss
+# Patch swc and lightningcss deps again
 RUN npm install --force
 
-# 👇 Run build now that native binaries are available
+# Now that all deps and native binaries are available
 RUN npm run build
 
-# Etapa de produção
+# Production
 FROM node:20-slim
 WORKDIR /app
 COPY --from=builder /app ./
