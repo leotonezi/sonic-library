@@ -39,7 +39,7 @@ export default function NewBookPage() {
           <label className="block text-sm font-medium text-blue-400">Author</label>
           <input
             type="text"
-            className="mt-1 w-full border border-blue-600 text-blue-300 focus:border-blue-400 focus:outline-none px-3 py-2 rounded"
+            className="input-primary"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             required
@@ -49,7 +49,7 @@ export default function NewBookPage() {
           <label className="block text-sm font-medium text-blue-400">Title</label>
           <input
             type="text"
-            className="mt-1 w-full border border-blue-600 text-blue-300 focus:border-blue-400 focus:outline-none px-3 py-2 rounded"
+            className="input-primary"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -58,7 +58,7 @@ export default function NewBookPage() {
         <div>
           <label className="block text-sm font-medium text-blue-400">Description</label>
           <textarea
-            className="mt-1 w-full border border-blue-600 text-blue-300 focus:border-blue-400 focus:outline-none px-3 py-2 rounded"
+            className="input-primary"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}

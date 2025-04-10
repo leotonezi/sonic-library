@@ -58,6 +58,23 @@
   .btn-primary:hover {
     background-color: #fc9957; /* matches your custom blue-600 */
   }
+
+  .input-primary {
+    margin-top: 0.25rem; /* mt-1 */
+    width: 100%; /* w-full */
+    background-color: #bfdbfe; /* bg-blue-200 */
+    border: 1px solid #2563eb; /* border-blue-600 */
+    color: #1e3a8a; /* text-blue-900 */
+    padding: 0.5rem 0.75rem; /* py-2 px-3 */
+    border-radius: 0.25rem; /* rounded */
+  
+    /* Remove outline on focus */
+    outline: none;
+  }
+  
+  .input-primary:focus {
+    border-color: #60a5fa; /* focus:border-blue-400 */
+  }
 }
 
 body {

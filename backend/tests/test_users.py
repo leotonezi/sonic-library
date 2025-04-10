@@ -35,4 +35,4 @@ def test_get_users():
     headers, _ = create_user_and_get_token()
     response = client.get("/users", headers=headers)
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    assert isinstance(response.json()["data"], list)
