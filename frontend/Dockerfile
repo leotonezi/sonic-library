@@ -1,5 +1,5 @@
 # Etapa de build
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 # Variável de ambiente para build (precisa ser passada no docker-compose)
 ARG NEXT_PUBLIC_BACKEND_URL
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # Etapa de produção
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
