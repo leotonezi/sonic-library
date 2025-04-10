@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { apiFetch, apiPost } from "@/utils/api";
 import Book from "@/types/book";
 import Review from "@/types/review";
@@ -16,31 +16,27 @@ export default function BookPage() {
   const [loading, setLoading] = useState(true);
   const params = useParams();
 
-  const fetchBookAndReviews = async () => {
+  const fetchBookAndReviews = useCallback(async () => {
     try {
       const [bookRes, reviewsRes] = await Promise.all([
         apiFetch<Book>(`/books/${params.id}`),
         apiFetch<Review[]>(`/reviews/book/${params.id}`, { noCache: true }),
       ]);
-
+  
       setBook(bookRes);
-      if (reviewsRes) {
-        setReviews(reviewsRes);
-      } else {
-        setReviews([]);
-      }
+      setReviews(reviewsRes ?? []);
     } catch (err) {
       console.error("Failed to fetch book or reviews", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
 
   useEffect(() => {
     if (params?.id) {
       fetchBookAndReviews();
     }
-  }, [params?.id]);
+  }, [params?.id, fetchBookAndReviews]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
