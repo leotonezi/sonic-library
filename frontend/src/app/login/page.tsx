@@ -73,7 +73,7 @@ export default function LoginPage() {
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="mt-1 w-full bg-white text-black p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#00aaff]"
+            className="input-primary"
             required
           />
         </label>
@@ -84,7 +84,7 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="mt-1 w-full bg-white text-black p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#00aaff]"
+            className="input-primary"
             required
           />
         </label>
