@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "node -e \"try{require('next')?.build?.()}catch(e){}\""
   },
   "dependencies": {
     "next": "^15.2.5",

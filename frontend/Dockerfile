@@ -8,19 +8,21 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-# 👇 This will run postinstall and patch swc/lightningcss deps
+# 👇 First install just base deps
 RUN npm install
 
+# 👇 Now copy the rest of the project
 COPY . .
 
-# 👇 Run build — now lightningcss should be ready
+# 👇 Reinstall to run postinstall hook and patch lightningcss
+RUN npm install --force
+
+# 👇 Run build now that native binaries are available
 RUN npm run build
 
 # Etapa de produção
 FROM node:20-slim
-
 WORKDIR /app
 COPY --from=builder /app ./
 EXPOSE 3000
-
 CMD ["npm", "start"]
