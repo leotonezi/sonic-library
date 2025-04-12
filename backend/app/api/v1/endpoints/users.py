@@ -28,6 +28,11 @@ def index(
     users = user_service.get_all()
     return ApiResponse(data=[UserResponse.model_validate(u) for u in users])
 
+@router.get("/me", response_model=ApiResponse[UserResponse])
+def get_me(current_user: User = Depends(get_current_user)):
+    """Get details of the logged-in user (Protected Route)"""
+    return ApiResponse(data=UserResponse.model_validate(current_user))
+
 @router.get("/{user_id}", response_model=ApiResponse[UserResponse])
 def get(
     user_id: int,
@@ -39,8 +44,3 @@ def get(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return ApiResponse(data=UserResponse.model_validate(user))
-
-@router.get("/me", response_model=ApiResponse[UserResponse])
-def get_me(current_user: User = Depends(get_current_user)):
-    """Get details of the logged-in user (Protected Route)"""
-    return ApiResponse(data=UserResponse.model_validate(current_user))

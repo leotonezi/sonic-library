@@ -22,6 +22,12 @@ export default function NavBar() {
           Books
         </Link>
         <Link
+          href="/recommendation"
+          className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
+        >
+          Recommend
+        </Link>
+        <Link
           href="/users"
           className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
         >
