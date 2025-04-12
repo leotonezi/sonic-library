@@ -1,0 +1,20 @@
+repos:
+  # ✅ Run pytest in backend/
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Run backend tests
+        entry: pytest
+        language: system
+        files: ^backend/
+        pass_filenames: false
+
+  # ✅ Run ESLint in frontend/
+  - repo: local
+    hooks:
+      - id: eslint
+        name: Run ESLint in frontend
+        entry: npm run lint --prefix frontend
+        language: system
+        types: [javascript, typescript]
+        pass_filenames: false
