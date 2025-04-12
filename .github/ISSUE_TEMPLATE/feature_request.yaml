@@ -1,0 +1,47 @@
+name: 🚀 Feature Request
+description: Suggest a new feature or improvement for the project
+title: "[feat] "
+labels: ["feat"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a feature for Sonic Library! Please fill out the details below.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: What’s the core of the feature you'd like to see?
+      placeholder: e.g. Add dark mode toggle to frontend
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Detailed Description
+      description: Provide a clear and concise explanation of the feature.
+      placeholder: What and why?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: When is this feature considered done?
+      placeholder: e.g. Toggle switch in navbar, theme persists in localStorage
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - 🟢 Low
+        - 🟡 Medium
+        - 🔴 High
+    validations:
+      required: false

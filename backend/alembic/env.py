@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv(override=True)
 import sys
 import importlib
 from sqlalchemy import create_engine, pool
@@ -31,7 +33,7 @@ for filename in os.listdir(models_dir):
 target_metadata = Base.metadata
 
 # ✅ Use DATABASE_URL from the environment
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:password@db/fastlibrary")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:password@localhost:5432/fastlibrary")
 
 def run_migrations_online():
     engine = create_engine(DATABASE_URL, poolclass=pool.NullPool)

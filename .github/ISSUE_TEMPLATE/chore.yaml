@@ -1,0 +1,35 @@
+name: "🧹 Chore"
+description: "A maintenance or cleanup task"
+title: "[chore] "
+labels: ["chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to Sonic Library! Please fill out the following details.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: What needs cleanup or refactoring?
+      placeholder: e.g. Add docstrings to backend services
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Detailed Description
+      description: What will this improve?
+      placeholder: Reason and scope of the chore
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Completion Criteria
+      placeholder: e.g. All services documented
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: ["🟢 Low", "🟡 Medium", "🔴 High"]

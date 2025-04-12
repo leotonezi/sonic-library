@@ -1,0 +1,35 @@
+name: Sonic Library CI
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Compose
+        run: docker compose -f docker-compose.yml up -d --build
+
+      - name: Wait for services to be healthy
+        run: |
+          for i in {1..10}; do
+            docker compose ps | grep "healthy" && break || sleep 5;
+          done
+
+      - name: Run backend tests
+        run: docker compose exec -T fastapi pytest
+
+      - name: Build frontend
+        run: docker compose exec -T frontend npm run build

@@ -1,0 +1,34 @@
+name: "🧪 Test Task"
+description: "Add or improve test coverage"
+title: "[tests] "
+labels: ["tests"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to Sonic Library! Please fill out the following details.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: What part of the app needs testing?
+      placeholder: e.g. Add test for login flow
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Test Scope / Details
+      description: What is being tested? Unit, integration, or end-to-end?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Test Completion Criteria
+      placeholder: e.g. Test must pass and be added to CI
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: ["🟢 Low", "🟡 Medium", "🔴 High"]

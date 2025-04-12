@@ -1,9 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class ReviewBase(BaseModel):
     book_id: int
     user_id: int
     content: str
+    rate: int
 
 class ReviewCreate(ReviewBase):
     pass
@@ -11,5 +12,4 @@ class ReviewCreate(ReviewBase):
 class ReviewResponse(ReviewBase):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

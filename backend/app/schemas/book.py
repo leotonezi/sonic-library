@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 
 class BookBase(BaseModel):
@@ -16,5 +16,4 @@ class BookResponse(BookBase):
     def short_description(self) -> str:
         return (self.description[:50] + "...") if self.description else "No description available"
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

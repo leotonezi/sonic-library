@@ -1,44 +1,37 @@
-'use client';
+import Link from 'next/link';
+import { getBooks } from '@/services/bookService';
 
-import { useEffect, useState } from 'react';
+export const revalidate = 60;
 
-type Book = {
-  id: number;
-  title: string;
-  author: string;
-  description?: string;
-};
-
-export default function Books() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('http://localhost:8000/books')
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data)
-        setBooks(data);
-        setLoading(false);
-      });
-  }, []);
+export default async function BooksPage() {
+  const books = await getBooks();
 
   return (
-    <main className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Books</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <ul className="space-y-2">
-          {books.map((book) => (
-            <li key={book.id} className="border p-4 rounded">
-              <h2 className="text-xl font-semibold">{book.title}</h2>
-              <p className="text-sm text-gray-500">By {book.author}</p>
-              {book.description && <p>{book.description}</p>}
-            </li>
-          ))}
-        </ul>
-      )}
+    <main className="p-6 bg-[#0a1128] text-white min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-blue-500">Books</h1>
+        <Link href="/books/new" className="btn-primary">
+          Add New Book
+        </Link>
+      </div>
+      <ul className="space-y-4">
+        {books.map((book) => (
+          <li
+            key={book.id}
+            className="bg-blue-900 border border-blue-600 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-xl hover:bg-blue-800"
+          >
+            <Link href={`/books/${book.id}`}>
+              <h2 className="text-xl font-semibold text-blue-500 hover:underline">
+                {book.title}
+              </h2>
+            </Link>
+            <p className="text-sm italic text-white">By {book.author}</p>
+            {book.description && (
+              <p className="mt-2 text-blue-100">{book.description}</p>
+            )}
+          </li>
+        ))}
+      </ul>
     </main>
   );
 }
