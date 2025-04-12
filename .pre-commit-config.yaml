@@ -1,0 +1,19 @@
+repos:
+  # ✅ Run pytest in backend/
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Run backend tests
+        entry: bash -c "cd backend && pytest"
+        language: system
+        pass_filenames: false
+
+  # ✅ Run ESLint in frontend/
+  - repo: local
+    hooks:
+      - id: eslint
+        name: Run ESLint in frontend
+        entry: npm run lint --prefix frontend
+        language: system
+        files: ^frontend/.*\.(js|ts|jsx|tsx)$
+        pass_filenames: false
