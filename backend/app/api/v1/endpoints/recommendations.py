@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.review import Review
 from app.models.book import Book
 from app.services.recommendation_service import generate_book_recommendations
+from app.schemas.base_schema import ApiResponse
 
 router = APIRouter()
 
@@ -26,4 +27,4 @@ def get_recommendations(user_id: int, db: Session = Depends(get_db)):
     books_pydantic = [BookResponse.model_validate(b) for b in books]
 
     recommendations = generate_book_recommendations(user_reviews_pydantic, books_pydantic)
-    return {"recommendations": recommendations}
+    return ApiResponse(data=recommendations)

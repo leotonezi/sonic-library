@@ -4,6 +4,8 @@ import { Merriweather } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/navbar";
 import { Toaster } from 'sonner';
+import { Providers } from "./providers";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,8 +40,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${merriwether.variable} antialiased`}
       >
+        <Providers>
         <NavBar/>
-        {children}
+          {children}
+        </Providers>
         <Toaster />
       </body>
     </html>

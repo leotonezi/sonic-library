@@ -23,7 +23,7 @@ def create_user_and_get_token():
     }
     response = client.post("/auth/token", data=login_data)
     assert response.status_code == 200, f"Authentication failed: {response.text}"
-    token = response.json()["access_token"]
+    token = response.json()["data"]["access_token"]
     return {"Authorization": f"Bearer {token}"}, new_user
 
 def test_create_user():
