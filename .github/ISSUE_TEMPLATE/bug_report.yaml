@@ -1,0 +1,35 @@
+name: "🐞 Bug Report"
+description: "Report a bug or unexpected behavior"
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to Sonic Library! Please fill out the following details.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: What’s the bug?
+      placeholder: e.g. Recommendation page crashes on load
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Detailed Description
+      description: What happens, and what should happen?
+      placeholder: Actual vs expected behavior, environment
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Steps to Reproduce / Fix Criteria
+      placeholder: e.g. Open `/recommendation`, see error
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: ["🟢 Low", "🟡 Medium", "🔴 High"]
