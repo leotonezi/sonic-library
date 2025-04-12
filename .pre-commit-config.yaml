@@ -4,9 +4,8 @@ repos:
     hooks:
       - id: pytest
         name: Run backend tests
-        entry: pytest
+        entry: bash -c "cd backend && pytest"
         language: system
-        files: ^backend/
         pass_filenames: false
 
   # ✅ Run ESLint in frontend/
@@ -16,5 +15,5 @@ repos:
         name: Run ESLint in frontend
         entry: npm run lint --prefix frontend
         language: system
-        types: [javascript, typescript]
+        files: ^frontend/.*\.(js|ts|jsx|tsx)$
         pass_filenames: false
