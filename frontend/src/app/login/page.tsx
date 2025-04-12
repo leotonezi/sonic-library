@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiPost } from '@/utils/api';
-import { ApiResponse, AuthResponse } from '@/types/auth';
+import { AuthResponse } from '@/types/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
