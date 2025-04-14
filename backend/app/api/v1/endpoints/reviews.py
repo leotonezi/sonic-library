@@ -38,3 +38,12 @@ def get_by_book(book_id: int, review_service: ReviewService = Depends(get_review
     """Get reviews by book ID"""
     reviews = review_service.get_by_book(book_id)
     return ApiResponse(data=[ReviewResponse.model_validate(r) for r in reviews])
+
+@router.delete("/{review_id}", status_code=204)
+def delete_review(review_id: int, review_service: ReviewService = Depends(get_review_service)):
+    deleted = review_service.delete_by_id(review_id)
+    
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Review not found")
+    
+    return None  # 204 No Content
