@@ -59,6 +59,19 @@ export default function BookPage() {
     }
   };
 
+  const handleDeleteReview = async (reviewId: number) => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/${reviewId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      toast.success("Review deleted!");
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+    } else {
+      toast.error("Failed to delete review");
+    }
+  };
+
   if (loading) return <p className="text-white p-6">Loading...</p>;
   if (!book) return <p className="text-white p-6">Book not found</p>;
 
@@ -113,7 +126,14 @@ export default function BookPage() {
         ) : (
           <ul className="space-y-4">
             {reviews.map((r) => (
-              <li key={r.id} className="bg-blue-800 p-4 rounded shadow">
+              <li key={r.id} className="bg-blue-800 p-4 rounded shadow relative">
+                <button
+                  onClick={() => handleDeleteReview(r.id)}
+                  className="absolute top-2 right-2 text-sm text-blue-300 hover:text-orange-500 cursor-pointer"
+                  aria-label="Delete review"
+                >
+                  ✕
+                </button>
                 <p className="text-blue-200">{r.content}</p>
                 <p className="text-blue-100 text-sm">Rate: {r.rate}/5</p>
               </li>
