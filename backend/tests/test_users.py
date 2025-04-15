@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from app.main import app
 from faker import Faker
+from email_validator import validate_email, EmailNotValidError
 
 fake = Faker()
 client = TestClient(app)
@@ -10,9 +11,16 @@ def create_user_and_get_token():
     password = fake.password(length=10)
     new_user = {
         "name": fake.name(),
-        "email": fake.unique.email(),
+        "email": fake.unique.email(domain="gmail.com"),
         "password": password
     }
+
+    # Ensure the email is valid
+    try:
+        validated = validate_email(new_user["email"])
+        new_user["email"] = validated.email  # Normalize to lowercase and valid format
+    except EmailNotValidError as e:
+        raise AssertionError(f"Generated invalid email: {new_user['email']}") from e
 
     response = client.post("/users", json=new_user)
     assert response.status_code == 200, f"User creation failed: {response.text}"
