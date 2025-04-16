@@ -41,14 +41,16 @@
     --color-indigo-700: #4338ca;
     --color-indigo-800: #3730a3;
     --color-indigo-900: #1e1b4b;
-
+  
+    --color-orange-100: #ffd2b5;
+    --color-orange-200: #ffb380;
     --color-orange-500: #fc9957;
-    --color-orange-500: #fc9957;
+    --color-orange-700: #fa8537;
   }
 
   .btn-primary {
     cursor: pointer;
-    background-color: #fa8537; /* matches your custom blue-500 */
+    background-color: #fa8537;
     color: white;
     padding: 0.5rem 1rem; /* px-4 py-2 */
     border-radius: 0.5rem; /* rounded */
@@ -56,7 +58,20 @@
   }
   
   .btn-primary:hover {
-    background-color: #fc9957; /* matches your custom blue-600 */
+    background-color: #fc9957;
+  }
+
+  .btn-inverted {
+    cursor: pointer;
+    background-color: white;
+    color: #fa8537;
+    padding: 0.5rem 1rem; /* px-4 py-2 */
+    border-radius: 0.5rem; /* rounded */
+    transition: background-color 0.2s ease-in-out; /* transition duration-200 */
+  }
+  
+  .btn-inverted:hover {
+    background-color: #ffd2b5; /* matches your custom orange-100 */
   }
 
   .input-primary {
