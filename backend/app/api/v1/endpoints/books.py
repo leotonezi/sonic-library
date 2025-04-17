@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.book_service import BookService
@@ -18,9 +18,15 @@ def create(book: BookCreate, book_service: BookService = Depends(get_book_servic
     return ApiResponse(data=BookResponse.model_validate(obj))
 
 @router.get("/", response_model=ApiResponse[list[BookResponse]])
-def index(book_service: BookService = Depends(get_book_service)):
-    """Get all books"""
-    books = book_service.get_all()
+def index(
+    title: str = Query(default=None, description="Search books by title"),
+    book_service: BookService = Depends(get_book_service)
+):
+    """Get all books or search by title"""
+    if title:
+        books = book_service.get_by_title(title)
+    else:
+        books = book_service.get_all()
     return ApiResponse(data=[BookResponse.model_validate(b) for b in books])
 
 @router.get("/{book_id}", response_model=ApiResponse[BookResponse])
