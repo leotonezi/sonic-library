@@ -19,14 +19,12 @@ def create(book: BookCreate, book_service: BookService = Depends(get_book_servic
 
 @router.get("/", response_model=ApiResponse[list[BookResponse]])
 def index(
-    title: str = Query(default=None, description="Search books by title"),
+    search: str = Query(default=None, description="Search books by title or author"),
+    genre: str = Query(default=None, description="Filter by genre"),
     book_service: BookService = Depends(get_book_service)
 ):
-    """Get all books or search by title"""
-    if title:
-        books = book_service.get_by_title(title)
-    else:
-        books = book_service.get_all()
+    """Get all books or filter by title or author and/or genre"""
+    books = book_service.filter_books(search=search, genre=genre)
     return ApiResponse(data=[BookResponse.model_validate(b) for b in books])
 
 @router.get("/{book_id}", response_model=ApiResponse[BookResponse])

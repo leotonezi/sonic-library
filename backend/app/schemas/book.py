@@ -5,6 +5,7 @@ class BookBase(BaseModel):
     title: str = Field(..., max_length=255)
     author: str
     description: Optional[str] = None
+    genre: Optional[str] = None
 
 class BookCreate(BookBase):
     pass
