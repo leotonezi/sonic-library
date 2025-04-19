@@ -2,9 +2,9 @@ name: Sonic Library CI
 
 on:
   push:
-    branches: [main, development]
+    branches: [master, development]
   pull_request:
-    branches: [main, development]
+    branches: [master, development]
 
 jobs:
   ci:
@@ -16,20 +16,59 @@ jobs:
       NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
 
     steps:
-      - name: Checkout code
+      - name: 📦 Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Docker Compose
+      - name: 🐳 Set up Docker Compose
         run: docker compose -f docker-compose.yml up -d --build
 
-      - name: Wait for services to be healthy
+      - name: ⏳ Wait for services to become healthy
         run: |
+          echo "Waiting for services to be healthy..."
           for i in {1..10}; do
-            docker compose ps | grep "healthy" && break || sleep 5;
+            STATUS=$(docker compose ps | grep "healthy")
+            if [ -n "$STATUS" ]; then
+              echo "✅ All services are healthy!"
+              break
+            fi
+            echo "⏳ Still waiting... ($i/10)"
+            sleep 5
           done
 
-      - name: Run backend tests
+          if [ -z "$STATUS" ]; then
+            echo "❌ Services failed to become healthy."
+            docker compose logs
+            exit 1
+          fi
+
+      - name: 🧪 Run backend tests
         run: docker compose exec -T fastapi pytest
 
-      - name: Build frontend
+      - name: 🛠️ Build frontend
         run: docker compose exec -T frontend npm run build
+
+      - name: 🧹 Teardown (optional)
+        if: always()
+        run: docker compose down --volumes --remove-orphans
+
+  release:
+    if: github.ref == 'refs/heads/main'
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 🧰 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 📦 Install semantic-release dependencies
+        run: npm install
+
+      - name: 🚀 Run Semantic Release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx semantic-release
