@@ -1,44 +1,22 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "@/redux/userSlice";
+import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { apiFetch } from "@/utils/api";
 
 export default function RecommendationPage() {
-  const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [recommendationText, setRecommendationText] = useState<string>("");
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-
-      const userData = await apiFetch<{ id: number; email: string }>("/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        noCache: true,
-      });
-
-      if (userData) {
-        dispatch(setUser(userData));
-      }
-    };
-
-    fetchUser();
-  }, [dispatch]);
-
-  useEffect(() => {
     const fetchRecommendations = async () => {
       const token = localStorage.getItem("access_token");
       if (!token || !user.id) return;
-  
+
       setLoadingRecommendations(true);
-  
+
       try {
         const rec = await apiFetch<string>(`/recommendations/${user.id}`, {
           headers: {
@@ -46,7 +24,7 @@ export default function RecommendationPage() {
           },
           noCache: true,
         });
-  
+
         if (rec) {
           const cleanText = rec
             .replace(/[*_~`>#-]/g, '')
@@ -60,7 +38,7 @@ export default function RecommendationPage() {
         setLoadingRecommendations(false);
       }
     };
-  
+
     if (user.id) {
       fetchRecommendations();
     }

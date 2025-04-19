@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiPost } from '@/utils/api';
+import { useDispatch } from 'react-redux';
+import { setUser } from '@/redux/userSlice';
+import { apiPost, apiFetch } from '@/utils/api';
 import { AuthResponse } from '@/types/auth';
 
 export default function LoginPage() {
@@ -10,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const dispatch = useDispatch();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +40,24 @@ export default function LoginPage() {
   
     const { access_token } = res;
     localStorage.setItem('access_token', access_token);
-    router.push('/books');
+
+    try {
+      const userData = await apiFetch<{ id: number; email: string }>('/users/me', {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+        noCache: true,
+      });
+
+      if (userData) {
+        dispatch(setUser(userData));
+      }
+
+      router.push('/books');
+    } catch (err) {
+      console.error('Failed to fetch user after login', err);
+      setError('Logged in, but failed to fetch user profile.');
+    }
   }
 
   return (

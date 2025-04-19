@@ -7,3 +7,10 @@ class ReviewService(BaseService[Review]):
 
     def get_by_book(self, book_id: int):
         return self.db.query(self.model).filter(self.model.book_id == book_id).all()
+    
+    def delete_by_id(self, review_id: int):
+        review = self.db.query(self.model).filter(self.model.id == review_id).first()
+        if review:
+            self.db.delete(review)
+            self.db.commit()
+        return review

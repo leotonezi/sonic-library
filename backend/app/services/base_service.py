@@ -14,6 +14,21 @@ class BaseService(Generic[T]):
 
     def get_all(self):
         return self.db.query(self.model).all()
+    
+    def update(self, obj_id: int, obj_in: dict):
+        db_obj = self.get_by_id(obj_id)
+        if not db_obj:
+            return None
+
+        if 'updated_at' in self.model.__table__.columns:
+            obj_in['updated_at'] = datetime.utcnow()
+
+        for field, value in obj_in.items():
+            setattr(db_obj, field, value)
+
+        self.db.commit()
+        self.db.refresh(db_obj)
+        return db_obj
 
     def create(self, obj_in: dict):
         now = datetime.utcnow()
