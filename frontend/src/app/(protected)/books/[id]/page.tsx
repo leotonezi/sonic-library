@@ -25,7 +25,8 @@ export default function BookPage() {
 
   useEffect(() => {
     if (!user) {
-      logout().then(() => router.push("/login"));
+      logout();
+      router.push("/login");
     }
   }, [user, logout, router]);
 
