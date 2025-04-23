@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: 🧪 Run backend tests
-        run: docker compose exec -T fastapi pytest
+        run: docker compose exec -T fastapi pytest -vv
 
       - name: 🛠️ Build frontend
         run: docker compose exec -T frontend npm run build

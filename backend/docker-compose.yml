@@ -29,9 +29,10 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db/${POSTGRES_DB:-fastlibrary}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
       - .:/app
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 volumes:
   postgres_data:

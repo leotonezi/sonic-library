@@ -17,3 +17,12 @@ repos:
         language: system
         files: ^frontend/.*\.(js|ts|jsx|tsx)$
         pass_filenames: false
+
+  # ✅ Run GitHub Actions locally with act
+  - repo: local
+    hooks:
+      - id: act
+        name: Simulate CI with act
+        entry: act
+        language: system
+        pass_filenames: false
