@@ -4,10 +4,15 @@ from app.core.database import get_db
 from app.services.book_service import BookService
 from app.schemas.base_schema import ApiResponse
 from app.schemas.book import BookCreate, BookResponse
+from app.core.security import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
-def get_book_service(db: Session = Depends(get_db)) -> BookService:
+def get_book_service(
+        db: Session = Depends(get_db),
+        current_user: User =  Depends(get_current_user),
+        ) -> BookService:
     """Dependency function to inject BookService."""
     return BookService(db)
 

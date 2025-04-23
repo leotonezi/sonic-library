@@ -1,35 +1,43 @@
-"use client";
+'use client';
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { apiFetch, apiPost } from "@/utils/api";
 import Book from "@/types/book";
 import Review from "@/types/review";
 import { toast } from "sonner";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
 import { Pencil, Star, Trash2 } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function BookPage() {
+  const router = useRouter();
   const [book, setBook] = useState<Book | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [review, setReview] = useState("");
   const [rate, setRate] = useState("");
   const [loading, setLoading] = useState(true);
-  const params = useParams();
-  
   const [editReviewId, setEditReviewId] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState("");
 
-  const user = useSelector((state: RootState) => state.user);
+  const params = useParams();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+
+  useEffect(() => {
+    if (!user) {
+      logout();
+      router.push("/login");
+    }
+  }, [user, logout, router]);
 
   const fetchBookAndReviews = useCallback(async () => {
+    if (!user || !params?.id) return;
     try {
       const [bookRes, reviewsRes] = await Promise.all([
         apiFetch<Book>(`/books/${params.id}`),
         apiFetch<Review[]>(`/reviews/book/${params.id}`, { noCache: true }),
       ]);
-  
+
       setBook(bookRes);
       setReviews(reviewsRes ?? []);
     } catch (err) {
@@ -37,7 +45,7 @@ export default function BookPage() {
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [params?.id, user]);
 
   useEffect(() => {
     if (params?.id) {
@@ -171,7 +179,7 @@ export default function BookPage() {
             {reviews.map((r) => (
               <li key={r.id} className="bg-blue-800 p-4 rounded shadow relative">
                 <div className="absolute top-2 right-2 flex gap-2">
-                {user.id === r.user_id &&
+                {user?.id === r.user_id &&
                 <>
                   <button
                     onClick={() => {

@@ -6,16 +6,17 @@ from app.models.review import Review
 from app.models.book import Book
 from app.services.recommendation_service import generate_book_recommendations
 from app.schemas.base_schema import ApiResponse
+from app.core.security import get_current_user
+
 
 router = APIRouter()
 
 @router.get("/{user_id}")
-def get_recommendations(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    user_reviews = db.query(Review).filter(Review.user_id == user_id).all()
+def get_recommendations(
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+    ):
+    user_reviews = db.query(Review).filter(Review.user_id == current_user.id).all()
     if not user_reviews:
         raise HTTPException(status_code=404, detail="User has no reviews")
 
