@@ -179,7 +179,7 @@ export default function BookPage() {
             {reviews.map((r) => (
               <li key={r.id} className="bg-blue-800 p-4 rounded shadow relative">
                 <div className="absolute top-2 right-2 flex gap-2">
-                {user.id === r.user_id &&
+                {user?.id === r.user_id &&
                 <>
                   <button
                     onClick={() => {
