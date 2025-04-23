@@ -14,3 +14,12 @@ export interface AuthResponse {
     name?: string; // Optional user name
   };
 }
+
+export interface AuthState {
+  user: AuthResponse["user"] | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  setAuth: (response: AuthResponse) => void;
+  logout: () => void;
+  isAuthenticated: () => boolean;
+}
