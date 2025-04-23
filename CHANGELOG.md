@@ -1,3 +1,14 @@
+## [0.1.2](https://github.com/leotonezi/sonic-library/compare/v0.1.1...v0.1.2) (2025-04-23)
+
+
+### Bug Fixes
+
+* env problems in CI ([dd6251a](https://github.com/leotonezi/sonic-library/commit/dd6251a1993a9ce4378919d9d04f1be59f49259d))
+* test ([d9a0dc6](https://github.com/leotonezi/sonic-library/commit/d9a0dc64fb809f7701f0830bed43fc61a6ae7364))
+* test ([b2155e6](https://github.com/leotonezi/sonic-library/commit/b2155e6aad274dd5b1995023a22ffaf921d67f10))
+* test ([661d4bb](https://github.com/leotonezi/sonic-library/commit/661d4bb5f2b91a030484e66fcdec0ee0374c908d))
+* test ([e8fbae3](https://github.com/leotonezi/sonic-library/commit/e8fbae38534a165933e21e75c8dd9fbdce9c587d))
+
 ## [0.1.1](https://github.com/leotonezi/sonic-library/compare/v0.1.0...v0.1.1) (2025-04-19)
 
 
