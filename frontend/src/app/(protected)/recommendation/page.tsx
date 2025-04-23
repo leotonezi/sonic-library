@@ -1,19 +1,18 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
 import { apiFetch } from "@/utils/api";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function RecommendationPage() {
-  const user = useSelector((state: RootState) => state.user);
+  const user = useAuthStore((state) => state.user);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [recommendationText, setRecommendationText] = useState<string>("");
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       const token = localStorage.getItem("access_token");
-      if (!token || !user.id) return;
+      if (!token || !user) return;
 
       setLoadingRecommendations(true);
 
@@ -39,10 +38,10 @@ export default function RecommendationPage() {
       }
     };
 
-    if (user.id) {
+    if (user?.id) {
       fetchRecommendations();
     }
-  }, [user.id]);
+  }, [user]);
 
   return (
     <div className="max-w-xl mx-auto mt-10 p-6 bg-blue-900 border border-blue-600 rounded-lg shadow text-white">

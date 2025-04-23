@@ -1,8 +1,4 @@
 {
-  "dependencies": {
-    "@reduxjs/toolkit": "^2.6.1",
-    "react-redux": "^9.2.0"
-  },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",

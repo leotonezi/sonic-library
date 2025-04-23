@@ -14,7 +14,7 @@ export default function BooksPage() {
 
   useEffect(() => {
     fetchBooks();
-  }, []);
+  }, [books]);
  
   const fetchBooks = async () => {
     const query = new URLSearchParams();

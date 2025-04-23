@@ -2,61 +2,61 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useDispatch } from 'react-redux';
-import { setUser } from '@/redux/userSlice';
 import { apiPost, apiFetch } from '@/utils/api';
 import { AuthResponse } from '@/types/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const dispatch = useDispatch();
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-  
+
     const formData = new URLSearchParams({
       username: email,
       password,
     });
-  
-    const res = await apiPost<AuthResponse>(
-      '/auth/token',
-      formData.toString(),
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    );
-  
-    if (!res || !res.access_token) {
-      setError('Invalid credentials or unexpected error.');
-      return;
-    }
-  
-    const { access_token } = res;
-    localStorage.setItem('access_token', access_token);
 
     try {
-      const userData = await apiFetch<{ id: number; email: string }>('/users/me', {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-        noCache: true,
-      });
+      const authRes = await apiPost<AuthResponse>(
+        '/auth/token',
+        formData.toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+      );
 
-      if (userData) {
-        dispatch(setUser(userData));
+      if (!authRes?.access_token) {
+        setError('Invalid credentials or unexpected error.');
+        return;
       }
+
+      const userData = await apiFetch<{ id: number; email: string; name?: string }>(
+        '/users/me',
+        {
+          headers: {
+            Authorization: `Bearer ${authRes.access_token}`,
+          },
+          noCache: true,
+        }
+      );
+
+      setAuth({
+        ...authRes,
+        user: userData ?? undefined,
+      });
 
       router.push('/books');
     } catch (err) {
-      console.error('Failed to fetch user after login', err);
-      setError('Logged in, but failed to fetch user profile.');
+      console.error('Login error:', err);
+      setError('Login failed. Please try again.');
     }
   }
 
@@ -79,7 +79,7 @@ export default function LoginPage() {
           <input
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             className="input-primary"
             required
           />
@@ -90,16 +90,13 @@ export default function LoginPage() {
           <input
             type="password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             className="input-primary"
             required
           />
         </label>
 
-        <button
-          type="submit"
-          className="btn-primary w-full"
-        >
+        <button type="submit" className="btn-primary w-full">
           Sign In
         </button>
       </form>
