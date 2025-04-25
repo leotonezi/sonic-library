@@ -13,6 +13,7 @@ export default function BooksPage() {
   const [selectedGenre, setSelectedGenre] = useState('');
 
   useEffect(() => {
+    if(books.length === 0)
     fetchBooks();
   }, [books]);
  

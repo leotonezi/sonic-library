@@ -8,12 +8,17 @@ type ApiResponse<T> = {
   message: string;
 };
 
+function getAuthHeader(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export async function apiFetch<T>(
   endpoint: string,
   options?: ExtendedRequestInit
 ): Promise<T | null> {
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
   if (!BASE_URL) {
     console.warn("⚠️ NEXT_PUBLIC_BACKEND_URL is not defined.");
     return null;
@@ -21,9 +26,17 @@ export async function apiFetch<T>(
 
   const noCache = options?.noCache;
 
+  const headers: Record<string, string> = {
+    ...(options?.headers instanceof Headers
+      ? Object.fromEntries(options.headers.entries())
+      : (options?.headers as Record<string, string> || {})),
+    ...getAuthHeader(),
+  };
+
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
+      headers,
       cache: noCache ? "no-store" : "force-cache",
     });
 
@@ -46,22 +59,30 @@ export async function apiPost<T, D = unknown>(
   options?: RequestInit
 ): Promise<T> {
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
   if (!BASE_URL) {
     throw new Error("NEXT_PUBLIC_BACKEND_URL is not defined.");
   }
 
-  const headers = {
-    "Content-Type": "application/json",
-    ...(options?.headers || {}),
-  } as Record<string, string>;
+  const rawContentType = options?.headers instanceof Headers
+    ? options.headers.get("Content-Type")
+    : (options?.headers as Record<string, string> || {})["Content-Type"];
+
+  const contentType = rawContentType || "application/json";
+
+  const headers: Record<string, string> = {
+    "Content-Type": contentType,
+    ...getAuthHeader(),
+    ...(options?.headers instanceof Headers
+      ? Object.fromEntries(options.headers.entries())
+      : (options?.headers as Record<string, string> || {})),
+  };
 
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
       method: "POST",
       headers,
       body:
-        headers["Content-Type"] === "application/x-www-form-urlencoded"
+        contentType === "application/x-www-form-urlencoded"
           ? (data as string)
           : JSON.stringify(data),
       ...options,
