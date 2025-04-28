@@ -1,3 +1,15 @@
+# [0.2.0](https://github.com/leotonezi/sonic-library/compare/v0.1.2...v0.2.0) (2025-04-28)
+
+
+### Bug Fixes
+
+* Authentication expiring ([b1da300](https://github.com/leotonezi/sonic-library/commit/b1da3004b52f3bc4134184d03e9c150fb1136de1))
+
+
+### Features
+
+* add signup page & auth logic ([d0b828e](https://github.com/leotonezi/sonic-library/commit/d0b828ea058248e1a8d4dd180d591ed499e97278))
+
 ## [0.1.2](https://github.com/leotonezi/sonic-library/compare/v0.1.1...v0.1.2) (2025-04-23)
 
 
