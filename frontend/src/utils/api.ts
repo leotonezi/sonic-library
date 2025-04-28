@@ -8,10 +8,23 @@ type ApiResponse<T> = {
   message: string;
 };
 
-function getAuthHeader(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+export function getAuthHeader(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+
+  const persistedAuth = localStorage.getItem('auth-storage');
+  if (!persistedAuth) return {};
+
+  try {
+    const parsed = JSON.parse(persistedAuth);
+    const token = parsed.state?.accessToken;
+
+    if (!token) return {};
+
+    return { Authorization: `Bearer ${token}` };
+  } catch (err) {
+    console.error('Failed to parse auth-storage:', err);
+    return {};
+  }
 }
 
 export async function apiFetch<T>(
@@ -26,11 +39,11 @@ export async function apiFetch<T>(
 
   const noCache = options?.noCache;
 
-  const headers: Record<string, string> = {
+  const headers = {
+    ...getAuthHeader(),
     ...(options?.headers instanceof Headers
       ? Object.fromEntries(options.headers.entries())
-      : (options?.headers as Record<string, string> || {})),
-    ...getAuthHeader(),
+      : (options?.headers || {})),
   };
 
   try {
@@ -89,13 +102,64 @@ export async function apiPost<T, D = unknown>(
     });
 
     if (!res.ok) {
-      throw new Error(`API error ${res.status} on POST ${endpoint}`);
+      let errorMessage = `API error ${res.status} on POST ${endpoint}`;
+
+      try {
+        const errorData = await res.json();
+        if (errorData?.detail) {
+          errorMessage = errorData.detail;
+        }
+      } catch (parseError) {
+        console.warn('Failed to parse error JSON:', parseError);
+      }
+
+      throw new Error(errorMessage);
     }
 
     const json: ApiResponse<T> = await res.json();
     return json.data;
   } catch (error) {
-    console.error(`Error in apiPost: ${error}`);
+    console.error(`Error in apiPost:`, error);
     throw error;
+  }
+}
+
+export async function apiDelete<T = unknown>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T | null> {
+  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  if (!BASE_URL) {
+    console.warn("⚠️ NEXT_PUBLIC_BACKEND_URL is not defined.");
+    return null;
+  }
+
+  const headers = {
+    ...getAuthHeader(),
+    ...(options?.headers || {}),
+  };
+
+  try {
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "DELETE",
+      headers,
+      ...options,
+    });
+
+    if (!res.ok) {
+      console.warn(`⚠️ API error ${res.status} on DELETE ${endpoint}`);
+      return null;
+    }
+
+    if (res.status === 204) {
+      return null;
+    }
+
+    const json = await res.json();
+    return (json as ApiResponse<T>).data;
+  } catch (err) {
+    console.error(`❌ Failed to DELETE ${endpoint}:`, err);
+    return null;
   }
 }

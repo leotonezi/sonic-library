@@ -51,3 +51,22 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
 
     return user
+
+def create_activation_token(email: str, expires_delta: timedelta | None = None) -> str:
+    """Generate a JWT token specifically for account activation."""
+    to_encode = {"sub": email}
+    expire = datetime.now(UTC) + (expires_delta or timedelta(hours=24))
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt
+
+def verify_activation_token(token: str) -> str:
+    """Verify the activation token and extract the email."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise ValueError("Invalid token payload.")
+        return email
+    except JWTError:
+        raise ValueError("Invalid or expired token.")

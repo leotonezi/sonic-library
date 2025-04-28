@@ -22,8 +22,14 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      MAIL_USERNAME: ${MAIL_USERNAME:-test_username}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-test_password}
+      MAIL_SERVER: ${MAIL_SERVER:-smtp.example.com}
+      MAIL_FROM: ${MAIL_FROM:-test@example.com}
     ports:
       - "8000:8000"
+    mem_limit: 2048m
+    mem_reservation: 1024m
 
   frontend:
     build:

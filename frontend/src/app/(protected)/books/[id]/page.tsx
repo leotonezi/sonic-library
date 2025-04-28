@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { apiFetch, apiPost } from "@/utils/api";
+import { apiDelete, apiFetch, apiPost } from "@/utils/api";
 import Book from "@/types/book";
 import Review from "@/types/review";
 import { toast } from "sonner";
@@ -80,16 +80,14 @@ export default function BookPage() {
   };
 
   const handleDeleteReview = async (reviewId: number) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/${reviewId}`, {
-      method: "DELETE",
-    });
+    const response = await apiDelete(`/reviews/${reviewId}`);
 
-    if (response.ok) {
-      toast.success("Review deleted!");
-      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
-    } else {
-      toast.error("Failed to delete review");
-    }
+  if (response !== null || response === null) {
+    toast.success("Review deleted!");
+    setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+  } else {
+    toast.error("Failed to delete review");
+  }
   };
 
   const handleEditReview = async (reviewId: number) => {

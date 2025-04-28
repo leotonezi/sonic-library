@@ -2,6 +2,10 @@ from fastapi.testclient import TestClient
 from app.main import app
 from faker import Faker
 from email_validator import validate_email, EmailNotValidError
+from unittest.mock import patch
+
+patcher = patch('app.core.mail.send_activation_email', lambda *args, **kwargs: None)
+patcher.start()
 
 fake = Faker()
 client = TestClient(app)
@@ -21,6 +25,15 @@ def create_user_and_get_token():
         raise AssertionError(f"Generated invalid email: {new_user['email']}") from e
 
     response = client.post("/users", json=new_user)
+    from app.core.database import SessionLocal
+    from app.models.user import User
+
+    db = SessionLocal()
+    user = db.query(User).filter_by(email=new_user["email"]).first()
+    user.is_active = True
+    db.commit()
+    db.close()
+
     assert response.status_code == 200
 
     login_data = {
@@ -53,3 +66,5 @@ def test_create_book():
     assert data["author"] == new_book["author"]
     assert data["description"] == new_book["description"]
     assert data["genre"] == new_book["genre"]
+
+patcher.stop()
