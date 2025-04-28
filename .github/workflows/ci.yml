@@ -14,6 +14,10 @@ jobs:
       DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
+      MAIL_FROM: ${{ secrets.MAIL_FROM }}
 
     steps:
       - name: 📦 Checkout repository
@@ -27,22 +31,31 @@ jobs:
           echo "Waiting for services to be healthy..."
           for i in {1..10}; do
             STATUS=$(docker compose ps | grep "healthy")
-            if [ -n "$STATUS" ]; then
-              echo "✅ All services are healthy!"
+            RUNNING=$(docker compose ps | grep "fastapi" | grep "Up")
+            if [ -n "$STATUS" ] && [ -n "$RUNNING" ]; then
+              echo "✅ All services are healthy and running!"
               break
             fi
             echo "⏳ Still waiting... ($i/10)"
             sleep 5
           done
 
-          if [ -z "$STATUS" ]; then
-            echo "❌ Services failed to become healthy."
+          if [ -z "$STATUS" ] || [ -z "$RUNNING" ]; then
+            echo "❌ Services failed to become healthy or crashed."
             docker compose logs
             exit 1
           fi
 
+      - name: 🛠️ Install test dependencies
+        run: docker compose exec -T fastapi pip install faker
+
       - name: 🧪 Run backend tests
-        run: docker compose exec -T fastapi pytest -vv
+        run: docker compose exec -T fastapi pytest -vv --log-cli-level=DEBUG
+        timeout-minutes: 10
+
+      - name: 📜 Output container logs on test failure
+        if: failure()
+        run: docker compose logs fastapi
 
       - name: 🛠️ Build frontend
         run: docker compose exec -T frontend npm run build

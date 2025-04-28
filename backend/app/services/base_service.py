@@ -11,6 +11,9 @@ class BaseService(Generic[T]):
 
     def get_by_id(self, obj_id: int):
         return self.db.query(self.model).filter(self.model.id == obj_id).first()
+    
+    def get_by_email(self, email: str):
+        return self.db.query(self.model).filter(self.model.email == email).first()
 
     def get_all(self):
         return self.db.query(self.model).all()
