@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from "sonner";
 import { apiPost, apiFetch } from '@/utils/api';
 import { AuthResponse } from '@/types/auth';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -12,6 +13,16 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
+
+  const searchParams = useSearchParams();
+  const signupSuccess = searchParams.get('signup_success');
+
+  useEffect(() => {
+    if (signupSuccess === 'true') {
+      toast.success('Signup successful! Please check your email to activate your account.', { id: 'signup-success' });
+    }
+  }, [signupSuccess]);
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +43,8 @@ export default function LoginPage() {
           },
         }
       );
+
+      console.log('authRes', authRes);
 
       if (!authRes?.access_token) {
         setError('Invalid credentials or unexpected error.');
@@ -55,8 +68,8 @@ export default function LoginPage() {
 
       router.push('/books');
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Login failed. Please try again.');
+      const message = String(err);
+      setError(message);
     }
   }
 
@@ -99,6 +112,13 @@ export default function LoginPage() {
         <button type="submit" className="btn-primary w-full">
           Sign In
         </button>
+
+        <p className="text-center text-sm text-white mt-4">
+          Don&apos;t have an account?{' '}
+          <a href="/signup" className="text-[#00aaff] hover:underline">
+            Sign up here
+          </a>
+        </p>
       </form>
     </main>
   );

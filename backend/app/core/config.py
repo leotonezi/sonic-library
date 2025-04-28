@@ -11,6 +11,13 @@ class Settings:
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:password@localhost:5432/fastlibrary")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your_secret_key_here")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL")
+    BACKEND_URL: str = os.getenv("BACKEND_URL")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD")
+    MAIL_FROM: str = os.getenv("MAIL_FROM")
+    MAIL_PORT: int = int(os.getenv("MAIL_PORT", 587))
+    MAIL_SERVER: str = os.getenv("MAIL_SERVER")
 
 settings = Settings()

@@ -1,9 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
+import { useAuthStore } from "@/store/useAuthStore"; // assumes Zustand store
+import { Menu } from "lucide-react";
 
 export default function NavBar() {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+
   return (
-    <nav className="shadow-md flex bg-[#0a1f44] justify-between h-16">
+    <nav className="shadow-md flex bg-[#0a1f44] justify-between h-16 px-4">
       <Link href="/" className="flex items-center h-full">
         <Image
           src="/sonic-library-logo.png"
@@ -14,7 +23,8 @@ export default function NavBar() {
           className="object-contain"
         />
       </Link>
-      <div className="flex gap-4">
+
+      <div className="flex gap-4 relative items-center">
         <Link
           href="/books"
           className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
@@ -33,15 +43,39 @@ export default function NavBar() {
         >
           Users
         </Link>
-        <Link
-          href="/login"
-          className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
-        >
-          Login
-        </Link>
+
+        {/* 👤 User menu dropdown */}
+        {user ? (
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen((prev) => !prev)}
+              className="flex items-center justify-center h-full px-4 cursor-pointer text-white"
+            >
+              <Menu />
+            </button>
+            {dropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded shadow text-black z-50">
+                <button
+                  onClick={() => {
+                    logout();
+                    setDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
+          >
+            Login
+          </Link>
+        )}
       </div>
     </nav>
   );
 }
-
-

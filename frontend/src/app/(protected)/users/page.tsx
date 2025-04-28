@@ -1,36 +1,40 @@
-import User from '@/types/user';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { apiFetch } from '@/utils/api';
+import User from '@/types/user';
 
-export const revalidate = 60;
+export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
-async function getUsers(): Promise<User[]> {
-  const users = await apiFetch<User[]>('/users/');
-  return users ?? [];
-}
+  useEffect(() => {
+    async function loadUsers() {
+      const data = await apiFetch<User[]>('/users/');
+      setUsers(data ?? []);
+      setLoading(false);
+    }
 
-export default async function UsersPage() {
-  const users = await getUsers();
-
-  if (!users || users.length === 0) {
-    return (
-      <main className="p-6">
-        <h1 className="text-3xl font-bold mb-4">Users</h1>
-        <p className="text-gray-500">No users found.</p>
-      </main>
-    );
-  }
+    loadUsers();
+  }, []);
 
   return (
     <main className="p-6">
       <h1 className="text-3xl font-bold mb-4">Users</h1>
-      <ul className="space-y-2">
-        {users.map((user) => (
-          <li key={user?.id} className="border p-4 rounded">
-            <h2 className="text-xl font-semibold">{user.name}</h2>
-            <p className="text-sm">{user.email}</p>
-          </li>
-        ))}
-      </ul>
+      {loading ? (
+        <p className="text-gray-500">Loading...</p>
+      ) : users.length === 0 ? (
+        <p className="text-gray-500">No users found.</p>
+      ) : (
+        <ul className="space-y-2">
+          {users.map((user) => (
+            <li key={user.id} className="border p-4 rounded">
+              <h2 className="text-xl font-semibold">{user.name}</h2>
+              <p className="text-sm">{user.email}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }

@@ -32,6 +32,7 @@ class UserService(BaseService[User]):
             name=user_data.name,
             email=normalized_email,
             password=hashed_password,
+            is_active=False
         )
 
         self.db.add(db_user)
