@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from app.api.v1.endpoints import books, users, reviews, recommendations, auth
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.logging_config import setup_logging
+import logging
+
+setup_logging()
+logger = logging.getLogger("sonic")
 
 app = FastAPI(title="SonicLibrary API")
 

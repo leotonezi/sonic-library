@@ -8,19 +8,14 @@ export default function RecommendationPage() {
   const user = useAuthStore((state) => state.user);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [recommendationText, setRecommendationText] = useState<string>("");
-
   useEffect(() => {
     const fetchRecommendations = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token || !user) return;
+      if (!user) return;
 
       setLoadingRecommendations(true);
 
       try {
         const rec = await apiFetch<string>(`/recommendations/${user.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
           noCache: true,
         });
 

@@ -163,3 +163,46 @@ export async function apiDelete<T = unknown>(
     return null;
   }
 }
+
+export async function apiPut<T = unknown>(
+  endpoint: string,
+  body: unknown,
+  options?: RequestInit
+): Promise<T | null> {
+  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  if (!BASE_URL) {
+    console.warn("⚠️ NEXT_PUBLIC_BACKEND_URL is not defined.");
+    return null;
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...getAuthHeader(),
+    ...(options?.headers || {}),
+  };
+
+  try {
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(body),
+      ...options,
+    });
+
+    if (!res.ok) {
+      console.warn(`⚠️ API error ${res.status} on PUT ${endpoint}`);
+      return null;
+    }
+
+    if (res.status === 204) {
+      return null;
+    }
+
+    const json = await res.json();
+    return (json as ApiResponse<T>).data;
+  } catch (err) {
+    console.error(`❌ Failed to PUT ${endpoint}:`, err);
+    return null;
+  }
+}

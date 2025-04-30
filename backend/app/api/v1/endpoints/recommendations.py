@@ -7,11 +7,12 @@ from app.models.book import Book
 from app.services.recommendation_service import generate_book_recommendations
 from app.schemas.base_schema import ApiResponse
 from app.core.security import get_current_user
-
+from app.core.logging_decorator import log_exceptions
 
 router = APIRouter()
 
 @router.get("/{user_id}")
+@log_exceptions("GET /recommendations/{user_id}")
 def get_recommendations(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)

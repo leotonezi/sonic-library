@@ -44,8 +44,6 @@ export default function LoginPage() {
         }
       );
 
-      console.log('authRes', authRes);
-
       if (!authRes?.access_token) {
         setError('Invalid credentials or unexpected error.');
         return;
