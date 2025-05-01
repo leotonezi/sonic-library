@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { apiDelete, apiFetch, apiPost } from "@/utils/api";
+import { apiDelete, apiFetch, apiPost, apiPut } from "@/utils/api";
 import Book from "@/types/book";
 import Review from "@/types/review";
 import { toast } from "sonner";
@@ -91,15 +91,12 @@ export default function BookPage() {
   };
 
   const handleEditReview = async (reviewId: number) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/${reviewId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ content: editedContent }),
-    });
-
-    if (response.ok) {
+    const response = await apiPut<{ id: number; content: string }>(
+      `/reviews/${reviewId}`,
+      { content: editedContent }
+    );
+  
+    if (response) {
       toast.success("Review updated!");
       setReviews((prev) =>
         prev.map((r) => (r.id === reviewId ? { ...r, content: editedContent } : r))
