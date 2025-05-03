@@ -6,6 +6,7 @@ from app.schemas.user import UserCreate, UserResponse
 from app.schemas.base_schema import ApiResponse
 from app.core.security import get_current_user
 from app.models.user import User
+from app.core.logging_decorator import log_exceptions
 
 router = APIRouter()
 
@@ -14,12 +15,14 @@ def get_user_service(db: Session = Depends(get_db)) -> UserService:
     return UserService(db)
 
 @router.post("/", response_model=ApiResponse[UserResponse])
+@log_exceptions("POST /users")
 def create(user: UserCreate, user_service: UserService = Depends(get_user_service)):
     """Create a new user (Public Endpoint)"""
     user_obj = user_service.create(user)
     return ApiResponse(data=UserResponse.model_validate(user_obj))
 
 @router.get("/", response_model=ApiResponse[list[UserResponse]])
+@log_exceptions("GET /users")
 def index(
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_user),
@@ -34,6 +37,7 @@ def get_me(current_user: User = Depends(get_current_user)):
     return ApiResponse(data=UserResponse.model_validate(current_user))
 
 @router.get("/{user_id}", response_model=ApiResponse[UserResponse])
+@log_exceptions("GET /users/{user_id}")
 def get(
     user_id: int,
     user_service: UserService = Depends(get_user_service),

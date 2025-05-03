@@ -55,12 +55,19 @@ export default function NavBar() {
             </button>
             {dropdownOpen && (
               <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded shadow text-black z-50">
+                <Link
+                  href="/profile"
+                  className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  Profile
+                </Link>
                 <button
                   onClick={() => {
                     logout();
                     setDropdownOpen(false);
                   }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer border-t"
                 >
                   Logout
                 </button>
