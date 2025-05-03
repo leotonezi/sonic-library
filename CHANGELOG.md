@@ -1,3 +1,11 @@
+# [0.3.0](https://github.com/leotonezi/sonic-library/compare/v0.2.0...v0.3.0) (2025-05-03)
+
+
+### Features
+
+* add logging structure ([49ee954](https://github.com/leotonezi/sonic-library/commit/49ee954384dc6c6ea725a582c7d60f064a68eecc))
+* add user profile page ([64fc0c8](https://github.com/leotonezi/sonic-library/commit/64fc0c8bae0a182f967d2ee570f030d052901737))
+
 # [0.2.0](https://github.com/leotonezi/sonic-library/compare/v0.1.2...v0.2.0) (2025-04-28)
 
 
