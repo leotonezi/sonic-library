@@ -1,25 +1,51 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
+import LoadingScreen from '@/components/loading'; // Create this component
 
-export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+export default function ProtectedLayout({ 
+  children 
+}: { 
+  children: React.ReactNode 
+}) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const { user, isLoading, checkAuth, logout } = useAuthStore();
 
   useEffect(() => {
-    if (mounted && !user) {
-      logout();
-      router.replace('/login');
-    }
-  }, [mounted, user, logout, router]);
+    const initAuth = async () => {
+      try {
+        const isAuthenticated = await checkAuth();
+        if (!isAuthenticated) {
+          await logout();
+          router.replace('/login');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+      }
+    };
 
-  if (!mounted || !user) return null;
+    initAuth();
+  }, [checkAuth, logout, router]);
 
-  return <>{children}</>;
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  // If not authenticated, don't render anything
+  // (we're already redirecting in the useEffect)
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-blue-950">
+      <main>
+        {children}
+      </main>
+    </div>
+  );
 }

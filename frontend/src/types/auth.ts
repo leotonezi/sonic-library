@@ -1,3 +1,5 @@
+import User from "./user";
+
 export interface ApiResponse<T> {
   message: string;
   status: string;
@@ -16,10 +18,10 @@ export interface AuthResponse {
 }
 
 export interface AuthState {
-  user: AuthResponse["user"] | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-  setAuth: (response: AuthResponse) => void;
-  logout: () => void;
+  user: User | null;
+  isLoading: boolean;
+  setUser: (user: User | null) => void;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
   isAuthenticated: () => boolean;
 }

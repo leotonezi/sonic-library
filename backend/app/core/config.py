@@ -19,5 +19,12 @@ class Settings:
     MAIL_FROM: str = os.getenv("MAIL_FROM")
     MAIL_PORT: int = int(os.getenv("MAIL_PORT", 587))
     MAIL_SERVER: str = os.getenv("MAIL_SERVER")
+    ACCESS_TOKEN_COOKIE_NAME: str = "access_token"
+    REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
+    COOKIE_SECURE: bool = True
+    COOKIE_SAMESITE: str = "lax"
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ENVIRONMENT: str = "local"
+
 
 settings = Settings()

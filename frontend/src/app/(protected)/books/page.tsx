@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react'; // 👈 import useCallback too!
 import { getBooks } from '@/services/bookService';
 import { Search } from 'lucide-react';
-import Book from '@/types/book';
+import { Book } from '@/types/book';
 import { BOOK_GENRES } from '@/utils/enums';
 
 export default function BooksPage() {
