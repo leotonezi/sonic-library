@@ -3,16 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from "sonner";
-import { apiPost, apiFetch } from '@/utils/api';
-import { AuthResponse } from '@/types/auth';
 import { useAuthStore } from '@/store/useAuthStore';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const setUser = useAuthStore((state) => state.setUser);
 
   const searchParams = useSearchParams();
   const signupSuccess = searchParams.get('signup_success');
@@ -23,10 +22,10 @@ export default function LoginPage() {
     }
   }, [signupSuccess]);
 
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     const formData = new URLSearchParams({
       username: email,
@@ -34,40 +33,37 @@ export default function LoginPage() {
     });
 
     try {
-      const authRes = await apiPost<AuthResponse>(
-        '/auth/token',
-        formData.toString(),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }
-      );
-
-      if (!authRes?.access_token) {
-        setError('Invalid credentials or unexpected error.');
-        return;
-      }
-
-      const userData = await apiFetch<{ id: number; email: string; name?: string }>(
-        '/users/me',
-        {
-          headers: {
-            Authorization: `Bearer ${authRes.access_token}`,
-          },
-          noCache: true,
-        }
-      );
-
-      setAuth({
-        ...authRes,
-        user: userData ?? undefined,
+      // Login request
+      const loginRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+        credentials: 'include', // Important for cookies
       });
 
+      if (!loginRes.ok) {
+        const errorData = await loginRes.json();
+        throw new Error(errorData.detail || 'Login failed');
+      }
+
+      const { data } = await loginRes.json();
+
+      // Set user in store
+      setUser(data.user);
+
+      // Show success message
+      toast.success('Login successful!');
+
+      // Redirect to books page
       router.push('/books');
     } catch (err) {
-      const message = String(err);
+      const message = err instanceof Error ? err.message : 'Login failed';
       setError(message);
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -93,6 +89,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="input-primary"
             required
+            disabled={isLoading}
           />
         </label>
 
@@ -104,11 +101,25 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="input-primary"
             required
+            disabled={isLoading}
           />
         </label>
 
-        <button type="submit" className="btn-primary w-full">
-          Sign In
+        <button 
+          type="submit" 
+          className="btn-primary w-full relative"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <span className="opacity-0">Sign In</span>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
+              </div>
+            </>
+          ) : (
+            'Sign In'
+          )}
         </button>
 
         <p className="text-center text-sm text-white mt-4">

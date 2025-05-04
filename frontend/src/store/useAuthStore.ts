@@ -1,35 +1,55 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { AuthState } from "@/types/auth";
+import User from "@/types/user";
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  isLoading: false,
 
-      setAuth: ({ access_token, refresh_token, user }) => {
-        set({
-          user: user ?? null,
-          accessToken: access_token,
-          refreshToken: refresh_token ?? null,
-        });
-      },
+  setUser: (user: User | null) => {
+    set({ user });
+  },
 
-      logout: () => {
-        set({ user: null, accessToken: null, refreshToken: null });
-      },
-
-      isAuthenticated: () => !!get().accessToken,
-    }),
-    {
-      name: "auth-storage", // localStorage key
-      partialize: (state) => ({
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        user: state.user,
-      }),
+  logout: async () => {
+    try {
+      set({ isLoading: true });
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      set({ user: null, isLoading: false });
     }
-  )
-);
+  },
+
+  checkAuth: async () => {
+    try {
+      set({ isLoading: true });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me`,
+        {
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        set({ user: null });
+        return false;
+      }
+
+      const userData = await response.json();
+      set({ user: userData.data });
+      return true;
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      set({ user: null });
+      return false;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  isAuthenticated: () => !!get().user,
+}));

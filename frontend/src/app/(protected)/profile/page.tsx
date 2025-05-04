@@ -1,58 +1,29 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
-import { apiFetch } from '@/utils/api';
-import User from '@/types/user';
+// app/profile/page.tsx
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { Mail, User as UserIcon } from 'lucide-react';
+import User from '@/types/user';
 
-export default function ProfilePage() {
-  const router = useRouter();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const [profile, setProfile] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export default async function ProfilePage() {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
 
-  useEffect(() => {
-    if (!user) {
-      logout();
-      router.push('/login');
-    }
-  }, [user, logout, router]);
-
-  useEffect(() => {
-    async function loadProfile() {
-      if (!user?.id) return;
-      
-      try {
-        const data = await apiFetch<User>(`/users/me`);
-        setProfile(data);
-      } catch (err) {
-        console.error('Failed to load profile:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadProfile();
-  }, [user?.id]);
-
-  if (loading) {
-    return (
-      <main className="p-6 bg-blue-950 text-blue-50 min-h-screen">
-        <p className="text-blue-200">Loading profile...</p>
-      </main>
-    );
+  if (!accessToken) {
+    redirect('/login');
   }
 
-  if (!profile) {
-    return (
-      <main className="p-6 bg-blue-950 text-blue-50 min-h-screen">
-        <p className="text-red-400">Profile not found.</p>
-      </main>
-    );
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me`, {
+    headers: {
+      Cookie: `access_token=${accessToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    redirect('/login');
   }
+
+  const { data: profile }: { data: User } = await res.json();
 
   return (
     <main className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">

@@ -1,3 +1,5 @@
+import { handleTokenRefresh } from "./auth";
+
 type ExtendedRequestInit = RequestInit & {
   noCache?: boolean;
 };
@@ -8,24 +10,10 @@ type ApiResponse<T> = {
   message: string;
 };
 
-export function getAuthHeader(): Record<string, string> {
-  if (typeof window === 'undefined') return {};
-
-  const persistedAuth = localStorage.getItem('auth-storage');
-  if (!persistedAuth) return {};
-
-  try {
-    const parsed = JSON.parse(persistedAuth);
-    const token = parsed.state?.accessToken;
-
-    if (!token) return {};
-
-    return { Authorization: `Bearer ${token}` };
-  } catch (err) {
-    console.error('Failed to parse auth-storage:', err);
-    return {};
-  }
-}
+// Base fetch configuration that includes credentials
+const baseFetchConfig: RequestInit = {
+  credentials: 'include', // This ensures cookies are sent with requests
+};
 
 export async function apiFetch<T>(
   endpoint: string,
@@ -39,21 +27,33 @@ export async function apiFetch<T>(
 
   const noCache = options?.noCache;
 
-  const headers = {
-    ...getAuthHeader(),
-    ...(options?.headers instanceof Headers
-      ? Object.fromEntries(options.headers.entries())
-      : (options?.headers || {})),
-  };
-
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
+      ...baseFetchConfig,
       ...options,
-      headers,
+      headers: {
+        ...(options?.headers instanceof Headers
+          ? Object.fromEntries(options.headers.entries())
+          : (options?.headers || {})),
+      },
       cache: noCache ? "no-store" : "force-cache",
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        try {
+          const refreshed = await handleTokenRefresh();
+          if (refreshed) {
+            // Retry the original request
+            return await apiFetch(endpoint, options);
+          }
+        } catch (error) {
+          console.error("Token refresh failed:", error);
+          window.location.href = '/login';
+          return null;
+        }
+      }
+
       console.warn(`⚠️ API error ${res.status} on ${endpoint}`);
       return null;
     }
@@ -84,7 +84,6 @@ export async function apiPost<T, D = unknown>(
 
   const headers: Record<string, string> = {
     "Content-Type": contentType,
-    ...getAuthHeader(),
     ...(options?.headers instanceof Headers
       ? Object.fromEntries(options.headers.entries())
       : (options?.headers as Record<string, string> || {})),
@@ -92,6 +91,7 @@ export async function apiPost<T, D = unknown>(
 
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
+      ...baseFetchConfig,
       method: "POST",
       headers,
       body:
@@ -102,6 +102,11 @@ export async function apiPost<T, D = unknown>(
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Session expired. Please login again.');
+      }
+
       let errorMessage = `API error ${res.status} on POST ${endpoint}`;
 
       try {
@@ -135,19 +140,30 @@ export async function apiDelete<T = unknown>(
     return null;
   }
 
-  const headers = {
-    ...getAuthHeader(),
-    ...(options?.headers || {}),
-  };
-
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
+      ...baseFetchConfig,
       method: "DELETE",
-      headers,
+      headers: {
+        ...(options?.headers || {}),
+      },
       ...options,
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        try {
+          const refreshed = await handleTokenRefresh();
+          if (refreshed) {
+            // Retry the original request
+            return await apiFetch(endpoint, options);
+          }
+        } catch (error) {
+          console.error("Error on apiDelete:", error);
+          window.location.href = '/login';
+          return null;
+        }
+      }
       console.warn(`⚠️ API error ${res.status} on DELETE ${endpoint}`);
       return null;
     }
@@ -176,21 +192,31 @@ export async function apiPut<T = unknown>(
     return null;
   }
 
-  const headers = {
-    "Content-Type": "application/json",
-    ...getAuthHeader(),
-    ...(options?.headers || {}),
-  };
-
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
+      ...baseFetchConfig,
       method: "PUT",
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options?.headers || {}),
+      },
       body: JSON.stringify(body),
       ...options,
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        try {
+          const refreshed = await handleTokenRefresh();
+          if (refreshed) {
+            return await apiFetch(endpoint, options);
+          }
+        } catch (error) {
+          console.error("Error on apiPut:", error);
+          window.location.href = '/login';
+          return null;
+        }
+      }
       console.warn(`⚠️ API error ${res.status} on PUT ${endpoint}`);
       return null;
     }
@@ -205,4 +231,17 @@ export async function apiPut<T = unknown>(
     console.error(`❌ Failed to PUT ${endpoint}:`, err);
     return null;
   }
+}
+
+export async function serverSideApiFetch(url: string, accessToken: string) {
+  const response = await fetch(url, {
+    headers: { Cookie: `access_token=${accessToken}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  return response.json();
 }

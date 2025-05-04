@@ -42,6 +42,14 @@ export default function RootLayout({
         <NavBar/>
           {children}
         <Toaster />
+
+        <footer className="bg-blue-900 mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <p className="text-blue-200 text-center text-sm">
+              © {new Date().getFullYear()} Sonic Library. All rights reserved.
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
   );
