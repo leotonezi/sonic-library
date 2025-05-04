@@ -5,11 +5,22 @@ import Image from "next/image";
 import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore"; // assumes Zustand store
 import { Menu } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <nav className="shadow-md flex bg-[#0a1f44] justify-between h-16 px-4">
@@ -64,7 +75,7 @@ export default function NavBar() {
                 </Link>
                 <button
                   onClick={() => {
-                    logout();
+                    handleLogout();
                     setDropdownOpen(false);
                   }}
                   className="w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer border-t"

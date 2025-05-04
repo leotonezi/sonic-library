@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Form
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Form, Response
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -19,40 +19,36 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 @router.post("/token")
 async def login_for_access_token(
+    response: Response,
     db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
-    """Authenticate user and return JWT token in ApiResponse format."""
     user_service = UserService(db)
     user = user_service.get_user_by_email(form_data.username)
 
-    if not user:
-        raise HTTPException(status_code=401, detail="User does not exist")
+    if not user or not verify_password(form_data.password, user.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not verify_password(form_data.password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid password")
-    
     if not user.is_active:
-        activation_token = create_activation_token(user.email)
-        activation_link = f"{settings.BACKEND_URL}/auth/activate?token={activation_token}"
-
-        await send_activation_email(user.email, activation_link)
-
-        raise HTTPException(
-            status_code=401,
-            detail="User is not active yet. A new activation email has been sent. Please, check your inbox."
-        )
+        raise HTTPException(status_code=401, detail="User is not active")
 
     access_token = create_access_token(
         data={"sub": user.email},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=settings.ENVIRONMENT == "production",
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/"
+    )
+
     return ApiResponse(
-        data={
-            "access_token": access_token,
-            "token_type": "bearer"
-        },
+        data={"user": {"email": user.email, "name": user.name}},
         status="success",
         message="Login successful"
     )
@@ -108,3 +104,14 @@ def activate_account(
     user_service.db.commit()
 
     return ApiResponse(data="Account activated successfully.")
+
+@router.post("/logout")
+async def logout(response: Response):
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        secure=settings.ENVIRONMENT == "production",
+        samesite="lax",
+        path="/"
+    )
+    return ApiResponse(data=None, status="success", message="Logged out")
