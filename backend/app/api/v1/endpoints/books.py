@@ -8,6 +8,9 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
 
+import os
+import httpx
+
 router = APIRouter()
 
 def get_book_service(
@@ -48,3 +51,46 @@ def get(book_id: int, book_service: BookService = Depends(get_book_service)):
         return ApiResponse(data=BookResponse.model_validate(book))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error retrieving book")
+    
+@router.get("/search-external", response_model=ApiResponse[list[dict]])
+@log_exceptions("GET /books/search-external")
+async def search_external_books(
+    q: str = Query(..., description="Search books by title, author, or ISBN"),
+    max_results: int = Query(10, ge=1, le=40),
+):
+    """
+    Search for books using the Google Books API and return normalized results.
+    """
+    GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
+    GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
+
+    params = {
+        "q": q,
+        "maxResults": max_results,
+    }
+    if GOOGLE_BOOKS_API_KEY:
+        params["key"] = GOOGLE_BOOKS_API_KEY
+
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
+            resp.raise_for_status()
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
+
+    data = resp.json()
+    books = []
+    for item in data.get("items", []):
+        info = item.get("volumeInfo", {})
+        books.append({
+            "external_id": item.get("id"),
+            "title": info.get("title"),
+            "authors": info.get("authors", []),
+            "publishedDate": info.get("publishedDate"),
+            "description": info.get("description"),
+            "thumbnail": info.get("imageLinks", {}).get("thumbnail"),
+            "pageCount": info.get("pageCount"),
+            "categories": info.get("categories", []),
+            "language": info.get("language"),
+        })
+    return ApiResponse(data=books)
