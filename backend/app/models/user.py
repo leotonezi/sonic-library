@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean
 from app.core.database import Base
+from sqlalchemy.orm import relationship
 
 class User(Base):
     __tablename__ = "users"
@@ -9,3 +10,5 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     is_active = Column(Boolean, default=False)
     password = Column(String, nullable=False)
+
+    books = relationship("UserBook", back_populates="user", cascade="all, delete-orphan")

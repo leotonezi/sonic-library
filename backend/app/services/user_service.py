@@ -18,27 +18,30 @@ class UserService(BaseService[User]):
 
         try:
             validated = validate_email(user_data.email)
-            normalized_email = validated.email
-        except EmailNotValidError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid email: {e}")
+            normalized_email = validated.normalized
 
-        if self.get_user_by_email(normalized_email):
-            raise HTTPException(status_code=400, detail="Email is already registered")
+            if self.get_user_by_email(normalized_email):
+                raise HTTPException(status_code=400, detail="Email is already registered")
 
-        from app.core.security import hash_password
+            from app.core.security import hash_password
 
-        hashed_password = hash_password(user_data.password)
-        db_user = User(
-            name=user_data.name,
-            email=normalized_email,
-            password=hashed_password,
-            is_active=False
-        )
+            hashed_password = hash_password(user_data.password)
+            db_user = User(
+                name=user_data.name,
+                email=normalized_email,
+                password=hashed_password,
+                is_active=False
+            )
 
-        self.db.add(db_user)
-        self.db.commit()
-        self.db.refresh(db_user)
-        return db_user
+            self.db.add(db_user)
+            self.db.commit()
+            self.db.refresh(db_user)
+            return db_user
+        except Exception as e:
+            print(f"Error in UserService.create: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            raise
 
     def authenticate_user(self, email: str, password: str):
         """Authenticates user and returns the user object if credentials are valid."""

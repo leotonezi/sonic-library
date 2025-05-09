@@ -27,6 +27,8 @@ async function getBookData(bookId: string, accessToken: string): Promise<{
     const book = bookData.data;
     const reviews = reviewsData.data ?? [];
 
+    console.log(book, reviews)
+
     if (!book || !book.id) {
       throw new Error('Invalid book data received');
     }
@@ -54,13 +56,13 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
     redirect('/login');
   }
 
-  if (id || isNaN(Number(id))) {
+  if (!id || isNaN(Number(id))) {
     notFound();
   }
 
   try {
     const { book, reviews } = await getBookData(id, accessToken);
-
+    
     if (!book) {
       notFound();
     }

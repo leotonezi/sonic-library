@@ -20,11 +20,21 @@ jobs:
       MAIL_FROM: ${{ secrets.MAIL_FROM }}
 
     steps:
-      - name: 📦 Checkout repository
-        uses: actions/checkout@v3
+      - name: Remove all untracked files and directories
+        run: |
+          git clean -fdx
 
-      - name: 🐳 Set up Docker Compose
-        run: docker compose -f docker-compose.yml up -d --build
+      - name: Clean checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          clean: true
+
+      - name: 🐳 Build Docker images (no cache)
+        run: docker compose -f docker-compose.yml build --no-cache
+
+      - name: 🐳 Start Docker Compose
+        run: docker compose -f docker-compose.yml up -d
 
       - name: ⏳ Wait for services to become healthy
         run: |
