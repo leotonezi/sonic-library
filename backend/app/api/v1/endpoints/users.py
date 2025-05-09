@@ -17,9 +17,15 @@ def get_user_service(db: Session = Depends(get_db)) -> UserService:
 @router.post("/", response_model=ApiResponse[UserResponse])
 @log_exceptions("POST /users")
 def create(user: UserCreate, user_service: UserService = Depends(get_user_service)):
-    """Create a new user (Public Endpoint)"""
-    user_obj = user_service.create(user)
-    return ApiResponse(data=UserResponse.model_validate(user_obj))
+    try:
+        user_obj = user_service.create(user)
+        return ApiResponse(data=UserResponse.model_validate(user_obj))
+    except Exception as e:
+        # Log the full error details
+        print(f"Error creating user: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise
 
 @router.get("/", response_model=ApiResponse[list[UserResponse]])
 @log_exceptions("GET /users")

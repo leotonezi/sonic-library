@@ -52,3 +52,5 @@ class Book(Base):
     genre = Column(SqlEnum(GenreEnum, name="genre_enum"), nullable=True)
 
     reviews = relationship("Review", back_populates="book")
+
+    users = relationship("UserBook", back_populates="book", cascade="all, delete-orphan")    
