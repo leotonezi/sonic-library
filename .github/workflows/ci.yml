@@ -20,15 +20,15 @@ jobs:
       MAIL_FROM: ${{ secrets.MAIL_FROM }}
 
     steps:
-      - name: Remove all untracked files and directories
-        run: |
-          git clean -fdx
-
       - name: Clean checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
           clean: true
+
+      - name: Remove all untracked files and directories
+        run: |
+          git clean -fdx
 
       - name: 🐳 Build Docker images (no cache)
         run: docker compose -f docker-compose.yml build --no-cache
