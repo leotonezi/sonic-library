@@ -8,8 +8,8 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
 
+import requests
 import os
-import httpx
 
 router = APIRouter()
 
@@ -41,20 +41,9 @@ def index(
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error listing books")
 
-@router.get("/{book_id}", response_model=ApiResponse[BookResponse])
-@log_exceptions("GET /books/{book_id}")
-def get(book_id: int, book_service: BookService = Depends(get_book_service)):
-    try:
-        book = book_service.get_by_id(book_id)
-        if not book:
-            raise HTTPException(status_code=404, detail="Book not found")
-        return ApiResponse(data=BookResponse.model_validate(book))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Error retrieving book")
-    
-@router.get("/search-external", response_model=ApiResponse[list[dict]])
+@router.get("/search-external", response_model=ApiResponse)
 @log_exceptions("GET /books/search-external")
-async def search_external_books(
+def search_external_books(
     q: str = Query(..., description="Search books by title, author, or ISBN"),
     max_results: int = Query(10, ge=1, le=40),
 ):
@@ -71,26 +60,43 @@ async def search_external_books(
     if GOOGLE_BOOKS_API_KEY:
         params["key"] = GOOGLE_BOOKS_API_KEY
 
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
-            resp.raise_for_status()
-        except httpx.HTTPError as e:
-            raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
+    try:
+        resp = requests.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
 
-    data = resp.json()
-    books = []
-    for item in data.get("items", []):
-        info = item.get("volumeInfo", {})
-        books.append({
-            "external_id": item.get("id"),
-            "title": info.get("title"),
-            "authors": info.get("authors", []),
-            "publishedDate": info.get("publishedDate"),
-            "description": info.get("description"),
-            "thumbnail": info.get("imageLinks", {}).get("thumbnail"),
-            "pageCount": info.get("pageCount"),
-            "categories": info.get("categories", []),
-            "language": info.get("language"),
-        })
-    return ApiResponse(data=books)
+        books = []
+        for item in data.get("items", []):
+            info = item.get("volumeInfo", {})
+            books.append({
+                "external_id": item.get("id"),
+                "title": info.get("title"),
+                "authors": info.get("authors", []),
+                "publishedDate": info.get("publishedDate"),
+                "description": info.get("description"),
+                "thumbnail": info.get("imageLinks", {}).get("thumbnail"),
+                "pageCount": info.get("pageCount"),
+                "categories": info.get("categories", []),
+                "language": info.get("language"),
+            })
+
+        return {
+            "data": books,
+            "message": "Books fetched successfully",
+            "status": "ok"
+        }
+
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
+
+@router.get("/{book_id}", response_model=ApiResponse[BookResponse])
+@log_exceptions("GET /books/{book_id}")
+def get(book_id: int, book_service: BookService = Depends(get_book_service)):
+    try:
+        book = book_service.get_by_id(book_id)
+        if not book:
+            raise HTTPException(status_code=404, detail="Book not found")
+        return ApiResponse(data=BookResponse.model_validate(book))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error retrieving book")
+    
