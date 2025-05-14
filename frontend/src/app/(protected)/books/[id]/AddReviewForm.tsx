@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function AddReviewForm({ bookId }: { bookId: number }) {
   const [review, setReview] = useState('');
   const [rate, setRate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const user = useAuthStore((state) => state.user);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,6 +28,7 @@ export default function AddReviewForm({ bookId }: { bookId: number }) {
           content: review,
           rate: Number(rate),
           book_id: bookId,
+          user_id: user?.id,
         }),
       });
 
@@ -36,8 +39,10 @@ export default function AddReviewForm({ bookId }: { bookId: number }) {
       toast.success('Review added successfully!');
       setReview('');
       setRate('');
-      
+
       router.refresh();
+      //window.location.reload();
+      router.push(`/books/${bookId}`);
     } catch (error) {
       toast.error('Failed to submit review');
       console.error('Review submission failed:', error);
@@ -64,7 +69,7 @@ export default function AddReviewForm({ bookId }: { bookId: number }) {
               key={star}
               type="button"
               className={`text-2xl transition-colors cursor-pointer ${
-                Number(rate) >= star ? 'text-yellow-400' : 'text-gray-400'
+                Number(rate) >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'
               }`}
               onClick={() => setRate(String(star))}
               disabled={isSubmitting}
