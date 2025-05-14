@@ -15,12 +15,22 @@ export default function LoginPage() {
 
   const searchParams = useSearchParams();
   const signupSuccess = searchParams.get('signup_success');
+  const notActivated = searchParams.get('not_activated');
+  const activated = searchParams.get('activated');
 
   useEffect(() => {
     if (signupSuccess === 'true') {
       toast.success('Signup successful! Please check your email to activate your account.', { id: 'signup-success' });
     }
-  }, [signupSuccess]);
+
+    if (notActivated === 'true') {
+      toast.warning('User is not activated yet! Please check your email to activate your account.', { id: 'not-activated' });
+    }
+
+    if (activated === 'true') {
+      toast.success('Account activated successfully! You can now log in.', { id: 'account-activated' });
+    }
+  }, [signupSuccess, notActivated, activated]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,31 +43,33 @@ export default function LoginPage() {
     });
 
     try {
-      // Login request
       const loginRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
-        credentials: 'include', // Important for cookies
+        credentials: 'include',
       });
 
-      if (!loginRes.ok) {
-        const errorData = await loginRes.json();
-        throw new Error(errorData.detail || 'Login failed');
+      const responseData = await loginRes.json();
+
+      if (responseData.status === 'pending_activation') {
+        toast.info('Please check your email to activate your account.');
+        setError('Account not activated. Check your email for activation instructions.');
+        return;
       }
 
-      const { data } = await loginRes.json();
+      if (!loginRes.ok) {
+        throw new Error(responseData.detail || 'Login failed');
+      }
 
-      // Set user in store
+      // Handle successful login
+      const { data } = responseData;
       setUser(data.user);
-
-      // Show success message
       toast.success('Login successful!');
-
-      // Redirect to books page
       router.push('/books');
+
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
       setError(message);

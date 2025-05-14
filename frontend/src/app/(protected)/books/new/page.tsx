@@ -10,7 +10,7 @@ export default function NewBookPage() {
   const [author, setAuthor] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [genre, setGenre] = useState(''); // State for selected genre
+  const [genre, setGenre] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +66,7 @@ export default function NewBookPage() {
             {BOOK_GENRES.map((genreOption: { label: string, value: string }) => (
               <option 
                 key={genreOption.value} 
-                value={genreOption.value}
+                value={genreOption.label}
               >
                 {genreOption.label}
               </option>

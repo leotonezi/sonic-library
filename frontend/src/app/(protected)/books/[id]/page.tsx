@@ -8,6 +8,8 @@ import Review from '@/types/review';
 import { ApiResponse } from '@/types/auth';
 import { serverSideApiFetch } from '@/utils/api';
 
+export const dynamic = 'force-dynamic';
+
 async function getBookData(bookId: string, accessToken: string): Promise<{
   book: BookWithRating;
   reviews: Review[];
@@ -86,7 +88,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
         </div>
 
         <AddReviewForm bookId={book.id} />
-        <ReviewsList initialReviews={reviews}/>
+        <ReviewsList reviews={reviews || []}/>
       </main>
     );
   } catch (error) {

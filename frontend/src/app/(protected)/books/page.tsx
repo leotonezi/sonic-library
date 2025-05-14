@@ -36,7 +36,7 @@ export default function BooksPage() {
     if (books.length === 0) {
       fetchBooks();
     }
-  }, [books, fetchBooks]);
+  }, []);
 
   const handleSearch = async () => {
     if (isSearchingExternal) {
