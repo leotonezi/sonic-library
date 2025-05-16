@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
+      DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
       MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
@@ -55,6 +55,9 @@ jobs:
             docker compose logs
             exit 1
           fi
+
+      - name: 🚀 Run Alembic migrations
+        run: docker compose exec -T fastapi alembic upgrade head
 
       - name: 🛠️ Install test dependencies
         run: docker compose exec -T fastapi pip install faker

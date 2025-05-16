@@ -6,6 +6,7 @@ import { getBooks, searchExternalBooks } from '@/services/bookService';
 import { Search } from 'lucide-react';
 import { Book, ExternalBook } from '@/types/book';
 import { BOOK_GENRES } from '@/utils/enums';
+import Image from 'next/image';
 
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -36,7 +37,7 @@ export default function BooksPage() {
     if (books.length === 0) {
       fetchBooks();
     }
-  }, []);
+  }, [books.length, fetchBooks]);
 
   const handleSearch = async () => {
     if (isSearchingExternal) {
@@ -96,20 +97,21 @@ export default function BooksPage() {
       <ul className="space-y-4">
         {isSearchingExternal
           ? externalBooks.map((book) => (
-              <li
-                key={book.external_id}
-                className="bg-blue-900 border border-blue-600 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-xl hover:bg-blue-800"
-              >
+            <li
+              key={book.external_id}
+              className="bg-blue-900 border border-blue-600 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-xl hover:bg-blue-800"
+            >
+              <Link href={`/books/external/${book.external_id}`} className="block">
                 <div className="flex">
                   {book.thumbnail && (
-                    <img
+                    <Image
                       src={book.thumbnail}
                       alt={book.title}
                       className="w-24 h-32 object-cover rounded mr-4"
                     />
                   )}
                   <div>
-                    <h2 className="text-xl font-semibold text-blue-500">
+                    <h2 className="text-xl font-semibold text-blue-500 hover:underline">
                       {book.title}
                     </h2>
                     <p className="text-sm italic text-white">
@@ -130,7 +132,8 @@ export default function BooksPage() {
                     </div>
                   </div>
                 </div>
-              </li>
+              </Link>
+            </li>
             ))
           : books.map((book) => (
               <li
