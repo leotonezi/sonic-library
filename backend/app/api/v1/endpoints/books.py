@@ -39,7 +39,7 @@ def index(
         books = book_service.filter_books(search=search, genre=genre)
         return ApiResponse(data=[BookResponse.model_validate(b) for b in books])
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error listing books")
+        raise HTTPException(status_code=500, detail="Error listing books: " + str(e))
 
 @router.get("/search-external", response_model=ApiResponse)
 @log_exceptions("GET /books/search-external")

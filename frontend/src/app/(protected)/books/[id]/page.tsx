@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import { Star } from 'lucide-react';
-import AddReviewForm from './AddReviewForm';
-import ReviewsList from './ReviewsList';
+import AddReviewForm from './add-review-form';
+import ReviewsList from './review-list';
 import { Book, BookWithRating } from '@/types/book';
 import Review from '@/types/review';
 import { ApiResponse } from '@/types/auth';
@@ -22,7 +22,10 @@ async function getBookData(bookId: string, accessToken: string): Promise<{
       ),
       serverSideApiFetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/book/${bookId}`,
-        accessToken
+        accessToken,
+        {
+          next: { revalidate: 60 },
+        }
       ),
     ]) as [ApiResponse<Book>, ApiResponse<Review[]>];
 

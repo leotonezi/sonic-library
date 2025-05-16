@@ -44,7 +44,6 @@ export async function apiFetch<T>(
         try {
           const refreshed = await handleTokenRefresh();
           if (refreshed) {
-            // Retry the original request
             return await apiFetch(endpoint, options);
           }
         } catch (error) {
@@ -233,10 +232,19 @@ export async function apiPut<T = unknown>(
   }
 }
 
-export async function serverSideApiFetch(url: string, accessToken: string) {
+export async function serverSideApiFetch(
+  url: string,
+  accessToken: string,
+  options: RequestInit & { next?: { revalidate?: number } } = {}
+) {
+  const mergedHeaders = {
+    Cookie: `access_token=${accessToken}`,
+    ...(options.headers || {}),
+  };
+
   const response = await fetch(url, {
-    headers: { Cookie: `access_token=${accessToken}` },
-    cache: 'no-store',
+    ...options,
+    headers: mergedHeaders,
   });
 
   if (!response.ok) {

@@ -1,5 +1,5 @@
 import Review from '@/types/review';
-import ReviewActions from './ReviewActions';
+import ReviewActions from './review-actions';
 import { Star } from 'lucide-react';
 
 const renderStars = (rate: number) => {
