@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
+      DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
       MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
 import { getBooks, searchExternalBooks } from '@/services/bookService';
 import { Search } from 'lucide-react';
-import { Book, ExternalBook } from '@/types/book';
+import { Book, ExternalBook } from '@/interfaces/book';
 import { BOOK_GENRES } from '@/utils/enums';
 import Image from 'next/image';
 
@@ -107,6 +107,8 @@ export default function BooksPage() {
                     <Image
                       src={book.thumbnail}
                       alt={book.title}
+                      width={80}
+                      height={80}
                       className="w-24 h-32 object-cover rounded mr-4"
                     />
                   )}

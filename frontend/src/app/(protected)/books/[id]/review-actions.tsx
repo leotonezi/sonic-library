@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import Review from '@/types/review';
+import Review from '@/interfaces/review';
 
 type ReviewActionsProps = {
   review: Review;

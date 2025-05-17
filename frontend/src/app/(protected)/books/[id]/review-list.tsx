@@ -1,4 +1,4 @@
-import Review from '@/types/review';
+import Review from '@/interfaces/review';
 import ReviewActions from './review-actions';
 import { Star } from 'lucide-react';
 

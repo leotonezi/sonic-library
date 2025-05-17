@@ -1,4 +1,4 @@
-import { Book, ExternalBook } from "@/types/book";
+import { Book, ExternalBook } from "@/interfaces/book";
 import { apiFetch } from "@/utils/api";
 import { notFound } from "next/navigation";
 
