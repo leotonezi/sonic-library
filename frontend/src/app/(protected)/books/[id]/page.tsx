@@ -3,9 +3,9 @@ import { redirect, notFound } from 'next/navigation';
 import { Star } from 'lucide-react';
 import AddReviewForm from './add-review-form';
 import ReviewsList from './review-list';
-import { Book, BookWithRating } from '@/types/book';
-import Review from '@/types/review';
-import { ApiResponse } from '@/types/auth';
+import { Book, BookWithRating } from '@/interfaces/book';
+import Review from '@/interfaces/review';
+import { ApiResponse } from '@/interfaces/auth';
 import { serverSideApiFetch } from '@/utils/api';
 
 export const dynamic = 'force-dynamic';

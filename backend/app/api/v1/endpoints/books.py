@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.book_service import BookService
@@ -8,8 +8,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
 
-import requests
-import os
+import re, html, requests, os
 
 router = APIRouter()
 
@@ -89,6 +88,48 @@ def search_external_books(
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
 
+@router.get("/external/{external_id}", response_model=ApiResponse)
+@log_exceptions("GET /books/external/{external_id}")
+def get_book_by_external_id(
+    external_id: str = Path(..., description="Google Books volume ID"),
+):
+    """
+    Fetch a single book from Google Books API by its external (Google) ID.
+    """
+    GOOGLE_BOOKS_API_URL = f"https://www.googleapis.com/books/v1/volumes/{external_id}"
+    GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
+
+    params = {}
+    if GOOGLE_BOOKS_API_KEY:
+        params["key"] = GOOGLE_BOOKS_API_KEY
+
+    try:
+        resp = requests.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
+        resp.raise_for_status()
+        item = resp.json()
+
+        info = item.get("volumeInfo", {})
+        book = {
+            "external_id": item.get("id"),
+            "title": info.get("title"),
+            "authors": info.get("authors", []),
+            "publishedDate": info.get("publishedDate"),
+            "description": clean_html(info.get("description")),
+            "thumbnail": info.get("imageLinks", {}).get("thumbnail"),
+            "pageCount": info.get("pageCount"),
+            "categories": info.get("categories", []),
+            "language": info.get("language"),
+        }
+
+        return {
+            "data": book,
+            "message": "Book fetched successfully",
+            "status": "ok"
+        }
+
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
+
 @router.get("/{book_id}", response_model=ApiResponse[BookResponse])
 @log_exceptions("GET /books/{book_id}")
 def get(book_id: int, book_service: BookService = Depends(get_book_service)):
@@ -100,3 +141,11 @@ def get(book_id: int, book_service: BookService = Depends(get_book_service)):
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error retrieving book")
     
+
+def clean_html(raw_html: str) -> str:
+    if not raw_html:
+        return ""
+    text = html.unescape(raw_html)
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'<.*?>', '', text)
+    return text.strip()
