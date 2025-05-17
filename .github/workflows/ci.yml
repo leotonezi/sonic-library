@@ -56,9 +56,6 @@ jobs:
             exit 1
           fi
 
-      - name: 🚀 Run Alembic migrations
-        run: docker compose exec -T fastapi alembic upgrade head
-
       - name: 🛠️ Install test dependencies
         run: docker compose exec -T fastapi pip install faker
 
