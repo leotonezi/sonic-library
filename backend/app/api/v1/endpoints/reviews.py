@@ -46,6 +46,13 @@ def get_by_book(book_id: int, review_service: ReviewService = Depends(get_review
     reviews = review_service.get_by_book(book_id)
     return ApiResponse(data=[ReviewResponse.model_validate(r) for r in reviews])
 
+
+@router.get("/book/external/{book_id}", response_model=ApiResponse[list[ReviewResponse]])
+@log_exceptions("GET /reviews/book/external/{book_id}")
+def get_by_book(book_id: int, review_service: ReviewService = Depends(get_review_service)):
+    reviews = review_service.get_by_external_book(book_id)
+    return ApiResponse(data=[ReviewResponse.model_validate(r) for r in reviews])
+
 @router.put("/{review_id}", response_model=ApiResponse[ReviewResponse])
 @log_exceptions("PUT /reviews/{review_id}")
 def update(

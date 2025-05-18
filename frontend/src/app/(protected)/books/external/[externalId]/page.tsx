@@ -5,27 +5,18 @@ import { redirect, notFound } from 'next/navigation';
 import { ApiResponse } from '@/interfaces/auth';
 import { serverSideApiFetch } from '@/utils/api';
 import Image from 'next/image';
+import ReviewsList from '../../[id]/review-list';
+import UserBookActions from './user-book-actions';
+import { ExternalBook, UserBook } from '@/interfaces/book';
 
 export const dynamic = 'force-dynamic';
 
-interface GoogleBook {
-  external_id: string;
-  title: string;
-  authors: string[];
-  publishedDate: string;
-  description: string;
-  thumbnail: string;
-  pageCount: number;
-  categories: string[];
-  language: string;
-}
-
-async function getExternalBookData(externalId: string, accessToken: string): Promise<GoogleBook> {
+async function getExternalBookData(externalId: string, accessToken: string): Promise<ExternalBook> {
   try {
     const bookData = await serverSideApiFetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/books/external/${externalId}`,
       accessToken
-    ) as ApiResponse<GoogleBook>;
+    ) as ApiResponse<ExternalBook>;
 
     const book = bookData.data;
 
@@ -36,6 +27,31 @@ async function getExternalBookData(externalId: string, accessToken: string): Pro
     return book;
   } catch (error) {
     console.error('Error fetching external book data:', error);
+    throw error;
+  }
+}
+
+async function getUserBookData(externalId: string, accessToken: string): Promise<UserBook | null> {
+  try {
+    const response = await serverSideApiFetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/user-books/book/external/${externalId}`,
+      accessToken
+    );
+
+    if (!response) {
+      return null;
+    }
+
+    if (response?.status === 404) {
+      return null;
+    }
+
+    const res = await response.json();
+    return res.data ?? null;
+  } catch (error) {
+    if (error instanceof Error && error.message?.includes('404')) {
+      return null;
+    }
     throw error;
   }
 }
@@ -56,9 +72,9 @@ export default async function ExternalBookPage({ params }: Props) {
   try {
     const book = await getExternalBookData(externalId, accessToken);
     
-    if (!book) {
-      notFound();
-    }
+    if (!book) notFound();
+
+    const userBook = await getUserBookData(externalId, accessToken);
 
     return (
       <main className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
@@ -108,15 +124,12 @@ export default async function ExternalBookPage({ params }: Props) {
                 )}
               </div>
 
-              <div className="mt-6 space-x-4">
-                <button className="bg-blue-500 cursor-pointer hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition">
-                  Add to Reading List
-                </button>
-                <button className="bg-green-500 cursor-pointer hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition">
-                  Mark as Read
-                </button>
-              </div>
+              <UserBookActions externalId={externalId} userBook={userBook} />
             </div>
+          </div>
+
+          <div className="mt-5">
+            <ReviewsList/>
           </div>
         </div>
       </main>

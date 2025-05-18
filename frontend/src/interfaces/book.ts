@@ -1,5 +1,6 @@
 export interface Book {
   id: number;
+  external_book_id: string | null;
   title: string;
   author: string;
   description?: string;
@@ -19,4 +20,14 @@ export interface ExternalBook {
   pageCount?: number;
   categories?: string[];
   language?: string;
+}
+
+export interface UserBook {
+  id: number;
+  user_id: number;
+  book_id: number | null;
+  external_book_id: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
 }
