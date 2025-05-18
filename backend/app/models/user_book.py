@@ -1,12 +1,13 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func, UniqueConstraint
+from sqlalchemy import (
+    Column, Integer, String, ForeignKey, DateTime, func, UniqueConstraint, CheckConstraint
+)
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 from sqlalchemy import Enum as SqlEnum
 import enum
-from typing import Optional
 
 class StatusEnum(str, enum.Enum):
-    READ = "READ"          
+    READ = "READ"
     READING = "READING"
     TO_READ = "TO_READ"
 
@@ -19,7 +20,8 @@ class UserBook(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"), nullable=False)
+    book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"), nullable=True)
+    external_book_id = Column(String, nullable=True)
     status = Column(
         SqlEnum(StatusEnum, name="status_enum"),
         nullable=False,
@@ -38,8 +40,16 @@ class UserBook(Base):
     book = relationship("Book", back_populates="users")
 
     __table_args__ = (
+        CheckConstraint(
+            "(book_id IS NOT NULL AND external_book_id IS NULL) OR (book_id IS NULL AND external_book_id IS NOT NULL)",
+            name="check_one_book_reference"
+        ),
         UniqueConstraint('user_id', 'book_id', name='_user_book_uc'),
+        UniqueConstraint('user_id', 'external_book_id', name='_user_external_book_uc'),
     )
 
     def __repr__(self) -> str:
-        return f"<UserBook(user_id={self.user_id}, book_id={self.book_id}, status={self.status})>"
+        return (
+            f"<UserBook(user_id={self.user_id}, book_id={self.book_id}, "
+            f"external_book_id={self.external_book_id}, status={self.status})>"
+        )

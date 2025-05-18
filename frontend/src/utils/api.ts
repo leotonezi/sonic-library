@@ -247,6 +247,10 @@ export async function serverSideApiFetch(
     headers: mergedHeaders,
   });
 
+  if (response.status === 404) {
+    return null;
+  }
+
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
   }
