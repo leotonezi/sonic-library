@@ -42,12 +42,11 @@ async function getUserBookData(externalId: string, accessToken: string): Promise
       return null;
     }
 
-    if (response?.status === 404) {
+    if (response?.status !== 'ok') {
       return null;
     }
-
-    const res = await response.json();
-    return res.data ?? null;
+    
+    return response.data ?? null;
   } catch (error) {
     if (error instanceof Error && error.message?.includes('404')) {
       return null;
@@ -83,7 +82,7 @@ export default async function ExternalBookPage({ params }: Props) {
             <div className="md:col-span-1">
               {book.thumbnail && (
                 <Image
-                  src={book.thumbnail}
+                  src={book?.thumbnail}
                   alt={book.title}
                   width={80}
                   height={80}

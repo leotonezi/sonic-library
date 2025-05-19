@@ -3,7 +3,7 @@
 'use client';
 
 import { UserBook } from '@/interfaces/book';
-import { apiPost } from '@/utils/api';
+import { apiPost, apiPut } from '@/utils/api';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -21,14 +21,12 @@ export default function UserBookActions({ externalId, userBook }: Props) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiPost('/user-books', {
-        body: JSON.stringify({
-          external_book_id: externalId,
-          status: 'TO_READ',
-        }),
-      }) as Response;
+      const data = await apiPost<UserBook>('/user-books', {
+        external_book_id: externalId,
+        status: 'TO_READ',
+      });
 
-      if (!response.ok) {
+      if (!data) {
         throw new Error('Failed to add to reading list');
       }
 
@@ -42,53 +40,85 @@ export default function UserBookActions({ externalId, userBook }: Props) {
     }
   };
 
-  const handleMarkAsRead = async () => {
-    setIsLoading(true);
-    setError(null);
+const handleMarkAsRead = async () => {
+  setIsLoading(true);
+  setError(null);
 
-    try {
-      let method = 'POST';
-      let url = '/user-books';
-      let body = JSON.stringify({
+  try {
+    let data: UserBook | null;
+
+    if (!status) {
+      data = await apiPost<UserBook>('/user-books', {
         external_book_id: externalId,
         status: 'READ',
       });
-
-      // If book is already in library, update instead of create
-      if (status) {
-        method = 'PUT';
-        url = `/user-books/${userBook?.id}`;
-        body = JSON.stringify({
-          status: 'READ',
-        });
-      }
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: body,
+    } else {
+      data = await apiPut<UserBook>(`/user-books/${userBook?.id}`, {
+        status: 'READ',
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to mark as read');
-      }
-
-      setStatus('READ');
-      toast.success('Marked as Read!');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      toast.error(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
     }
-  };
+
+    if (!data) {
+      throw new Error('Failed to mark as read');
+    }
+
+    setStatus('READ');
+    toast.success('Marked as Read!');
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'An error occurred');
+    toast.error(err instanceof Error ? err.message : 'An error occurred');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+const handleMarkAsReading = async () => {
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    let data: UserBook | null;
+
+    if (!status) {
+      data = await apiPost<UserBook>('/user-books', {
+        external_book_id: externalId,
+        status: 'READING',
+      });
+    } else {
+      data = await apiPut<UserBook>(`/user-books/${userBook?.id}`, {
+        status: 'READING',
+      });
+    }
+
+    if (!data) {
+      throw new Error('Failed to mark as reading');
+    }
+
+    setStatus('READING');
+    toast.success('Marked as Reading!');
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'An error occurred');
+    toast.error(err instanceof Error ? err.message : 'An error occurred');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  let statusMessage = '';
+  if (status === 'READ') {
+    statusMessage = 'Read';
+  } else if (status === 'READING') {
+    statusMessage = 'Reading';
+  } else if (status === 'TO_READ') {
+    statusMessage = 'To Read';
+  }
 
   return (
     <div className="mt-6 space-x-4">
       {isLoading && <span className="text-gray-400">Loading...</span>}
       {error && <span className="text-red-500">{error}</span>}
+
+      {statusMessage && <span className="text-gray-400">{statusMessage}</span>}
 
       {!status && (
         <button
@@ -100,13 +130,25 @@ export default function UserBookActions({ externalId, userBook }: Props) {
         </button>
       )}
 
-      <button
-        className="bg-green-500 cursor-pointer hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition"
-        onClick={handleMarkAsRead}
-        disabled={isLoading}
-      >
-        Mark as Read
-      </button>
+      {(status === 'TO_READ' || status === 'READING') && (
+        <button
+          className="bg-green-500 cursor-pointer hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition"
+          onClick={handleMarkAsRead}
+          disabled={isLoading}
+        >
+          Mark as Read
+        </button>
+      )}
+
+      {(status === 'TO_READ') && (
+        <button
+          className="bg-yellow-500 cursor-pointer hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition"
+          onClick={handleMarkAsReading}
+          disabled={isLoading}
+        >
+          Mark as Reading
+        </button>
+      )}
     </div>
   );
 }

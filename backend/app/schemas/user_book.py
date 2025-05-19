@@ -9,8 +9,9 @@ class StatusEnum(str, Enum):
     TO_READ = "TO_READ"
 
 class UserBookBase(BaseModel):
-    book_id: int
-    status: StatusEnum = Field(default=StatusEnum.TO_READ)
+    book_id: Optional[int] = None
+    external_book_id: Optional[str] = None
+    status: StatusEnum = StatusEnum.TO_READ
 
 class UserBookCreate(UserBookBase):
     pass
