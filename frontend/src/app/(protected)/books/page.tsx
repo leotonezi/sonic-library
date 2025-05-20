@@ -105,7 +105,7 @@ export default function BooksPage() {
                 <div className="flex">
                   {book.thumbnail && (
                     <Image
-                      src={book.thumbnail}
+                      src={book?.thumbnail}
                       alt={book.title}
                       width={80}
                       height={80}

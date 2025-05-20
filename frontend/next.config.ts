@@ -2,20 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
-  //reactStrictMode: 
   images: {
     remotePatterns: [
       {
         protocol: 'http',
         hostname: 'books.google.com',
         port: '',
-        pathname: '/books/content/**',
+        pathname: '/**', // Allow any path
       },
       {
         protocol: 'https',
         hostname: 'books.google.com',
         port: '',
-        pathname: '/books/content/**',
+        pathname: '/**', // Allow any path
       },
     ],
   },

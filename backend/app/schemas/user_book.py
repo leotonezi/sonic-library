@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 from enum import Enum
+from .book import BookBase
 
 class StatusEnum(str, Enum):
     READ = "READ"        
@@ -9,10 +10,12 @@ class StatusEnum(str, Enum):
     TO_READ = "TO_READ"
 
 class UserBookBase(BaseModel):
-    book_id: int
-    status: StatusEnum = Field(default=StatusEnum.TO_READ)
+    book_id: Optional[int] = None
+    external_book_id: Optional[str] = None
+    status: StatusEnum = StatusEnum.TO_READ
 
 class UserBookCreate(UserBookBase):
+    book: Optional[BookBase] = None
     pass
 
 class UserBookUpdate(BaseModel):
