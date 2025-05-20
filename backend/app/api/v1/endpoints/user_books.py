@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.user_book_service import UserBookService
+from app.services.book_service import BookService
 from app.schemas.base_schema import ApiResponse
 from app.core.security import get_current_user
 from app.models.user import User
@@ -18,23 +19,57 @@ def get_user_book_service(
     """Inject UserBookService, requiring authenticated user."""
     return UserBookService(db)
 
+def get_book_service(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> BookService:
+    return BookService(db)
+
 @router.post("/", response_model=ApiResponse[UserBookResponse], status_code=201)
 @log_exceptions("POST /user-books")
 def create(
     user_book: UserBookCreate,
     current_user: User = Depends(get_current_user),
-    user_book_service: UserBookService = Depends(get_user_book_service)
+    user_book_service: UserBookService = Depends(get_user_book_service),
+    book_service: BookService = Depends(get_book_service)
 ):
-    """Add a book to user's library."""
     # Validate that either book_id or external_book_id is provided, not both
-    if bool(user_book.book_id) == bool(user_book.external_book_id):
+    if bool(getattr(user_book, "book_id", None)) == bool(user_book.external_book_id):
         raise HTTPException(
             status_code=400,
             detail="Exactly one of book_id or external_book_id must be provided"
         )
 
-    data = user_book.model_dump()
+    # --- Check if book exists, or create it ---
+    book_id = getattr(user_book, "book_id", None)
+    external_book_id = user_book.external_book_id
+
+    if book_id:
+        book = book_service.get(book_id)
+        if not book:
+            raise HTTPException(status_code=404, detail="Book with this ID does not exist.")
+    elif external_book_id:
+        book = book_service.get_by_external_id(external_book_id)
+        if not book:
+            # Use the provided book data to create the book
+            if not user_book.book:
+                raise HTTPException(status_code=400, detail="Book data required to create new book.")
+            try:
+                book = book_service.create(user_book.book)
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error creating book: {str(e)}"
+                )
+        book_id = book.id
+
+    # Prepare data for UserBook creation
+    data = user_book.dict(exclude_unset=True)
     data["user_id"] = current_user.id
+    if book_id:
+        data["book_id"] = book_id
+        data.pop("external_book_id", None)
+        data.pop("book", None)  # Remove book data from user_book creation
 
     obj = user_book_service.create(data)
     return ApiResponse(data=UserBookResponse.model_validate(obj))

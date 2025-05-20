@@ -1,8 +1,9 @@
 from pydantic import BaseModel, ConfigDict, Field, validator
-from typing import Optional, Literal
+from typing import Optional
 from app.models.book import GenreEnum
 
 class BookBase(BaseModel):
+    external_id: Optional[str] = Field(None, max_length=255)
     title: str = Field(..., max_length=255)
     author: str = Field(..., max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
