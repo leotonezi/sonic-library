@@ -55,7 +55,9 @@ def create(
             if not user_book.book:
                 raise HTTPException(status_code=400, detail="Book data required to create new book.")
             try:
-                book = book_service.create(user_book.book)
+                book_data = user_book.book.dict()
+                book_data["external_id"] = external_book_id
+                book = book_service.create(book_data)
             except Exception as e:
                 raise HTTPException(
                     status_code=500,
@@ -63,13 +65,11 @@ def create(
                 )
         book_id = book.id
 
-    # Prepare data for UserBook creation
     data = user_book.dict(exclude_unset=True)
     data["user_id"] = current_user.id
-    if book_id:
-        data["book_id"] = book_id
-        data.pop("external_book_id", None)
-        data.pop("book", None)  # Remove book data from user_book creation
+
+    data.pop("book", None)
+    data["book_id"] = book_id
 
     obj = user_book_service.create(data)
     return ApiResponse(data=UserBookResponse.model_validate(obj))
