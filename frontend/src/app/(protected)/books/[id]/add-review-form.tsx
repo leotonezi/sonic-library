@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Star } from 'lucide-react';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useState } from "react";
+import { Star } from "lucide-react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 
-export default function AddReviewForm({ bookId }: { bookId: number }) {
-  const [review, setReview] = useState('');
-  const [rate, setRate] = useState('');
+export default function AddReviewForm({ bookId }: { bookId: number | null }) {
+  const [review, setReview] = useState("");
+  const [rate, setRate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
@@ -18,34 +18,37 @@ export default function AddReviewForm({ bookId }: { bookId: number }) {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: review,
+            rate: Number(rate),
+            book_id: bookId,
+            user_id: user?.id,
+          }),
         },
-        body: JSON.stringify({
-          content: review,
-          rate: Number(rate),
-          book_id: bookId,
-          user_id: user?.id,
-        }),
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to submit review');
+        throw new Error("Failed to submit review");
       }
-      
-      toast.success('Review added successfully!');
-      setReview('');
-      setRate('');
+
+      toast.success("Review added successfully!");
+      setReview("");
+      setRate("");
 
       router.refresh();
       //window.location.reload();
       router.push(`/books/${bookId}`);
     } catch (error) {
-      toast.error('Failed to submit review');
-      console.error('Review submission failed:', error);
+      toast.error("Failed to submit review");
+      console.error("Review submission failed:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -53,7 +56,9 @@ export default function AddReviewForm({ bookId }: { bookId: number }) {
 
   return (
     <div className="bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full mb-6">
-      <h2 className="text-2xl font-semibold text-blue-500 mb-4">Add a Review</h2>
+      <h2 className="text-2xl font-semibold text-blue-500 mb-4">
+        Add a Review
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea
           placeholder="Write your review..."
@@ -69,11 +74,13 @@ export default function AddReviewForm({ bookId }: { bookId: number }) {
               key={star}
               type="button"
               className={`text-2xl transition-colors cursor-pointer ${
-                Number(rate) >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'
+                Number(rate) >= star
+                  ? "text-yellow-400 fill-yellow-400"
+                  : "text-gray-400"
               }`}
               onClick={() => setRate(String(star))}
               disabled={isSubmitting}
-              aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+              aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
             >
               <Star size={16} />
             </button>
@@ -92,7 +99,7 @@ export default function AddReviewForm({ bookId }: { bookId: number }) {
               </div>
             </>
           ) : (
-            'Submit Review'
+            "Submit Review"
           )}
         </button>
       </form>

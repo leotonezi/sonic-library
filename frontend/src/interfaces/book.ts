@@ -1,9 +1,16 @@
 export interface Book {
-  id: number;
-  external_book_id: string | null;
+  id: number | null;
+  external_id: string | null;
   title: string;
   author: string;
-  description?: string;
+  description?: string | null;
+  page_count?: number | null;
+  published_date?: string | null;
+  publisher?: string | null;
+  isbn?: string | null;
+  image_url?: string | null;
+  language?: string | null;
+  genres?: string[] | null;
 }
 
 export interface BookWithRating extends Book {
@@ -20,6 +27,8 @@ export interface ExternalBook {
   pageCount?: number;
   categories?: string[];
   language?: string;
+  publisher?: string;
+  isbn?: string;
 }
 
 export interface UserBook {

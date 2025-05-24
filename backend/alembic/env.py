@@ -16,7 +16,6 @@ from app.models.review import Review
 from app.models.user import User
 from app.models.user_book import UserBook
 from app.models.user_book import StatusEnum
-from app.models.book import GenreEnum
 
 # Load Alembic configuration
 config = context.config

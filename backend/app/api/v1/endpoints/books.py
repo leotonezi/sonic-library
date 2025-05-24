@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.book_service import BookService
+from app.services.user_book_service import UserBookService
 from app.schemas.base_schema import ApiResponse
 from app.schemas.book import BookCreate, BookResponse
+from app.schemas.user_book import UserBookResponse
 from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
@@ -18,14 +20,21 @@ def get_book_service(
 ) -> BookService:
     return BookService(db)
 
+def get_user_book_service(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserBookService:
+    return UserBookService(db)
+
 @router.post("/", response_model=ApiResponse[BookResponse], status_code=201)
 @log_exceptions("POST /books")
 def create(book: BookCreate, book_service: BookService = Depends(get_book_service)):
     try:
         obj = book_service.create(book.model_dump())
-        return ApiResponse(data=BookResponse.model_validate(obj))
+        response = BookResponse.from_orm_with_genres(obj)
+        return ApiResponse(data=response)
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Error creating book")
+        raise HTTPException(status_code=500, detail=f"Error creating book: {e}")
 
 @router.get("/", response_model=ApiResponse[list[BookResponse]])
 @log_exceptions("GET /books")
@@ -36,7 +45,7 @@ def index(
 ):
     try:
         books = book_service.filter_books(search=search, genre=genre)
-        return ApiResponse(data=[BookResponse.model_validate(b) for b in books])
+        return ApiResponse(data=[BookResponse.from_orm_with_genres(b) for b in books])
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error listing books: " + str(e))
 
@@ -92,6 +101,7 @@ def search_external_books(
 @log_exceptions("GET /books/external/{external_id}")
 def get_book_by_external_id(
     external_id: str = Path(..., description="Google Books volume ID"),
+    user_book_service: UserBookService = Depends(get_user_book_service)
 ):
     """
     Fetch a single book from Google Books API by its external (Google) ID.
@@ -108,6 +118,8 @@ def get_book_by_external_id(
         resp.raise_for_status()
         item = resp.json()
 
+        user_book = user_book_service.get_by_external_book(external_id)
+
         info = item.get("volumeInfo", {})
         book = {
             "external_id": item.get("id"),
@@ -121,8 +133,14 @@ def get_book_by_external_id(
             "language": info.get("language"),
         }
 
+        # Convert user_book to Pydantic schema or None if not found
+        user_book_response = UserBookResponse.from_orm(user_book) if user_book else None
+
         return {
-            "data": book,
+            "data": {
+                "book": book,
+                "userBook": user_book_response
+            },
             "message": "Book fetched successfully",
             "status": "ok"
         }
@@ -140,7 +158,7 @@ def get(book_id: int, book_service: BookService = Depends(get_book_service)):
         return ApiResponse(data=BookResponse.model_validate(book))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error retrieving book")
-    
+
 
 def clean_html(raw_html: str) -> str:
     if not raw_html:

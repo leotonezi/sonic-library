@@ -40,10 +40,7 @@ class UserBook(Base):
     book = relationship("Book", back_populates="users")
 
     __table_args__ = (
-        CheckConstraint(
-            "(book_id IS NOT NULL AND external_book_id IS NULL) OR (book_id IS NULL AND external_book_id IS NOT NULL)",
-            name="check_one_book_reference"
-        ),
+        # Removed CheckConstraint here
         UniqueConstraint('user_id', 'book_id', name='_user_book_uc'),
         UniqueConstraint('user_id', 'external_book_id', name='_user_external_book_uc'),
     )

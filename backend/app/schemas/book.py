@@ -1,12 +1,11 @@
 from pydantic import BaseModel, ConfigDict, Field, validator
-from typing import Optional
-from app.models.book import GenreEnum
+from typing import Optional, List
 
 class BookBase(BaseModel):
     external_id: Optional[str] = Field(None, max_length=255)
     title: str = Field(..., max_length=255)
     author: str = Field(..., max_length=255)
-    description: Optional[str] = Field(None, max_length=1000)
+    description: Optional[str] = Field(None, max_length=3000)
     page_count: Optional[int] = None
     published_date: Optional[str] = None
     publisher: Optional[str] = None
@@ -15,7 +14,7 @@ class BookBase(BaseModel):
     )
     image_url: Optional[str] = None
     language: Optional[str] = Field("pt-BR", max_length=10)
-    genre: Optional[GenreEnum] = None
+    genres: Optional[List[str]] = []
 
     @validator("isbn")
     def validate_isbn(cls, v):
@@ -35,6 +34,12 @@ class BookBase(BaseModel):
         return "No description available"
 
     model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def from_orm_with_genres(cls, book_orm):
+        data = book_orm.__dict__.copy()
+        data['genres'] = [genre.name for genre in book_orm.genres]
+        return cls.model_validate(data)
 
 class BookCreate(BookBase):
     pass

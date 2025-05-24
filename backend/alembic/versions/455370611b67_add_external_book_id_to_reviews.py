@@ -51,13 +51,7 @@ def upgrade() -> None:
             sa.Column('external_book_id', sa.String(), nullable=True)
         )
 
-        # Add check constraint if it doesn't exist
-        if not constraint_exists('reviews', 'check_one_book_reference'):
-            op.create_check_constraint(
-                'check_one_book_reference',
-                'reviews',
-                "(book_id IS NOT NULL AND external_book_id IS NULL) OR (book_id IS NULL AND external_book_id IS NOT NULL)"
-            )
+        # Removed check constraint creation here
 
         # Re-add foreign key constraint
         op.create_foreign_key(
@@ -72,11 +66,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     # Only perform downgrade operations if the column exists
     if column_exists('reviews', 'external_book_id'):
-        # Drop the check constraint if it exists
-        try:
-            op.drop_constraint('check_one_book_reference', 'reviews', type_='check')
-        except Exception:
-            pass  # Constraint might not exist
+        # Removed check constraint dropping here
 
         # Drop the foreign key constraint
         try:

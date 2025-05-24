@@ -5,8 +5,8 @@ from enum import Enum
 from .book import BookBase
 
 class StatusEnum(str, Enum):
-    READ = "READ"        
-    READING = "READING" 
+    READ = "READ"
+    READING = "READING"
     TO_READ = "TO_READ"
 
 class UserBookBase(BaseModel):
@@ -21,9 +21,12 @@ class UserBookCreate(UserBookBase):
 class UserBookUpdate(BaseModel):
     status: StatusEnum
 
-class UserBookResponse(UserBookBase):
+class UserBookResponse(BaseModel):
     id: int
     user_id: int
+    book_id: Optional[int]
+    external_book_id: Optional[str]
+    status: StatusEnum
     created_at: datetime
     updated_at: datetime
 
