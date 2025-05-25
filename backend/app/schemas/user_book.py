@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 from enum import Enum
-from .book import BookBase
+from .book import BookBase, BookResponse
 
 class StatusEnum(str, Enum):
     READ = "READ"
@@ -29,6 +29,7 @@ class UserBookResponse(BaseModel):
     status: StatusEnum
     created_at: datetime
     updated_at: datetime
+    book: Optional[BookResponse]
 
     class Config:
         from_attributes = True
@@ -44,3 +45,18 @@ class UserBookWithDetails(UserBookResponse):
 
     class Config:
         from_attributes = True
+
+
+def serialize_user_book(user_book) -> UserBookResponse:
+    book = user_book.book
+    genres = [genre.name for genre in book.genres] if book and book.genres else []
+    book_data = {
+        **book.__dict__,
+        "genres": genres,
+    } if book else None
+
+    user_book_data = {
+        **user_book.__dict__,
+        "book": book_data,
+    }
+    return UserBookResponse.model_validate(user_book_data)

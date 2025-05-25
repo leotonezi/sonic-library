@@ -2,6 +2,7 @@ from app.models.user_book import UserBook
 from app.services.base_service import BaseService
 from app.models.user_book import StatusEnum
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 class UserBookService(BaseService[UserBook]):
     def __init__(self, db):
@@ -10,6 +11,16 @@ class UserBookService(BaseService[UserBook]):
     def get_by_user(self, user_id: int):
         return self.db.query(self.model).filter(self.model.user_id == user_id).all()
 
+    def get_books_by_user(self, user_id: int):
+        """
+        Return all UserBook entries for the user with the related Book loaded.
+        """
+        return (
+            self.db.query(self.model)
+            .options(joinedload(self.model.book))  # eager load the Book relationship
+            .filter(self.model.user_id == user_id)
+            .all()
+        )
     def get_by_book(self, book_id: int):
         return self.db.query(self.model).filter(self.model.book_id == book_id).all()
 
