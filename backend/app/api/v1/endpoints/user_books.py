@@ -6,7 +6,7 @@ from app.services.book_service import BookService
 from app.schemas.base_schema import ApiResponse
 from app.core.security import get_current_user
 from app.models.user import User
-from app.schemas.user_book import UserBookCreate, UserBookResponse, UserBookUpdate
+from app.schemas.user_book import UserBookCreate, UserBookResponse, UserBookUpdate, serialize_user_book
 from app.core.logging_decorator import log_exceptions
 from app.models.user_book import StatusEnum
 
@@ -51,7 +51,6 @@ def create(
     elif external_book_id:
         book = book_service.get_by_external_id(external_book_id)
         if not book:
-            # Use the provided book data to create the book
             if not user_book.book:
                 raise HTTPException(status_code=400, detail="Book data required to create new book.")
             try:
@@ -64,6 +63,14 @@ def create(
                     detail=f"Error creating book: {str(e)}"
                 )
         book_id = book.id
+
+    # Check for duplicate user_book
+    existing = user_book_service.get_by_user_and_book(current_user.id, book_id)
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="This book is already in the user's library."
+        )
 
     data = user_book.dict(exclude_unset=True)
     data["user_id"] = current_user.id
@@ -81,8 +88,9 @@ def get_my_books(
     user_book_service: UserBookService = Depends(get_user_book_service)
 ):
     """Get all books in the user's library."""
-    books = user_book_service.get_by_user(current_user.id)
-    return ApiResponse(data=[UserBookResponse.model_validate(b) for b in books])
+    books = user_book_service.get_books_by_user(current_user.id)
+
+    return ApiResponse(data=[serialize_user_book(b) for b in books])
 
 @router.get("/book/{book_id}", response_model=ApiResponse[UserBookResponse])
 @log_exceptions("GET /user-books/book/{book_id}")
@@ -132,7 +140,7 @@ def update(
         user_book_id,
         user_book_in.model_dump(exclude_unset=True)
     )
-    return ApiResponse(data=UserBookResponse.model_validate(updated))
+    return ApiResponse(data=serialize_user_book(updated))
 
 @router.delete("/{user_book_id}", status_code=204)
 @log_exceptions("DELETE /user-books/{user_book_id}")

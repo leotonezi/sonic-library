@@ -45,6 +45,12 @@ export default function NavBar() {
           Books
         </Link>
         <Link
+          href={`/library/`}
+          className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
+        >
+          My Library
+        </Link>
+        <Link
           href="/recommendation"
           className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
         >

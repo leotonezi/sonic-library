@@ -39,4 +39,5 @@ export interface UserBook {
   status: string;
   created_at: string;
   updated_at: string;
+  book: Book | null;
 }

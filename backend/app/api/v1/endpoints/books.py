@@ -5,7 +5,7 @@ from app.services.book_service import BookService
 from app.services.user_book_service import UserBookService
 from app.schemas.base_schema import ApiResponse
 from app.schemas.book import BookCreate, BookResponse
-from app.schemas.user_book import UserBookResponse
+from app.schemas.user_book import UserBookResponse, serialize_user_book
 from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
@@ -133,8 +133,7 @@ def get_book_by_external_id(
             "language": info.get("language"),
         }
 
-        # Convert user_book to Pydantic schema or None if not found
-        user_book_response = UserBookResponse.from_orm(user_book) if user_book else None
+        user_book_response = serialize_user_book(user_book) if user_book else None
 
         return {
             "data": {
