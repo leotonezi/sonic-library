@@ -6,7 +6,7 @@ import { ApiResponse } from "@/interfaces/auth";
 import { serverSideApiFetch } from "@/utils/api";
 import Image from "next/image";
 import ReviewsList from "../../[id]/review-list";
-import UserBookActions from "./user-book-actions";
+import UserBookActions from "../../../../../components/user-book-actions";
 import { ExternalBook, UserBook } from "@/interfaces/book";
 
 export const dynamic = "force-dynamic";
