@@ -6,14 +6,11 @@ export const metadata: Metadata = {
   description: 'Create your account to start your journey in the Sonic Library!',
 };
 
-// Define props to match Next.js expectations for async resolution
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-// Use async function since props are expected to be Promises
 export default async function SignupPage({ searchParams }: PageProps) {
-  // Resolve the searchParams Promise
   const resolvedSearchParams = await searchParams;
   const error = typeof resolvedSearchParams.error === 'string' ? resolvedSearchParams.error : undefined;
 

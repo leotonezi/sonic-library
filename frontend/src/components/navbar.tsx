@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { useAuthStore } from "@/store/useAuthStore"; // assumes Zustand store
+import { useAuthStore } from "@/store/useAuthStore";
 import { Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -12,6 +12,8 @@ export default function NavBar() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
+
+  if (!user) return null;
 
   const handleLogout = async () => {
     try {
@@ -43,6 +45,12 @@ export default function NavBar() {
           Books
         </Link>
         <Link
+          href={`/library/`}
+          className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
+        >
+          My Library
+        </Link>
+        <Link
           href="/recommendation"
           className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
         >
@@ -56,43 +64,34 @@ export default function NavBar() {
         </Link>
 
         {/* 👤 User menu dropdown */}
-        {user ? (
-          <div className="relative">
-            <button
-              onClick={() => setDropdownOpen((prev) => !prev)}
-              className="flex items-center justify-center h-full px-4 cursor-pointer text-white"
-            >
-              <Menu />
-            </button>
-            {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded shadow text-black z-50">
-                <Link
-                  href="/profile"
-                  className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  Profile
-                </Link>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer border-t"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <Link
-            href="/login"
-            className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen((prev) => !prev)}
+            className="flex items-center justify-center h-full px-4 cursor-pointer text-white"
           >
-            Login
-          </Link>
-        )}
+            <Menu />
+          </button>
+          {dropdownOpen && (
+            <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded shadow text-black z-50">
+              <Link
+                href="/profile"
+                className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer"
+                onClick={() => setDropdownOpen(false)}
+              >
+                Profile
+              </Link>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setDropdownOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer border-t"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

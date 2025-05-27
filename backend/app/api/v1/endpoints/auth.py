@@ -19,6 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 @router.post("/token")
 async def login_for_access_token(
+    background_tasks: BackgroundTasks,
     response: Response,
     db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends()
@@ -30,7 +31,19 @@ async def login_for_access_token(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     if not user.is_active:
-        raise HTTPException(status_code=401, detail="User is not active")
+        activation_token = create_activation_token(user.email)
+        activation_link = f"{settings.BACKEND_URL}/auth/activate?token={activation_token}"
+
+        background_tasks.add_task(send_activation_email, user.email, activation_link)
+
+        return ApiResponse(
+            data={
+                "requiresActivation": True,
+                "email": user.email
+            },
+            status="pending_activation",
+            message="Account activation required"
+        )
 
     access_token = create_access_token(
         data={"sub": user.email},
@@ -63,6 +76,18 @@ async def signup(
 ):
     """Signup a new user and send activation email (Public Endpoint)"""
     existing_user = user_service.get_by_email(email)
+
+    if existing_user and not existing_user.is_active:
+        activation_token = create_activation_token(existing_user.email)
+        activation_link = f"{settings.BACKEND_URL}/auth/activate?token={activation_token}"
+
+        background_tasks.add_task(send_activation_email, email, activation_link)
+
+        return RedirectResponse(
+            url=f"{settings.FRONTEND_URL}/login?not_activated=true",
+            status_code=303
+        )
+    
     if existing_user:
         return RedirectResponse(
             url=f"{settings.FRONTEND_URL}/signup?error=email_registered",
@@ -73,7 +98,7 @@ async def signup(
     user_obj = user_service.create(UserCreate(name=name, email=email, password=password))
 
     activation_token = create_activation_token(user_obj.email)
-    activation_link = f"{settings.BACKEND_URL}/users/activate?token={activation_token}"
+    activation_link = f"{settings.BACKEND_URL}/auth/activate?token={activation_token}"
 
     background_tasks.add_task(send_activation_email, email, activation_link)
 
@@ -103,7 +128,10 @@ def activate_account(
     user.is_active = True
     user_service.db.commit()
 
-    return ApiResponse(data="Account activated successfully.")
+    return RedirectResponse(
+        url=f"{settings.FRONTEND_URL}/login?activated=true",
+        status_code=303
+    )
 
 @router.post("/logout")
 async def logout(response: Response):

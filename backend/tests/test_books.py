@@ -53,7 +53,7 @@ def test_create_book():
         "title": fake.sentence(nb_words=4),
         "author": fake.name(),
         "description": fake.text(max_nb_chars=100),
-        "genre": "Mystery"
+        "genres": ["Mystery"]
     }
     response = client.post("/books", json=new_book, cookies=cookies)
     assert response.status_code == 201
@@ -61,4 +61,6 @@ def test_create_book():
     assert data["title"] == new_book["title"]
     assert data["author"] == new_book["author"]
     assert data["description"] == new_book["description"]
-    assert data["genre"] == new_book["genre"]
+    assert "genres" in data
+    assert isinstance(data["genres"], list)
+    assert "Mystery" in data["genres"]

@@ -19,6 +19,6 @@ def log_exceptions(endpoint_name: str = None):
                 raise
             except Exception as e:
                 logger.exception(f"{name} - Unhandled Exception")
-                raise HTTPException(status_code=500, detail=f"Error in {name}")
+                raise HTTPException(status_code=500, detail=f"{str(e)}")
         return wrapper
     return decorator

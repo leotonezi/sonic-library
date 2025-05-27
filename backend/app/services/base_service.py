@@ -11,13 +11,13 @@ class BaseService(Generic[T]):
 
     def get_by_id(self, obj_id: int):
         return self.db.query(self.model).filter(self.model.id == obj_id).first()
-    
+
     def get_by_email(self, email: str):
         return self.db.query(self.model).filter(self.model.email == email).first()
 
     def get_all(self):
         return self.db.query(self.model).all()
-    
+
     def update(self, obj_id: int, obj_in: dict):
         db_obj = self.get_by_id(obj_id)
         if not db_obj:
