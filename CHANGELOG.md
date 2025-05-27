@@ -1,3 +1,23 @@
+# [0.4.0](https://github.com/leotonezi/sonic-library/compare/v0.3.0...v0.4.0) (2025-05-27)
+
+
+### Bug Fixes
+
+* migrations ([02582b8](https://github.com/leotonezi/sonic-library/commit/02582b840ffaee5622ccc115488ba2e372b8672c))
+* pytest ([43f0348](https://github.com/leotonezi/sonic-library/commit/43f0348d9b23c1d433b846f8d66cdc2581e09a6a))
+* pytest ([81ea06c](https://github.com/leotonezi/sonic-library/commit/81ea06c79d07bdae46d8f013886dcfef98f3c45b))
+
+
+### Features
+
+* add book creation to user-book logic ([009bc81](https://github.com/leotonezi/sonic-library/commit/009bc814d549dda6d1626c0d7498e747b66ef520))
+* add more logic in user book relations ([2e369fc](https://github.com/leotonezi/sonic-library/commit/2e369fc466087c36c565c7f3a278747da43b41a2))
+* add my library page ([f0dff2f](https://github.com/leotonezi/sonic-library/commit/f0dff2f5a30407ab5c0fa94ab1396abaa985c8e3))
+* improve books/[id] page ([08804c8](https://github.com/leotonezi/sonic-library/commit/08804c8fbfb197c2bbefbd8b6fcc12bc9f289f8a))
+* improve user-actions ([4b4e9bd](https://github.com/leotonezi/sonic-library/commit/4b4e9bd1cf71270f4aeea617c8993c84dfd6e7ab))
+* improvements on books model ([e1f1070](https://github.com/leotonezi/sonic-library/commit/e1f107051cb8446ac95aaa55497fb2cc2ebdcee4))
+* lots of changes ([589ff41](https://github.com/leotonezi/sonic-library/commit/589ff4113e131ce276f025126b1c0de11184db2c))
+
 # [0.3.0](https://github.com/leotonezi/sonic-library/compare/v0.2.0...v0.3.0) (2025-05-03)
 
 
