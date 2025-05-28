@@ -10,6 +10,7 @@
     "postinstall": "node -e \"try{require('next')?.build?.()}catch(e){}\""
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
     "lucide-react": "^0.488.0",
     "next": "^15.2.5",
     "react": "^19.0.0",

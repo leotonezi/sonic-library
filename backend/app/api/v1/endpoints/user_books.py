@@ -79,7 +79,7 @@ def create(
     data["book_id"] = book_id
 
     obj = user_book_service.create(data)
-    return ApiResponse(data=UserBookResponse.model_validate(obj))
+    return ApiResponse(data=serialize_user_book(obj))
 
 @router.get("/my-books", response_model=ApiResponse[list[UserBookResponse]])
 @log_exceptions("GET /user-books/my-books")

@@ -6,28 +6,32 @@ import { ApiResponse } from "@/interfaces/auth";
 import { serverSideApiFetch } from "@/utils/api";
 import Image from "next/image";
 import ReviewsList from "../../[id]/review-list";
-import UserBookActions from "../../../../../components/user-book-actions";
 import { ExternalBook, UserBook } from "@/interfaces/book";
+import ExternalBookPageClient from "@/components/external-book-client";
+import UserBookActions from "@/components/user-book-actions";
+import Review from "@/interfaces/review";
 
 export const dynamic = "force-dynamic";
 
 async function getExternalBookData(
   externalId: string,
   accessToken: string,
-): Promise<{ book: ExternalBook; userBook: UserBook }> {
+): Promise<{ book: ExternalBook; userBook: UserBook; reviews: Review[] }> {
   try {
     const response = (await serverSideApiFetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/books/external/${externalId}`,
       accessToken,
-    )) as ApiResponse<{ book: ExternalBook; userBook: UserBook }>;
+    )) as ApiResponse<{
+      book: ExternalBook;
+      userBook: UserBook;
+      reviews: Review[];
+    }>;
 
     const data = response.data;
 
     if (!data || !data.book || !data.book.external_id) {
       throw new Error("Invalid book data received");
     }
-
-    console.log(data);
 
     return data;
   } catch (error) {
@@ -50,7 +54,7 @@ export default async function ExternalBookPage({ params }: Props) {
   }
 
   try {
-    const { book, userBook } = await getExternalBookData(
+    const { book, userBook, reviews } = await getExternalBookData(
       externalId,
       accessToken,
     );
@@ -116,11 +120,17 @@ export default async function ExternalBookPage({ params }: Props) {
                 userBook={userBook}
                 book={book}
               />
+              {userBook && (
+                <ExternalBookPageClient
+                  userBook={userBook}
+                  externalId={externalId}
+                />
+              )}
             </div>
           </div>
 
           <div className="mt-5">
-            <ReviewsList />
+            <ReviewsList reviews={reviews} />
           </div>
         </div>
       </main>

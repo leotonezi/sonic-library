@@ -3,9 +3,11 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.book_service import BookService
 from app.services.user_book_service import UserBookService
+from app.services.review_service import ReviewService
 from app.schemas.base_schema import ApiResponse
 from app.schemas.book import BookCreate, BookResponse
-from app.schemas.user_book import UserBookResponse, serialize_user_book
+from app.schemas.user_book import serialize_user_book
+from app.schemas.review import ReviewResponse
 from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
@@ -19,6 +21,12 @@ def get_book_service(
     current_user: User = Depends(get_current_user),
 ) -> BookService:
     return BookService(db)
+
+def get_review_service(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ReviewService:
+    return ReviewService(db)
 
 def get_user_book_service(
     db: Session = Depends(get_db),
@@ -101,7 +109,8 @@ def search_external_books(
 @log_exceptions("GET /books/external/{external_id}")
 def get_book_by_external_id(
     external_id: str = Path(..., description="Google Books volume ID"),
-    user_book_service: UserBookService = Depends(get_user_book_service)
+    user_book_service: UserBookService = Depends(get_user_book_service),
+    review_service: ReviewService = Depends(get_review_service)
 ):
     """
     Fetch a single book from Google Books API by its external (Google) ID.
@@ -135,10 +144,14 @@ def get_book_by_external_id(
 
         user_book_response = serialize_user_book(user_book) if user_book else None
 
+        reviews_data = review_service.get_by_book(user_book.book_id) if user_book else []
+        reviews = [ReviewResponse.model_validate(r) for r in reviews_data]
+
         return {
             "data": {
                 "book": book,
-                "userBook": user_book_response
+                "userBook": user_book_response,
+                "reviews": reviews
             },
             "message": "Book fetched successfully",
             "status": "ok"
