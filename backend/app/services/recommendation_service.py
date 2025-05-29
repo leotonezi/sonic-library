@@ -1,3 +1,4 @@
+from app.models.book import Book
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from app.schemas.review import ReviewResponse
@@ -15,7 +16,7 @@ else:
 
 llm = ChatOpenAI(temperature=0.3, model="gpt-3.5-turbo")
 
-def generate_book_recommendations(user_reviews: list[ReviewResponse], all_books: list[BookResponse]) -> str:
+def generate_book_recommendations(user_reviews: list[ReviewResponse], all_books: list[Book]) -> str:
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are a book recommendation engine."),
         ("user", "Here is a list of books the user has reviewed and rated:\n\n{reviews}\n\nHere is a list of available books in our library:\n\n{book_list}\n\nBased on their preferences, recommend 3 new books and explain why. Be very straightforward.")
