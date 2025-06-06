@@ -1,19 +1,24 @@
+// components/NavBar.tsx
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSearchBookStore } from "@/store/useSearchBookStore";
 
 export default function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
 
-  if (!user) return null;
+  const searchQuery = useSearchBookStore((state) => state.searchQuery);
+  const setSearchQuery = useSearchBookStore((state) => state.setSearchQuery);
+  const fetchExternalBooks = useSearchBookStore(
+    (state) => state.fetchExternalBooks,
+  );
 
   const handleLogout = async () => {
     try {
@@ -24,8 +29,12 @@ export default function NavBar() {
     }
   };
 
+  const handleSearch = () => {
+    fetchExternalBooks();
+  };
+
   return (
-    <nav className="shadow-md flex bg-[#0a1f44] justify-between h-16 px-4">
+    <nav className="shadow-md flex bg-[#0a1f44] h-16 px-4 items-center">
       <Link href="/" className="flex items-center h-full">
         <Image
           src="/sonic-library-logo.png"
@@ -37,6 +46,30 @@ export default function NavBar() {
         />
       </Link>
 
+      {/* Centered Search Bar */}
+      <div className="flex-grow flex justify-center">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-blue-950 border border-blue-700 rounded-md">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search Google Books..."
+              className="pl-2 pr-2 py-1 w-48 rounded-md bg-transparent text-white placeholder-blue-300 focus:outline-none text-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
+            />
+            <Search
+              size={20}
+              className="text-white hover:text-orange-300 transition duration-300 cursor-pointer mx-2"
+              onClick={handleSearch}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Right-aligned Navigation Links and User Menu */}
       <div className="flex gap-4 relative items-center">
         <Link
           href="/books"
@@ -63,7 +96,7 @@ export default function NavBar() {
           Users
         </Link>
 
-        {/* 👤 User menu dropdown */}
+        {/* User menu dropdown */}
         <div className="relative">
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
