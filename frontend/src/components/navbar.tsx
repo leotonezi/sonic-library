@@ -13,12 +13,17 @@ export default function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
 
   const searchQuery = useSearchBookStore((state) => state.searchQuery);
   const setSearchQuery = useSearchBookStore((state) => state.setSearchQuery);
   const fetchExternalBooks = useSearchBookStore(
     (state) => state.fetchExternalBooks,
   );
+
+  if (!user) {
+    return;
+  }
 
   const handleLogout = async () => {
     try {
