@@ -13,7 +13,7 @@ services:
       retries: 5
 
   fastapi:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
@@ -41,5 +41,3 @@ services:
       NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
     ports:
       - "3000:3000"
-    depends_on:
-      - fastapi
