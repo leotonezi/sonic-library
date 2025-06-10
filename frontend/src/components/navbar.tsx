@@ -8,9 +8,11 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { Menu, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSearchBookStore } from "@/store/useSearchBookStore";
+import { toast } from "sonner";
 
 export default function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [genreInput, setGenreInput] = useState("");
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
@@ -34,8 +36,10 @@ export default function NavBar() {
     }
   };
 
-  const handleSearch = () => {
-    fetchExternalBooks();
+  const handleSearch = async () => {
+    await fetchExternalBooks(genreInput);
+    toast.success("Search Complete!!!");
+    router.push("/login");
   };
 
   return (
@@ -51,26 +55,38 @@ export default function NavBar() {
         />
       </Link>
 
-      {/* Centered Search Bar */}
+      {/* Centered Search Bar with Genre Input */}
       <div className="flex-grow flex justify-center">
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-blue-950 border border-blue-700 rounded-md">
+          {/* Genre Input */}
+          <div className="flex items-center bg-blue-950 h-10 border border-blue-700 rounded-md">
+            <input
+              type="text"
+              value={genreInput}
+              onChange={(e) => setGenreInput(e.target.value)}
+              placeholder="Type Genre..."
+              className="pl-2 pr-2 py-1 w-32 rounded-md bg-transparent text-white placeholder-blue-300 focus:outline-none text-sm"
+            />
+          </div>
+
+          {/* Search Input */}
+          <div className="flex items-center bg-blue-950 h-10 w-100 border border-blue-700 rounded-md">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search Google Books..."
-              className="pl-2 pr-2 py-1 w-48 rounded-md bg-transparent text-white placeholder-blue-300 focus:outline-none text-sm"
+              className="pl-2 pr-2 py-1 w-100 rounded-md bg-transparent text-white placeholder-blue-300 focus:outline-none text-sm"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSearch();
               }}
             />
-            <Search
-              size={20}
-              className="text-white hover:text-orange-300 transition duration-300 cursor-pointer mx-2"
-              onClick={handleSearch}
-            />
           </div>
+          <Search
+            size={20}
+            className="text-white hover:text-orange-300 transition duration-300 cursor-pointer mx-2"
+            onClick={handleSearch}
+          />
         </div>
       </div>
 

@@ -47,7 +47,7 @@ export default function UserBookActions({ externalId, userBook, book }: Props) {
       setIsLoading(false);
     }
   };
-
+  console.log(userBook);
   const handleMarkAsRead = async () => {
     setIsLoading(true);
     setError(null);
