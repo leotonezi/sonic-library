@@ -55,6 +55,12 @@ jobs:
             exit 1
           fi
 
+      - name: Create test database
+        run: docker compose exec -T db psql -U postgres -c "CREATE DATABASE fastlibrary_test;"
+
+      - name: Use test environment variables
+        run: cp backend/.env.test backend/.env
+
       - name: 🛠️ Install test dependencies
         run: docker compose exec -T fastapi pip install faker
 
@@ -65,6 +71,10 @@ jobs:
       - name: 📜 Output container logs on test failure
         if: failure()
         run: docker compose logs fastapi
+
+      - name: Drop test database
+        if: always()
+        run: docker compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS fastlibrary_test;"
 
       - name: 🧹 Teardown
         if: always()
