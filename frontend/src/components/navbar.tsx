@@ -93,12 +93,6 @@ export default function NavBar() {
       {/* Right-aligned Navigation Links and User Menu */}
       <div className="flex gap-4 relative items-center">
         <Link
-          href="/books"
-          className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
-        >
-          Books
-        </Link>
-        <Link
           href={`/library/`}
           className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
         >
@@ -110,13 +104,6 @@ export default function NavBar() {
         >
           Recommend
         </Link>
-        <Link
-          href="/users"
-          className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
-        >
-          Users
-        </Link>
-
         {/* User menu dropdown */}
         <div className="relative">
           <button
