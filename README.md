@@ -34,6 +34,9 @@ Sonic Library is a modern, full-stack digital library platform built with FastAP
 
 ## 📂 Project Structure
 
+<pre>
+
+```
 sonic-library/
 ├── backend/                # FastAPI app
 │   ├── app/
@@ -44,6 +47,10 @@ sonic-library/
 ├── .github/                # PR & issue templates, CI config
 ├── docker-compose.yml
 └── README.md
+```
+
+</pre>
+
 
 ⸻
 

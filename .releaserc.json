@@ -1,18 +1,17 @@
 {
-  "branches": ["main", "master"],
+  "repositoryUrl": "https://${GH_TOKEN}@github.com/leotonezi/sonic-library.git",
+  "branches": ["master"],
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
       "@semantic-release/changelog",
-      {
-        "changelogFile": "CHANGELOG.md"
-      }
+      { "changelogFile": "CHANGELOG.md" }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "VERSION"],
+        "assets": ["CHANGELOG.md"],
         "message": "chore(release): ${nextRelease.version} [skip ci]"
       }
     ],
