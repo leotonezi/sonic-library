@@ -14,8 +14,15 @@ interface Props {
   book: ExternalBook | null;
 }
 
-export default function UserBookActions({ externalId, userBook, book }: Props) {
-  const [status, setStatus] = useState<string | null>(userBook?.status || null);
+export default function UserBookActions({
+  externalId,
+  userBook: initialUserBook,
+  book,
+}: Props) {
+  const [status, setStatus] = useState<string | null>(
+    initialUserBook?.status || null,
+  );
+  const [userBook, setUserBook] = useState<UserBook | null>(initialUserBook);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +46,7 @@ export default function UserBookActions({ externalId, userBook, book }: Props) {
       }
 
       setStatus("TO_READ");
+      setUserBook(data);
       toast.success("Added to Reading List!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -76,6 +84,7 @@ export default function UserBookActions({ externalId, userBook, book }: Props) {
       }
 
       setStatus("READ");
+      setUserBook(data);
       toast.success("Marked as Read!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -113,6 +122,7 @@ export default function UserBookActions({ externalId, userBook, book }: Props) {
       }
 
       setStatus("READING");
+      setUserBook(data);
       toast.success("Marked as Reading!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

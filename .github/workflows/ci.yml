@@ -7,10 +7,10 @@ on:
     branches: [master, development]
 
 jobs:
-  ci:
+  backend:
     runs-on: ubuntu-latest
-
     env:
+      COMPOSE_PROJECT_NAME: backendci
       DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEXT_PUBLIC_BACKEND_URL: http://fastapi:8000
@@ -18,43 +18,48 @@ jobs:
       MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
       MAIL_SERVER: ${{ secrets.MAIL_SERVER }}
       MAIL_FROM: ${{ secrets.MAIL_FROM }}
-
     steps:
-      - name: Clean checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           clean: true
 
       - name: Remove all untracked files and directories
+        run: git clean -fdx
+
+      - name: Clean up old containers
+        run: docker compose down --volumes --remove-orphans || true
+
+      - name: 🐳 Build Docker images (backend only)
+        run: docker compose -f docker-compose.yml build fastapi
+
+      - name: 🐳 Start Docker Compose (backend only)
+        run: docker compose -f docker-compose.yml up -d fastapi db
+
+      - name: ⏳ Wait for backend services to become healthy
         run: |
-          git clean -fdx
-
-      - name: 🐳 Build Docker images (no cache)
-        run: docker compose -f docker-compose.yml build --no-cache
-
-      - name: 🐳 Start Docker Compose
-        run: docker compose -f docker-compose.yml up -d
-
-      - name: ⏳ Wait for services to become healthy
-        run: |
-          echo "Waiting for services to be healthy..."
+          echo "Waiting for backend services to be healthy..."
           for i in {1..10}; do
             STATUS=$(docker compose ps | grep "healthy")
             RUNNING=$(docker compose ps | grep "fastapi" | grep "Up")
             if [ -n "$STATUS" ] && [ -n "$RUNNING" ]; then
-              echo "✅ All services are healthy and running!"
+              echo "✅ Backend services are healthy and running!"
               break
             fi
             echo "⏳ Still waiting... ($i/10)"
             sleep 5
           done
-
           if [ -z "$STATUS" ] || [ -z "$RUNNING" ]; then
-            echo "❌ Services failed to become healthy or crashed."
+            echo "❌ Backend services failed to become healthy or crashed."
             docker compose logs
             exit 1
           fi
+
+      - name: Create test database
+        run: docker compose exec -T db psql -U postgres -c "CREATE DATABASE fastlibrary_test;"
+
+      - name: Use test environment variables
+        run: cp backend/.env.test backend/.env
 
       - name: 🛠️ Install test dependencies
         run: docker compose exec -T fastapi pip install faker
@@ -67,6 +72,33 @@ jobs:
         if: failure()
         run: docker compose logs fastapi
 
+      - name: Drop test database
+        if: always()
+        run: docker compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS fastlibrary_test;"
+
+      - name: 🧹 Teardown
+        if: always()
+        run: docker compose down --volumes --remove-orphans
+
+  frontend:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE_PROJECT_NAME: frontendci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          clean: true
+
+      - name: Clean up old containers
+        run: docker compose down --volumes --remove-orphans || true
+
+      - name: 🐳 Build Docker images (frontend only)
+        run: docker compose -f docker-compose.yml build frontend
+
+      - name: 🐳 Start Docker Compose (frontend only)
+        run: docker compose -f docker-compose.yml up -d frontend
+
       - name: 🛠️ Build frontend
         run: docker compose exec -T frontend npm run build
 
@@ -75,10 +107,9 @@ jobs:
         run: docker compose down --volumes --remove-orphans
 
   release:
-    if: github.ref == 'refs/heads/master'
-    needs: ci
+    if: github.ref == 'refs/heads/main'
+    needs: [backend, frontend]
     runs-on: ubuntu-latest
-
     steps:
       - name: 📦 Checkout repository
         uses: actions/checkout@v3
@@ -86,7 +117,7 @@ jobs:
       - name: 🧰 Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '23'
+          node-version: "18"
 
       - name: 📦 Install semantic-release dependencies
         run: npm install

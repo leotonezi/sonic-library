@@ -24,3 +24,42 @@ export function mapGoogleBookToBookCreate(googleBook: ExternalBook): Book {
         : [],
   };
 }
+
+export function convertExternalBookToBook(externalBook: ExternalBook): Book {
+  return {
+    id: null,
+    external_id: externalBook.external_id,
+    title: externalBook.title,
+    author: externalBook.authors ? externalBook.authors.join(", ") : "", // join authors array to string
+    description: externalBook.description ?? null,
+    page_count: externalBook.pageCount ?? null,
+    published_date: externalBook.publishedDate ?? null,
+    publisher: externalBook.publisher ?? null,
+    isbn: externalBook.isbn ?? null,
+    image_url: externalBook.thumbnail ?? null,
+    language: externalBook.language ?? null,
+    genres: externalBook.categories ?? null,
+  };
+}
+
+export function convertBookToExternalBook(book: Book): ExternalBook {
+  if (!book.external_id) {
+    throw new Error("Book.external_id is required to convert to ExternalBook");
+  }
+
+  return {
+    external_id: book.external_id,
+    title: book.title,
+    authors: book.author
+      ? book.author.split(",").map((a) => a.trim())
+      : undefined,
+    publishedDate: book.published_date ?? undefined,
+    description: book.description ?? undefined,
+    thumbnail: book.image_url ?? undefined,
+    pageCount: book.page_count ?? undefined,
+    categories: book.genres ?? undefined,
+    language: book.language ?? undefined,
+    publisher: book.publisher ?? undefined,
+    isbn: book.isbn ?? undefined,
+  };
+}

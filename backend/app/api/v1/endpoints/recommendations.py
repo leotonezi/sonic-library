@@ -26,7 +26,7 @@ def get_recommendations(
     from app.schemas.review import ReviewResponse
     from app.schemas.book import BookResponse
     user_reviews_pydantic = [ReviewResponse.model_validate(r) for r in user_reviews]
-    books_pydantic = [BookResponse.model_validate(b) for b in books]
+    books_pydantic = [BookResponse.from_orm_with_genres(b) for b in books]
 
     recommendations = generate_book_recommendations(user_reviews_pydantic, books_pydantic)
     return ApiResponse(data=recommendations)

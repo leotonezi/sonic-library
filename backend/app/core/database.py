@@ -3,9 +3,15 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.config import settings
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+import os
 
-engine = create_engine(settings.DATABASE_URL)
+if os.getenv("PYTEST_CURRENT_TEST"):
+    load_dotenv(".env.test", override=True)
+else:
+    load_dotenv(override=True)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

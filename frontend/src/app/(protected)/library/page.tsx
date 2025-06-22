@@ -1,21 +1,18 @@
 // app/library/[user_id]/page.tsx
 
+import UserBookActions from "@/components/user-book-actions";
 import { ApiResponse } from "@/interfaces/auth";
 import { UserBook } from "@/interfaces/book";
 import { serverSideApiFetch } from "@/utils/api";
+import { convertBookToExternalBook } from "@/utils/book";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "My Library",
   description: "Your personal book library",
-};
-
-const statusLabels: Record<string, string> = {
-  TO_READ: "To Read",
-  READING: "Reading",
-  READ: "Read",
 };
 
 async function getMyBooks(
@@ -52,7 +49,6 @@ export default async function LibraryPage() {
 
   try {
     const data = await getMyBooks(accessToken);
-    console.log(data);
     if (data && data.data) {
       userBooks = data.data; // data.data is UserBook[]
     }
@@ -99,9 +95,14 @@ export default async function LibraryPage() {
                 )}
 
                 <div className="flex-1 flex flex-col">
-                  <h2 className="text-2xl font-bold text-blue-400 mb-1">
-                    {book?.title || "No Title"}
-                  </h2>
+                  <Link
+                    href={`/books/external/${userBook?.external_book_id}`}
+                    passHref
+                  >
+                    <h2 className="text-2xl font-bold text-blue-400 mb-1 hover:text-blue-300 transition-colors cursor-pointer">
+                      {book?.title || "No Title"}
+                    </h2>
+                  </Link>
                   <p className="text-sm italic text-blue-300 mb-2">
                     By {book?.author || "N/A"}
                   </p>
@@ -111,9 +112,11 @@ export default async function LibraryPage() {
                   <p className="text-sm text-blue-200 leading-relaxed whitespace-pre-line flex-grow">
                     {truncate(book?.description || "", 300)}
                   </p>
-                  <p className="mt-4 text-blue-400 italic text-sm">
-                    {statusLabels[userBook.status] || userBook.status}
-                  </p>
+                  <UserBookActions
+                    externalId={userBook.external_book_id || ""}
+                    userBook={userBook}
+                    book={book ? convertBookToExternalBook(book) : null}
+                  />
                 </div>
               </article>
             );

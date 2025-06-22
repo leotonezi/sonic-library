@@ -1,107 +1,27 @@
+// components/BooksPage.tsx
 "use client";
 
-import Link from 'next/link';
-import { useEffect, useState, useCallback } from 'react';
-import { getBooks, searchExternalBooks } from '@/services/bookService';
-import { Search } from 'lucide-react';
-import { Book, ExternalBook } from '@/interfaces/book';
-import { BOOK_GENRES } from '@/utils/enums';
-import Image from 'next/image';
+import Link from "next/link";
+import Image from "next/image";
+import { useSearchBookStore } from "@/store/useSearchBookStore";
+import { Book } from "lucide-react";
 
 export default function BooksPage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [externalBooks, setExternalBooks] = useState<ExternalBook[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('');
-  const [isSearchingExternal, setIsSearchingExternal] = useState(false);
-
-  const fetchBooks = useCallback(async () => {
-    const query = new URLSearchParams();
-    if (searchQuery.trim()) query.append('search', searchQuery.trim());
-    if (selectedGenre) query.append('genre', selectedGenre);
-    const data = await getBooks(`?${query.toString()}`);
-    setBooks(data);
-  }, [searchQuery, selectedGenre]);
-
-  const fetchExternalBooks = useCallback(async () => {
-    if (!searchQuery.trim()) return;
-    try {
-      const data = await searchExternalBooks(searchQuery);
-      setExternalBooks(data);
-    } catch (error) {
-      console.error('Error fetching external books:', error);
-    }
-  }, [searchQuery]);
-
-  useEffect(() => {
-    if (books.length === 0) {
-      fetchBooks();
-    }
-  }, [books.length, fetchBooks]);
-
-  const handleSearch = async () => {
-    if (isSearchingExternal) {
-      await fetchExternalBooks();
-    } else {
-      await fetchBooks();
-    }
-  };
+  const searchResults = useSearchBookStore((state) => state.searchResults);
 
   return (
     <main className="p-6 bg-[#0a1128] text-white min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <div className="relative flex">
-          <select
-            value={selectedGenre}
-            onChange={(e) => setSelectedGenre(e.target.value)}
-            className="mr-2 px-2 py-2 rounded-md bg-blue-950 border border-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={isSearchingExternal}
-          >
-            <option value="">All Genres</option>
-            {BOOK_GENRES.map((bk) => (
-              <option key={bk.value} value={bk.value}>
-                {bk.label}
-              </option>
-            ))}
-          </select>
-
-          <div className="flex items-center bg-blue-950 border border-blue-700 rounded-md">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search books..."
-              className="pl-2 pr-2 py-2 w-64 rounded-md bg-transparent text-white placeholder-blue-300 focus:outline-none"
-            />
-            <button
-              onClick={() => setIsSearchingExternal(!isSearchingExternal)}
-              className={`px-3 py-1 text-sm ${
-                isSearchingExternal ? 'text-orange-300' : 'text-blue-300'
-              }`}
-            >
-              {isSearchingExternal ? 'Google Books' : 'Local'}
-            </button>
-            <Search
-              size={24}
-              className="text-white hover:text-orange-300 transition duration-300 cursor-pointer my-2 mx-2"
-              onClick={handleSearch}
-            />
-          </div>
-        </div>
-
-        <Link href="/books/new" className="btn-primary">
-          Add New Book
-        </Link>
-      </div>
-
       <ul className="space-y-4">
-        {isSearchingExternal
-          ? externalBooks.map((book) => (
+        {searchResults && searchResults.length > 0 ? (
+          searchResults.map((book) => (
             <li
               key={book.external_id}
               className="bg-blue-900 border border-blue-600 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-xl hover:bg-blue-800"
             >
-              <Link href={`/books/external/${book.external_id}`} className="block">
+              <Link
+                href={`/books/external/${book.external_id}`}
+                className="block"
+              >
                 <div className="flex">
                   {book.thumbnail && (
                     <Image
@@ -117,7 +37,7 @@ export default function BooksPage() {
                       {book.title}
                     </h2>
                     <p className="text-sm italic text-white">
-                      By {book.authors?.join(', ')}
+                      By {book.authors?.join(", ")}
                     </p>
                     {book.description && (
                       <p className="mt-2 text-blue-100 line-clamp-3">
@@ -128,7 +48,7 @@ export default function BooksPage() {
                       <span>{book.pageCount} pages</span>
                       {book.categories && (
                         <span className="ml-2">
-                          • {book.categories.join(', ')}
+                          • {book.categories.join(", ")}
                         </span>
                       )}
                     </div>
@@ -136,24 +56,60 @@ export default function BooksPage() {
                 </div>
               </Link>
             </li>
-            ))
-          : books.map((book) => (
-              <li
-                key={book.id}
-                className="bg-blue-900 border border-blue-600 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-xl hover:bg-blue-800"
-              >
-                <Link href={`/books/${book.id}`}>
-                  <h2 className="text-xl font-semibold text-blue-500 hover:underline">
-                    {book.title}
-                  </h2>
-                </Link>
-                <p className="text-sm italic text-white">By {book.author}</p>
-                {book.description && (
-                  <p className="mt-2 text-blue-100">{book.description}</p>
-                )}
-              </li>
-            ))}
+          ))
+        ) : (
+          <NoResultsState />
+        )}
       </ul>
     </main>
+  );
+}
+
+function NoResultsState() {
+  const fetchExternalBooks = useSearchBookStore(
+    (state) => state.fetchExternalBooks,
+  );
+
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4">
+      <div className="mb-6">
+        <Book className="w-24 h-24 text-blue-400 opacity-50" />
+      </div>
+
+      <h3 className="text-2xl font-semibold text-white mb-2">No books found</h3>
+
+      <p className="text-blue-200 text-center mb-8 max-w-md">
+        Start building your digital library by adding your first book or try
+        searching for something else.
+      </p>
+
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button
+          onClick={() => {
+            console.log("Browse popular books");
+          }}
+          className="px-6 py-3 border border-blue-500 text-blue-400 rounded-lg font-medium hover:bg-blue-500 hover:text-white transition-colors"
+        >
+          Browse Popular Books
+        </button>
+      </div>
+
+      <div className="mt-8 text-center">
+        <p className="text-sm text-blue-300 mb-2">Try searching for:</p>
+        <div className="flex flex-wrap justify-center gap-2">
+          {["Fiction", "Science", "History", "Biography"].map((suggestion) => (
+            <button
+              key={suggestion}
+              className="px-3 py-1 text-xs bg-blue-800 text-blue-200 cursor-pointer rounded-full hover:bg-blue-700 transition-colors"
+              onClick={() => {
+                fetchExternalBooks(suggestion); // Call fetchExternalBooks with the suggestion
+              }}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
