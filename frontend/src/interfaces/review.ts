@@ -4,4 +4,5 @@ export default interface Review {
   rate: number;
   user_id: number;
   created_at?: string;
+  user_name?: string;
 }

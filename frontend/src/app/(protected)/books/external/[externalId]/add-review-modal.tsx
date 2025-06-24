@@ -127,7 +127,7 @@ export default function AddReviewModal({
                   <div className="flex justify-end space-x-2">
                     <button
                       type="button"
-                      className="px-4 py-2 bg-blue-700 rounded text-blue-50"
+                      className="px-4 py-2 bg-blue-700 rounded text-blue-50 hover:bg-blue-600 cursor-pointer"
                       onClick={onClose}
                       disabled={loading}
                     >
@@ -135,7 +135,7 @@ export default function AddReviewModal({
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-500 rounded text-blue-50 font-semibold"
+                      className="px-4 py-2 bg-blue-500 rounded text-blue-50 hover:bg-blue-400 font-semibold cursor-pointer"
                       disabled={loading}
                     >
                       {loading ? "Submitting..." : "Submit"}
