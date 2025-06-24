@@ -5,6 +5,7 @@
 import { ExternalBook, UserBook } from "@/interfaces/book";
 import { apiPost, apiPut } from "@/utils/api";
 import { mapGoogleBookToBookCreate } from "@/utils/book";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +26,7 @@ export default function UserBookActions({
   const [userBook, setUserBook] = useState<UserBook | null>(initialUserBook);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleAddToReadingList = async () => {
     setIsLoading(true);
@@ -48,6 +50,7 @@ export default function UserBookActions({
       setStatus("TO_READ");
       setUserBook(data);
       toast.success("Added to Reading List!");
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       toast.error(err instanceof Error ? err.message : "An error occurred");
@@ -84,7 +87,6 @@ export default function UserBookActions({
       }
 
       setStatus("READ");
-      setUserBook(data);
       toast.success("Marked as Read!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -122,7 +124,6 @@ export default function UserBookActions({
       }
 
       setStatus("READING");
-      setUserBook(data);
       toast.success("Marked as Reading!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

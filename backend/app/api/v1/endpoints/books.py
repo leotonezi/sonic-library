@@ -144,8 +144,13 @@ def get_book_by_external_id(
 
         user_book_response = serialize_user_book(user_book) if user_book else None
 
-        reviews_data = review_service.get_by_book(user_book.book_id) if user_book else []
-        reviews = [ReviewResponse.model_validate(r) for r in reviews_data]
+        reviews_data = review_service.get_by_book_with_user(user_book.book_id) if user_book else []
+        reviews = [
+            ReviewResponse.model_validate(
+                {**review.__dict__, "user_name": user_name}
+            )
+            for review, user_name in reviews_data
+        ]
 
         return {
             "data": {

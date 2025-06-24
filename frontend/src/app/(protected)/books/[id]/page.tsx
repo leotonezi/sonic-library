@@ -35,8 +35,6 @@ async function getBookData(
     const book = bookData.data;
     const reviews = reviewsData.data ?? [];
 
-    console.log(book, reviews);
-
     if (!book || !book.id) {
       throw new Error("Invalid book data received");
     }
