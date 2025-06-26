@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.user_book_service import UserBookService
@@ -85,11 +85,11 @@ def create(
 @log_exceptions("GET /user-books/my-books")
 def get_my_books(
     current_user: User = Depends(get_current_user),
-    user_book_service: UserBookService = Depends(get_user_book_service)
+    user_book_service: UserBookService = Depends(get_user_book_service),
+    status: str | None = Query(None, description="Filter by reading status: TO READ, READ, READING")
 ):
-    """Get all books in the user's library."""
-    books = user_book_service.get_books_by_user(current_user.id)
-
+    """Get all books in the user's library, optionally filtered by status."""
+    books = user_book_service.get_books_by_user(current_user.id, status=status)
     return ApiResponse(data=[serialize_user_book(b) for b in books])
 
 @router.get("/book/{book_id}", response_model=ApiResponse[UserBookResponse])
