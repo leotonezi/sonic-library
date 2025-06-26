@@ -17,22 +17,30 @@ export const metadata: Metadata = {
 
 async function getMyBooks(
   accessToken: string,
+  status?: string,
 ): Promise<ApiResponse<UserBook[]> | null> {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!backendUrl) throw new Error("NEXT_PUBLIC_BACKEND_URL is not set");
 
-  const response = await serverSideApiFetch(
-    `${backendUrl}/user-books/my-books`,
-    accessToken,
-    {
-      next: { revalidate: 0 },
-    },
-  );
+  const url = new URL(`${backendUrl}/user-books/my-books`);
+  if (status) {
+    url.searchParams.append("status", status);
+  }
+
+  const response = await serverSideApiFetch(url.toString(), accessToken, {
+    next: { revalidate: 0 },
+  });
 
   return response;
 }
 
-export default async function LibraryPage() {
+export default async function LibraryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const statusFilter = resolvedSearchParams.status;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
 
@@ -48,23 +56,56 @@ export default async function LibraryPage() {
   let userBooks: UserBook[] = [];
 
   try {
-    const data = await getMyBooks(accessToken);
+    const data = await getMyBooks(accessToken, statusFilter);
     if (data && data.data) {
-      userBooks = data.data; // data.data is UserBook[]
+      userBooks = data.data;
     }
   } catch (error) {
     console.error("Failed to fetch user books:", error);
   }
+
   function truncate(text: string, maxLength: number) {
     if (!text) return "";
     return text.length > maxLength ? text.slice(0, maxLength) + "…" : text;
   }
+
+  const filterOptions = [
+    { value: "TO_READ", label: "To Read" },
+    { value: "READ", label: "Read" },
+    { value: "READING", label: "Reading" },
+  ];
 
   return (
     <main className="p-6 bg-blue-950 text-blue-50 min-h-screen max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-blue-500 mb-6 text-center">
         My Library
       </h1>
+
+      <section className="mb-6 flex justify-center gap-4">
+        {filterOptions.map(({ value, label }) => (
+          <a
+            key={value}
+            href={`?status=${value}`}
+            className={`px-4 py-2 rounded cursor-pointer ${
+              statusFilter === value
+                ? "bg-blue-700 text-white"
+                : "bg-blue-800 text-blue-300 hover:bg-blue-700"
+            }`}
+          >
+            {label}
+          </a>
+        ))}
+        <a
+          href="/library"
+          className={`px-4 py-2 rounded cursor-pointer ${
+            !statusFilter
+              ? "bg-blue-700 text-white"
+              : "bg-blue-800 text-blue-300 hover:bg-blue-700"
+          }`}
+        >
+          All
+        </a>
+      </section>
 
       <section className="space-y-6">
         {userBooks.length === 0 ? (
