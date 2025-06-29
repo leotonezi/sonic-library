@@ -45,7 +45,7 @@ def create(
     external_book_id = user_book.external_book_id
 
     if book_id:
-        book = book_service.get(book_id)
+        book = book_service.get_by_id(book_id)
         if not book:
             raise HTTPException(status_code=404, detail="Book with this ID does not exist.")
     elif external_book_id:
@@ -64,8 +64,12 @@ def create(
                 )
         book_id = book.id
 
+    # Debug print
+    print(f"[DEBUG] user_books.create: current_user.id={current_user.id}, book_id={book_id}")
+
     # Check for duplicate user_book
     existing = user_book_service.get_by_user_and_book(current_user.id, book_id)
+    print(f"[DEBUG] user_books.create: existing user_book for user_id={current_user.id}, book_id={book_id}: {existing}")
     if existing:
         raise HTTPException(
             status_code=400,

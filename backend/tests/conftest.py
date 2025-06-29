@@ -72,3 +72,21 @@ def client() -> Generator:
 
     # Clear any overrides after the test
     app.dependency_overrides.clear()
+
+@pytest.fixture(scope="function", autouse=True)
+def clean_database():
+    """Clean up database between tests."""
+    yield
+    # Clean up all data after each test
+    with test_engine.connect() as connection:
+        # Disable foreign key checks temporarily
+        connection.execute(text("SET session_replication_role = replica;"))
+        
+        # Delete all data from tables in reverse dependency order
+        tables = ['reviews', 'user_books', 'book_genres', 'books', 'genres', 'users']
+        for table in tables:
+            connection.execute(text(f"DELETE FROM {table};"))
+        
+        # Re-enable foreign key checks
+        connection.execute(text("SET session_replication_role = DEFAULT;"))
+        connection.commit()
