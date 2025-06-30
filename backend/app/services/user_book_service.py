@@ -81,3 +81,6 @@ class UserBookService(BaseService[UserBook]):
           )
           .all()
       )
+
+    def create(self, obj_in: dict):
+        return super().create(obj_in)
