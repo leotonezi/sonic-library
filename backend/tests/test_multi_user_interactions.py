@@ -5,26 +5,21 @@ from faker import Faker
 from email_validator import validate_email, EmailNotValidError
 from app.core.database import SessionLocal
 from app.models.user import User
-from app.models.book import Book, Genre
-from app.models.review import Review
-from app.models.user_book import UserBook, StatusEnum
-from sqlalchemy.orm import Session
-import traceback
+from typing import Optional, Dict, Any
 
 fake = Faker()
-client = TestClient(app)
 
 
 class MultiUserTestHelper:
     """Helper class for managing multiple users in tests."""
     
     def __init__(self):
-        self.users = {}
-        self.books = {}
-        self.reviews = {}
-        self.user_books = {}
+        self.users: Dict[str, Dict[str, Any]] = {}
+        self.books: Dict[int, Dict[str, Any]] = {}
+        self.reviews: Dict[str, Dict[str, Any]] = {}
+        self.user_books: Dict[str, Dict[str, Any]] = {}
     
-    def create_user(self, name: str = None, email: str = None) -> dict:
+    def create_user(self, name: Optional[str] = None, email: Optional[str] = None) -> Dict[str, Any]:
         """Create a user and return their credentials and cookies."""
         password = fake.password(length=10)
         user_data = {
@@ -51,7 +46,7 @@ class MultiUserTestHelper:
         try:
             user = db.query(User).filter_by(email=user_data["email"]).first()
             if user:
-                user.is_active = True
+                user.is_active = True  # type: ignore
                 db.commit()
             else:
                 raise Exception("User not found in database after creation!")
@@ -77,18 +72,20 @@ class MultiUserTestHelper:
         self.users[user_data["email"]] = user_info
         return user_info
     
-    def get_user_id(self, user_info: dict) -> int:
+    def get_user_id(self, user_info: Dict[str, Any]) -> int:
         """Get user ID from the database."""
         if user_info["user_id"] is None:
             db = SessionLocal()
             try:
                 user = db.query(User).filter_by(email=user_info["data"]["email"]).first()
-                user_info["user_id"] = user.id
+                if user is None:
+                    raise Exception("User not found in database")
+                user_info["user_id"] = int(user.id)  # type: ignore
             finally:
                 db.close()
         return user_info["user_id"]
     
-    def create_book(self, user_info: dict, book_data: dict = None) -> dict:
+    def create_book(self, user_info: Dict[str, Any], book_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Create a book and return book info."""
         if book_data is None:
             book_data = {
@@ -105,7 +102,7 @@ class MultiUserTestHelper:
         self.books[book_info["id"]] = book_info
         return book_info
     
-    def add_book_to_library(self, user_info: dict, book_id: int, status: str = "TO_READ") -> dict:
+    def add_book_to_library(self, user_info: Dict[str, Any], book_id: int, status: str = "TO_READ") -> Dict[str, Any]:
         """Add a book to user's library."""
         user_book_data = {
             "book_id": book_id,
@@ -118,7 +115,7 @@ class MultiUserTestHelper:
         self.user_books[key] = user_book_info
         return user_book_info
     
-    def add_review(self, user_info: dict, book_id: int, review_data: dict = None) -> dict:
+    def add_review(self, user_info: Dict[str, Any], book_id: int, review_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Add a review to a book."""
         if review_data is None:
             review_data = {
