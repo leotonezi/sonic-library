@@ -1,8 +1,11 @@
 import os
 from dotenv import load_dotenv
-load_dotenv(override=True)
+from pathlib import Path
+if Path(".env.test").exists():
+    load_dotenv(".env.test", override=True)
+else:
+    load_dotenv(override=True)
 import sys
-import importlib
 from sqlalchemy import create_engine, pool
 from alembic import context
 from logging.config import fileConfig
@@ -10,32 +13,36 @@ from logging.config import fileConfig
 # Import Base from database setup
 from app.core.database import Base
 
-# Ensure Alembic finds all models
+# Explicitly import all models
+from app.models.user import User
 from app.models.book import Book
 from app.models.review import Review
-from app.models.user import User
-from app.models.user_book import UserBook
-from app.models.user_book import StatusEnum
+from app.models.user_book import UserBook, StatusEnum
+from app.models import *
+
+# Debug: Print all tables and columns registered with Base.metadata
+print("[Alembic DEBUG] Tables registered with Base.metadata:")
+for table_name, table in Base.metadata.tables.items():
+    print(f"  {table_name}: {[col.name for col in table.columns]}")
 
 # Load Alembic configuration
 config = context.config
-fileConfig(config.config_file_name)
 
-# Ensure Alembic finds all models
-models_dir = os.path.join(os.path.dirname(__file__), "../app/models")
-sys.path.append(models_dir)
-
-# Auto-import all models in app/models/
-for filename in os.listdir(models_dir):
-    if filename.endswith(".py") and filename != "__init__.py":
-        module_name = f"app.models.{filename[:-3]}"  # Remove `.py`
-        importlib.import_module(module_name)
+# Override sqlalchemy.url in Alembic config if DATABASE_URL is set
+if os.environ.get("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
 
 # Assign metadata to Alembic
 target_metadata = Base.metadata
 
-# ✅ Use DATABASE_URL from the environment
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:password@localhost:5432/fastlibrary")
+# Use the config's sqlalchemy.url for engine creation
+DATABASE_URL = config.get_main_option("sqlalchemy.url")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL (sqlalchemy.url) is not set! Please set it in the environment or alembic.ini.")
+
+print("Alembic sqlalchemy.url:", DATABASE_URL)
+print("Env DATABASE_URL:", os.environ.get("DATABASE_URL"))
+print("Env TEST_DATABASE_URL:", os.environ.get("TEST_DATABASE_URL"))
 
 def run_migrations_online():
     engine = create_engine(DATABASE_URL, poolclass=pool.NullPool)

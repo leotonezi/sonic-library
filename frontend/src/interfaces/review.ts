@@ -5,4 +5,5 @@ export default interface Review {
   user_id: number;
   created_at?: string;
   user_name?: string;
+  user_profile_picture?: string;
 }

@@ -21,8 +21,24 @@ class ReviewService(BaseService[Review]):
 
     def get_by_book_with_user(self, book_id: int):
         return (
-            self.db.query(self.model, User.name.label("user_name"))
+            self.db.query(
+                self.model, 
+                User.name.label("user_name"),
+                User.profile_picture.label("user_profile_picture")
+            )
             .join(User, self.model.user_id == User.id)
             .filter(self.model.book_id == book_id)
+            .all()
+        )
+
+    def get_by_external_book_with_user(self, external_book_id: str):
+        return (
+            self.db.query(
+                self.model, 
+                User.name.label("user_name"),
+                User.profile_picture.label("user_profile_picture")
+            )
+            .join(User, self.model.user_id == User.id)
+            .filter(self.model.external_book_id == external_book_id)
             .all()
         )

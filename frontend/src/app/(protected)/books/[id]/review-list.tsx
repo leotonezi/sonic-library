@@ -14,6 +14,11 @@ const renderStars = (rate: number) => {
   ));
 };
 
+const getProfilePictureUrl = (filename?: string) => {
+  if (!filename) return undefined;
+  return `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/profile_pictures/${filename}`;
+};
+
 export default function ReviewsList({ reviews = [] }: { reviews?: Review[] }) {
   if (!reviews) {
     return null;
@@ -31,17 +36,35 @@ export default function ReviewsList({ reviews = [] }: { reviews?: Review[] }) {
               className="bg-blue-800 p-4 rounded shadow relative"
             >
               <ReviewActions review={review} />
+              
+              {/* User Info with Profile Picture */}
+              {review.user_name && (
+                <div className="flex items-center gap-3 mb-3">
+                  {review.user_profile_picture ? (
+                    <img
+                      src={getProfilePictureUrl(review.user_profile_picture)}
+                      alt={review.user_name}
+                      className="w-8 h-8 rounded-full object-cover border border-blue-500"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-blue-700 border border-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-sm text-blue-200 font-medium">
+                        {review.user_name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1 text-blue-300 text-sm font-medium">
+                    <User size={14} />
+                    <span>{review.user_name}</span>
+                  </div>
+                </div>
+              )}
+              
               <p className="text-blue-200 my-2">{review.content}</p>
               <div className="flex justify-between items-center mt-3">
                 <p className="text-blue-100 text-sm flex items-center gap-1">
                   {renderStars(review.rate)}
                 </p>
-                {review.user_name && (
-                  <div className="flex items-center gap-1 text-blue-300 text-sm">
-                    <User size={14} />
-                    <span>{review.user_name}</span>
-                  </div>
-                )}
               </div>
             </li>
           ))}

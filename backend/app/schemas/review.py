@@ -26,5 +26,6 @@ class ReviewResponse(ReviewBase):
     id: int
     user_id: int
     user_name: Optional[str] = None
+    user_profile_picture: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

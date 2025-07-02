@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.user_service import UserService
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserProfileUpdate
 from app.schemas.base_schema import ApiResponse
 from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
+from app.core.file_utils import save_profile_picture
 
 router = APIRouter()
 
@@ -54,3 +55,45 @@ def get(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return ApiResponse(data=UserResponse.model_validate(user))
+
+@router.put("/me/profile", response_model=ApiResponse[UserResponse])
+@log_exceptions("PUT /users/me/profile")
+def update_profile(
+    profile_data: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+):
+    """Update the current user's profile (Protected Route)"""
+    updated_user = user_service.update_profile(int(current_user.id), profile_data)
+    return ApiResponse(data=UserResponse.model_validate(updated_user))
+
+@router.post("/me/profile-picture", response_model=ApiResponse[UserResponse])
+@log_exceptions("POST /users/me/profile-picture")
+async def upload_profile_picture(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+):
+    """Upload a profile picture for the current user (Protected Route)"""
+    try:
+        # Save the uploaded file
+        filename = await save_profile_picture(file, int(current_user.id))
+        
+        # Update user profile with the new picture filename
+        profile_data = UserProfileUpdate(profile_picture=filename)
+        updated_user = user_service.update_profile(int(current_user.id), profile_data)
+        
+        return ApiResponse(data=UserResponse.model_validate(updated_user))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.put("/me", response_model=ApiResponse[UserResponse])
+@log_exceptions("PUT /users/me")
+def update_user(
+    user_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service)
+):
+    """Update the current user's information (Protected Route)"""
+    updated_user = user_service.update_user(int(current_user.id), user_data)
+    return ApiResponse(data=UserResponse.model_validate(updated_user))

@@ -5,7 +5,7 @@ from email_validator import validate_email, EmailNotValidError
 
 from app.models.user import User
 from app.services.base_service import BaseService
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, UserUpdate, UserProfileUpdate
 from app.core.config import settings
 
 
@@ -68,3 +68,52 @@ class UserService(BaseService[User]):
     def get_user_by_id(self, user_id: int) -> User:
         """Retrieves a user by their ID."""
         return self.db.query(User).filter(User.id == user_id).first()
+
+    def update_profile(self, user_id: int, profile_data: UserProfileUpdate) -> User:
+        """Update user profile information."""
+        user = self.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update fields if provided
+        if profile_data.name is not None:
+            user.name = profile_data.name
+        
+        if profile_data.profile_picture is not None:
+            # Delete old profile picture if it exists
+            if user.profile_picture:
+                from app.core.file_utils import delete_profile_picture
+                delete_profile_picture(user.profile_picture)
+            user.profile_picture = profile_data.profile_picture
+        
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
+    def update_user(self, user_id: int, user_data: UserUpdate) -> User:
+        """Update user information."""
+        user = self.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Update fields if provided
+        if user_data.name is not None:
+            user.name = user_data.name
+        
+        if user_data.email is not None:
+            try:
+                validated = validate_email(user_data.email)
+                normalized_email = validated.normalized
+                
+                # Check if email is already taken by another user
+                existing_user = self.get_user_by_email(normalized_email)
+                if existing_user and existing_user.id != user_id:
+                    raise HTTPException(status_code=400, detail="Email is already registered")
+                
+                user.email = normalized_email
+            except EmailNotValidError:
+                raise HTTPException(status_code=400, detail="Invalid email format")
+        
+        self.db.commit()
+        self.db.refresh(user)
+        return user

@@ -23,6 +23,8 @@ repos:
     hooks:
       - id: act
         name: Simulate CI with act
-        entry: act
+        entry: act --container-daemon-socket /var/run/docker.sock
         language: system
         pass_filenames: false
+        always_run: true
+        stages: [manual]
