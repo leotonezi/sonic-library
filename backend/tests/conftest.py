@@ -9,39 +9,73 @@ from typing import Generator
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+# Import settings after ensuring the environment is set up
 from app.core.config import settings
 from app.core.database import Base
 
-# Create test database URL by appending _test to database name
-# This ensures tests use a separate database from development
-DATABASE_URL = settings.DATABASE_URL
+# Get the current DATABASE_URL from environment or settings
+DATABASE_URL = os.environ.get("DATABASE_URL", settings.DATABASE_URL)
 
 # Detect if we're running in Docker (database host is 'db') or locally (database host is 'localhost')
 if 'db:5432' in DATABASE_URL:
-    # Docker environment
-    TEST_DATABASE_URL = DATABASE_URL.replace('/fastlibrary', '/fastlibrary_test')
+    # Docker environment - CI
+    if DATABASE_URL.endswith('/fastlibrary'):
+        TEST_DATABASE_URL = DATABASE_URL.replace('/fastlibrary', '/fastlibrary_test')
+    elif DATABASE_URL.endswith('/fastlibrary_test'):
+        # Already a test database
+        TEST_DATABASE_URL = DATABASE_URL
+    else:
+        # Extract database name and append _test
+        db_name = DATABASE_URL.split('/')[-1]
+        if not db_name.endswith('_test'):
+            TEST_DATABASE_URL = DATABASE_URL.replace(f'/{db_name}', f'/{db_name}_test')
+        else:
+            TEST_DATABASE_URL = DATABASE_URL
 else:
     # Local environment
     if DATABASE_URL.endswith('/fastlibrary'):
         TEST_DATABASE_URL = DATABASE_URL.replace('/fastlibrary', '/fastlibrary_test')
+    elif DATABASE_URL.endswith('/fastlibrary_test'):
+        # Already a test database
+        TEST_DATABASE_URL = DATABASE_URL
     else:
-        # Fallback: append _test to the database name
-        TEST_DATABASE_URL = DATABASE_URL + '_test'
+        # Extract database name and append _test
+        db_name = DATABASE_URL.split('/')[-1]
+        if not db_name.endswith('_test'):
+            TEST_DATABASE_URL = DATABASE_URL.replace(f'/{db_name}', f'/{db_name}_test')
+        else:
+            TEST_DATABASE_URL = DATABASE_URL
+
+print(f"[DEBUG] Original DATABASE_URL: {DATABASE_URL}")
+print(f"[DEBUG] Test DATABASE_URL: {TEST_DATABASE_URL}")
 
 # Create test database engine
 test_engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
+
+print(f"[DEBUG] Test engine created with URL: {TEST_DATABASE_URL}")
 
 @pytest.fixture(scope="session")
 def apply_migrations() -> Generator:
     """Apply Alembic migrations at the start of testing session."""
     
+    print(f"[DEBUG] Starting apply_migrations fixture")
+    print(f"[DEBUG] Current DATABASE_URL from env: {os.environ.get('DATABASE_URL', 'NOT_SET')}")
+    print(f"[DEBUG] Current DATABASE_URL from settings: {settings.DATABASE_URL}")
+    
+    # Extract test database name from TEST_DATABASE_URL
+    test_db_name = TEST_DATABASE_URL.split('/')[-1]
+    print(f"[DEBUG] Test database name: {test_db_name}")
+    
     # Create test database if it doesn't exist
     try:
         # Connect to default postgres database to create test database
-        default_engine = create_engine(DATABASE_URL.rsplit('/', 1)[0] + '/postgres')
+        default_db_url = DATABASE_URL.rsplit('/', 1)[0] + '/postgres'
+        print(f"[DEBUG] Connecting to default database: {default_db_url}")
+        default_engine = create_engine(default_db_url)
         with default_engine.connect() as connection:
             connection.execute(text("COMMIT"))  # Close any open transaction
-            connection.execute(text(f"CREATE DATABASE fastlibrary_test"))
+            connection.execute(text(f"CREATE DATABASE {test_db_name}"))
+            print(f"[DEBUG] Created test database: {test_db_name}")
     except Exception as e:
         # Database might already exist, which is fine
         print(f"Test database creation note: {e}")
@@ -59,13 +93,14 @@ def apply_migrations() -> Generator:
     
     try:
         # Apply migrations
+        print(f"[DEBUG] Applying Alembic migrations...")
         command.upgrade(alembic_cfg, "head")
         
         # Verify tables were created
         with test_engine.connect() as connection:
             result = connection.execute(text("SELECT tablename FROM pg_tables WHERE schemaname='public';"))
             tables = [row[0] for row in result]
-            print("Tables after migration:", tables)
+            print(f"[DEBUG] Tables after migration: {tables}")
             
             # Ensure all expected tables exist
             expected_tables = ['users', 'books', 'genres', 'reviews', 'user_books', 'book_genres', 'alembic_version']

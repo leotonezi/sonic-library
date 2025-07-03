@@ -70,6 +70,8 @@ jobs:
             export SECRET_KEY=test_key
             export ALGORITHM=HS256
             export ACCESS_TOKEN_EXPIRE_MINUTES=15
+            export PYTHONPATH=/app
+            cd /app && python -c \"from app.core.config import settings; print(f'DATABASE_URL: {settings.DATABASE_URL}')\"
             cd /app && pytest -vv --log-cli-level=DEBUG
           "
         timeout-minutes: 10
