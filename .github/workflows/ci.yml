@@ -64,13 +64,15 @@ jobs:
       - name: 🗄️ Apply migrations to test database
         run: |
           docker compose exec -T fastapi bash -c "
-            cd /app && DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test alembic upgrade head
+            export TEST_DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
+            cd /app && TEST_DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test alembic upgrade head
           "
 
       - name: 🧪 Run backend tests with test environment
         run: |
           docker compose exec -T fastapi bash -c "
             export DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
+            export TEST_DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
             export ENV=test
             export PROJECT_NAME=SonicLibraryTest
             export SECRET_KEY=test_key

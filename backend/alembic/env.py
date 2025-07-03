@@ -31,8 +31,8 @@ config = context.config
 # Assign metadata to Alembic
 target_metadata = Base.metadata
 
-# Get database URL - prioritize environment variable over config
-DATABASE_URL = os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+# Get database URL - prioritize TEST_DATABASE_URL for tests, then DATABASE_URL, then config
+DATABASE_URL = os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set! Please set it in the environment or alembic.ini.")
 
