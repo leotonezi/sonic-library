@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, Integer, String, ForeignKey, DateTime, func, UniqueConstraint, CheckConstraint
+    Column, Integer, String, ForeignKey, DateTime, func, UniqueConstraint, CheckConstraint, Index
 )
 from sqlalchemy.orm import relationship
 from app.models.base import Base
@@ -19,14 +19,15 @@ class UserBook(Base):
     __tablename__ = "user_books"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"), nullable=True)
-    external_book_id = Column(String, nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"), nullable=True, index=True)
+    external_book_id = Column(String, nullable=True, index=True)
     status = Column(
         SqlEnum(StatusEnum, name="status_enum"),
         nullable=False,
         default=StatusEnum.get_default,
-        server_default=StatusEnum.TO_READ.value
+        server_default=StatusEnum.TO_READ.value,
+        index=True
     )
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(
@@ -43,6 +44,10 @@ class UserBook(Base):
         # Removed CheckConstraint here
         UniqueConstraint('user_id', 'book_id', name='_user_book_uc'),
         UniqueConstraint('user_id', 'external_book_id', name='_user_external_book_uc'),
+        # Composite indexes for common query patterns
+        Index('idx_user_status', 'user_id', 'status'),
+        Index('idx_user_external_book', 'user_id', 'external_book_id'),
+        Index('idx_book_status', 'book_id', 'status'),
     )
 
     def __repr__(self) -> str:

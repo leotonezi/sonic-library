@@ -121,6 +121,13 @@ export default function NavBar() {
               >
                 Profile
               </Link>
+              <Link
+                href="/settings"
+                className="block w-full px-4 py-2 text-left hover:bg-gray-100 cursor-pointer border-t"
+                onClick={() => setDropdownOpen(false)}
+              >
+                Settings
+              </Link>
               <button
                 onClick={() => {
                   handleLogout();

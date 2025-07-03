@@ -1,7 +1,9 @@
 from fastapi import FastAPI
-from app.api.v1.endpoints import books, users, reviews, recommendations, auth, user_books
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1.endpoints import books, users, reviews, recommendations, auth, user_books
 from app.core.logging_config import setup_logging
+from app.core.file_utils import UPLOAD_DIR
 import logging
 
 setup_logging()
@@ -16,6 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files for profile pictures
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR.parent)), name="uploads")
 
 app.include_router(books.router, prefix="/books", tags=["Books"])
 app.include_router(users.router, prefix="/users", tags=["Users"])

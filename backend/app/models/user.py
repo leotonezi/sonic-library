@@ -10,5 +10,6 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     is_active = Column(Boolean, default=False)
     password = Column(String, nullable=False)
+    profile_picture = Column(String, nullable=True)
 
     books = relationship("UserBook", back_populates="user", cascade="all, delete-orphan")

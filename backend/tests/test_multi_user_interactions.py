@@ -6,6 +6,7 @@ from email_validator import validate_email, EmailNotValidError
 from app.core.database import SessionLocal
 from app.models.user import User
 from typing import Optional, Dict, Any
+import uuid
 
 fake = Faker()
 
@@ -18,13 +19,26 @@ class MultiUserTestHelper:
         self.books: Dict[int, Dict[str, Any]] = {}
         self.reviews: Dict[str, Dict[str, Any]] = {}
         self.user_books: Dict[str, Dict[str, Any]] = {}
+        # Generate a unique suffix for this test run to avoid email conflicts
+        self.test_suffix = str(uuid.uuid4())[:8]
     
     def create_user(self, name: Optional[str] = None, email: Optional[str] = None) -> Dict[str, Any]:
         """Create a user and return their credentials and cookies."""
         password = fake.password(length=10)
+        
+        # Generate unique email if not provided
+        if email is None:
+            base_email = fake.unique.email(domain="test.com")
+            # Add test suffix to ensure uniqueness across test runs
+            email = f"{base_email.split('@')[0]}_{self.test_suffix}@{base_email.split('@')[1]}"
+        else:
+            # Add test suffix to provided email to ensure uniqueness
+            email_parts = email.split('@')
+            email = f"{email_parts[0]}_{self.test_suffix}@{email_parts[1]}"
+        
         user_data = {
             "name": name or fake.name(),
-            "email": email or fake.unique.email(domain="gmail.com"),
+            "email": email,
             "password": password
         }
 
@@ -39,6 +53,14 @@ class MultiUserTestHelper:
 
         # Create user
         response = user_client.post("/users", json=user_data)
+        if response.status_code != 200:
+            print(f"[DEBUG] User creation failed for {user_data['email']}: {response.text}")
+            # Try to get more details about the error
+            try:
+                error_detail = response.json()
+                print(f"[DEBUG] Error detail: {error_detail}")
+            except:
+                pass
         assert response.status_code == 200, f"User creation failed: {response.text}"
 
         # Activate user

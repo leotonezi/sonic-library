@@ -1,10 +1,13 @@
 import logging
+import asyncio
 from fastapi import HTTPException
 from functools import wraps
+import inspect
+from typing import Optional
 
 logger = logging.getLogger("sonic")
 
-def log_exceptions(endpoint_name: str = None):
+def log_exceptions(endpoint_name: Optional[str] = None):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -12,6 +15,11 @@ def log_exceptions(endpoint_name: str = None):
             logger.info(f"{name} - Called")
             try:
                 result = func(*args, **kwargs)
+                
+                # Check if the function is async and await it if necessary
+                if inspect.iscoroutine(result):
+                    result = asyncio.run(result)
+                
                 logger.debug(f"{name} - Success: {result}")
                 return result
             except HTTPException as e:
