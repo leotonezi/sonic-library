@@ -61,6 +61,13 @@ jobs:
       - name: 🛠️ Install test dependencies
         run: docker compose exec -T fastapi pip install faker
 
+      - name: 🗄️ Apply migrations to test database
+        run: |
+          docker compose exec -T fastapi bash -c "
+            export DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
+            cd /app && alembic upgrade head
+          "
+
       - name: 🧪 Run backend tests with test environment
         run: |
           docker compose exec -T fastapi bash -c "
