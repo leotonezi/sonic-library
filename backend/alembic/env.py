@@ -31,14 +31,20 @@ config = context.config
 # Assign metadata to Alembic
 target_metadata = Base.metadata
 
-# Get database URL - prioritize environment variable over config
-DATABASE_URL = os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+# Get database URL - prioritize command line argument, then environment variable, then config
+db_url = context.get_x_argument(as_dictionary=True).get('db_url')
+if db_url:
+    DATABASE_URL = db_url
+else:
+    DATABASE_URL = os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set! Please set it in the environment or alembic.ini.")
+    raise RuntimeError("DATABASE_URL is not set! Please set it in the environment, alembic.ini, or via -x db_url=...")
 
 print("Alembic sqlalchemy.url:", DATABASE_URL)
 print("Env DATABASE_URL:", os.environ.get("DATABASE_URL"))
 print("Env TEST_DATABASE_URL:", os.environ.get("TEST_DATABASE_URL"))
+print("Command line db_url:", db_url)
 
 def run_migrations_online():
     # DATABASE_URL is guaranteed to be a string at this point due to the check above

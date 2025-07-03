@@ -64,8 +64,7 @@ jobs:
       - name: 🗄️ Apply migrations to test database
         run: |
           docker compose exec -T fastapi bash -c "
-            export DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
-            cd /app && alembic upgrade head
+            cd /app && alembic upgrade head -x db_url=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
           "
 
       - name: 🧪 Run backend tests with test environment
