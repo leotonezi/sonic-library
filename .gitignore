@@ -181,4 +181,4 @@ cython_debug/
 .pypirc
 
 # Profile picture files
-backend/uploads/*
+backend/uploads/profile_pictures/*
