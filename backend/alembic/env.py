@@ -28,24 +28,21 @@ for table_name, table in Base.metadata.tables.items():
 # Load Alembic configuration
 config = context.config
 
-# Override sqlalchemy.url in Alembic config if DATABASE_URL is set
-if os.environ.get("DATABASE_URL"):
-    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
-
 # Assign metadata to Alembic
 target_metadata = Base.metadata
 
-# Use the config's sqlalchemy.url for engine creation
-DATABASE_URL = config.get_main_option("sqlalchemy.url")
+# Get database URL - prioritize environment variable over config
+DATABASE_URL = os.environ.get("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL (sqlalchemy.url) is not set! Please set it in the environment or alembic.ini.")
+    raise RuntimeError("DATABASE_URL is not set! Please set it in the environment or alembic.ini.")
 
 print("Alembic sqlalchemy.url:", DATABASE_URL)
 print("Env DATABASE_URL:", os.environ.get("DATABASE_URL"))
 print("Env TEST_DATABASE_URL:", os.environ.get("TEST_DATABASE_URL"))
 
 def run_migrations_online():
-    engine = create_engine(DATABASE_URL, poolclass=pool.NullPool)
+    # DATABASE_URL is guaranteed to be a string at this point due to the check above
+    engine = create_engine(str(DATABASE_URL), poolclass=pool.NullPool)
 
     with engine.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
