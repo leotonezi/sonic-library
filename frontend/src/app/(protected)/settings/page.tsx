@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Camera, Save, X, CheckCircle, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 
 interface UserProfile {
   id: number;
@@ -187,9 +188,11 @@ export default function SettingsPage() {
             <div className="flex items-center gap-6">
               <div className="relative">
                 {profile?.profile_picture ? (
-                  <img
-                    src={getProfilePictureUrl(profile.profile_picture)}
+                  <Image
+                    src={getProfilePictureUrl(profile.profile_picture) || ''}
                     alt="Profile"
+                    width={96}
+                    height={96}
                     className="w-24 h-24 rounded-full object-cover border-2 border-blue-500"
                   />
                 ) : (
@@ -202,9 +205,11 @@ export default function SettingsPage() {
                 
                 {previewUrl && (
                   <div className="absolute inset-0 rounded-full overflow-hidden">
-                    <img
+                    <Image
                       src={previewUrl}
                       alt="Preview"
+                      width={96}
+                      height={96}
                       className="w-full h-full object-cover"
                     />
                   </div>

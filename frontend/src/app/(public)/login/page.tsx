@@ -11,12 +11,29 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const setUser = useAuthStore((state) => state.setUser);
+  const { setUser, checkAuth } = useAuthStore();
 
   const searchParams = useSearchParams();
   const signupSuccess = searchParams.get('signup_success');
   const notActivated = searchParams.get('not_activated');
   const activated = searchParams.get('activated');
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkIfAuthenticated = async () => {
+      try {
+        const isAuthenticated = await checkAuth();
+        if (isAuthenticated) {
+          // User is already authenticated, redirect to books page
+          router.replace('/books');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      }
+    };
+
+    checkIfAuthenticated();
+  }, [checkAuth, router]);
 
   useEffect(() => {
     if (signupSuccess === 'true') {

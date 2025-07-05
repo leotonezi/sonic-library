@@ -1,16 +1,39 @@
-import Link from "next/link";
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
+import LoadingScreen from '@/components/loading';
 
 export default function Home() {
-  return (
-    <main className="min-h-screen flex flex-col items-center justify-center text-3xl">
-      <div>
-        Hello, Sonic Library! 🚀
-      </div>
-      <div className="text-2xl mt-4">
-        <Link href="/login" className="text-blue-500 hover:underline">
-          Go to Login
-        </Link>
-      </div>
-    </main>
-  );
+  const router = useRouter();
+  const { isLoading, checkAuth } = useAuthStore();
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const isAuthenticated = await checkAuth();
+        if (isAuthenticated) {
+          // User is authenticated, redirect to books page
+          router.replace('/books');
+        } else {
+          // User is not authenticated, redirect to login
+          router.replace('/login');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        router.replace('/login');
+      }
+    };
+
+    initAuth();
+  }, [checkAuth, router]);
+
+  // Show loading screen while checking authentication
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  // Don't render anything while redirecting
+  return null;
 }
