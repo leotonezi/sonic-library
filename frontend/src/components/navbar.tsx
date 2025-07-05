@@ -16,6 +16,7 @@ export default function NavBar() {
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
 
   const searchQuery = useSearchBookStore((state) => state.searchQuery);
   const setSearchQuery = useSearchBookStore((state) => state.setSearchQuery);
@@ -23,8 +24,14 @@ export default function NavBar() {
     (state) => state.fetchExternalBooks,
   );
 
+  // Don't render navbar while checking authentication
+  if (isLoading) {
+    return null;
+  }
+
+  // Don't render navbar if user is not authenticated
   if (!user) {
-    return;
+    return null;
   }
 
   const handleLogout = async () => {
@@ -39,7 +46,7 @@ export default function NavBar() {
   const handleSearch = async () => {
     await fetchExternalBooks(genreInput);
     toast.success("Search Complete!!!");
-    router.push("/login");
+    router.push("/books");
   };
 
   return (
