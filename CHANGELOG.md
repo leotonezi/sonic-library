@@ -1,3 +1,37 @@
+# [0.5.0](https://github.com/leotonezi/sonic-library/compare/v0.4.0...v0.5.0) (2025-07-06)
+
+
+### Bug Fixes
+
+* alembic env.py to use DATABASE_URL environment variable ([e9ba7b7](https://github.com/leotonezi/sonic-library/commit/e9ba7b7643d6314eb28454965dc177a60ba1e02b))
+* auth redirect ([ab364d6](https://github.com/leotonezi/sonic-library/commit/ab364d617e769d3771657113b68626cbbb15b5d7))
+* change release ci reference ([7a935bb](https://github.com/leotonezi/sonic-library/commit/7a935bb68f337f377f9532400c1baf813de6e9f6))
+* change release ci reference ([80b9e96](https://github.com/leotonezi/sonic-library/commit/80b9e9682b7dd91d09dff264de7ec6120a36f862))
+* gh actions ([0c42488](https://github.com/leotonezi/sonic-library/commit/0c4248840630753ad76d8251e9abc8e110883d3f))
+* gh actions ([80aaaa1](https://github.com/leotonezi/sonic-library/commit/80aaaa14d9198c6202daccc38d8da173673b18e0))
+* linting fixes on test_multi_user_interactions ([03a0cec](https://github.com/leotonezi/sonic-library/commit/03a0cecbd25dab1d4fd60ba618cee8763142558c))
+* remove user caching to avoid SQLAlchemy session issues ([2f101cc](https://github.com/leotonezi/sonic-library/commit/2f101cc4a9cfeef3d1cf301d328e6548f38be8aa))
+* resolve CI test database issues and environment variable conflicts ([fcbf3d0](https://github.com/leotonezi/sonic-library/commit/fcbf3d0d7eb5a1d0664c969ffb7695f78efbfcf8))
+* set DATABASE_URL inline with alembic command ([702e244](https://github.com/leotonezi/sonic-library/commit/702e244f6edabe3893a6297dc02d42d15b6ba280))
+* use alembic -x flag to pass database URL directly ([2e4617c](https://github.com/leotonezi/sonic-library/commit/2e4617cce1895a5f2f2ad03ed98d5a35d782e0ea))
+* userBook state management ([7402b46](https://github.com/leotonezi/sonic-library/commit/7402b46447c06a917be5ce75af28ac8c1a01f83c))
+* workflow and review fixes ([023d1fd](https://github.com/leotonezi/sonic-library/commit/023d1fd9ad9361d5a403ee10cedba07052eb973a))
+
+
+### Features
+
+* add book change status on my library ([9176381](https://github.com/leotonezi/sonic-library/commit/9176381e8e62dc883fa4c4664ce1ff8b5197582b))
+* add filters to my library ([2a6364b](https://github.com/leotonezi/sonic-library/commit/2a6364bf99bed405a5a5f5722ff1a5bed19c6ed2))
+* add link into book titles on my library ([1ac1f71](https://github.com/leotonezi/sonic-library/commit/1ac1f71fe2128c8c12db494ae6bab5663178c9d9))
+* add mult user-review tests ([9a92b2d](https://github.com/leotonezi/sonic-library/commit/9a92b2d356153b7604dc0658c57ec475ff3c7057))
+* add review structure on external book ([94af87e](https://github.com/leotonezi/sonic-library/commit/94af87e384edbb0d712a9a10b512de5b87b88a24))
+* add user picture ([2c97d74](https://github.com/leotonezi/sonic-library/commit/2c97d74855331908e72cb4f85aea235385d0904e))
+* add user picture ([69c3f56](https://github.com/leotonezi/sonic-library/commit/69c3f56f82ba1ca7713759169595b18d620758cb))
+* improve pipeline ([20e70aa](https://github.com/leotonezi/sonic-library/commit/20e70aa221ae41d6b7cf22eab6dbc9e940a6d426))
+* improve searchBar and genre ([de56146](https://github.com/leotonezi/sonic-library/commit/de561468a8cbf68c84543e6609d72d89a3871c17))
+* refactor search books logic ([cf7f375](https://github.com/leotonezi/sonic-library/commit/cf7f375376b635eba2f257f0d3009f9fb399b6e1))
+* remove unuseful nav options ([40e3bc0](https://github.com/leotonezi/sonic-library/commit/40e3bc0382b37381261be71188e7958b75c864c8))
+
 # [0.4.0](https://github.com/leotonezi/sonic-library/compare/v0.3.0...v0.4.0) (2025-05-27)
 
 
