@@ -13,6 +13,7 @@ import { toast } from "sonner";
 export default function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [genreInput, setGenreInput] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
@@ -24,13 +25,8 @@ export default function NavBar() {
     (state) => state.fetchExternalBooks,
   );
 
-  // Don't render navbar while checking authentication
-  if (isLoading) {
-    return null;
-  }
-
-  // Don't render navbar if user is not authenticated
-  if (!user) {
+  // Don't render navbar if still loading or no user
+  if (isLoading || !user) {
     return null;
   }
 
@@ -44,9 +40,17 @@ export default function NavBar() {
   };
 
   const handleSearch = async () => {
-    await fetchExternalBooks(genreInput);
-    toast.success("Search Complete!!!");
-    router.push("/books");
+    setIsSearching(true);
+    try {
+      await fetchExternalBooks(genreInput);
+      toast.success("Search Complete!!!");
+      router.push("/books");
+    } catch (error) {
+      console.error("Search failed:", error);
+      toast.error("Search failed. Please try again.");
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -73,7 +77,10 @@ export default function NavBar() {
               onChange={(e) => setGenreInput(e.target.value)}
               placeholder="Type Genre..."
               className="pl-2 pr-2 py-1 w-32 rounded-md bg-transparent text-white placeholder-blue-300 focus:outline-none text-sm"
-            />
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
+              />
           </div>
 
           {/* Search Input */}
@@ -91,14 +98,18 @@ export default function NavBar() {
           </div>
           <Search
             size={20}
-            className="text-white hover:text-orange-300 transition duration-300 cursor-pointer mx-2"
+            className={`transition duration-300 cursor-pointer mx-2 ${
+              isSearching 
+                ? 'text-orange-400 animate-pulse' 
+                : 'text-white hover:text-orange-300'
+            }`}
             onClick={handleSearch}
           />
         </div>
       </div>
 
       {/* Right-aligned Navigation Links and User Menu */}
-      <div className="flex gap-4 relative items-center">
+      <div className="flex h-full">
         <Link
           href={`/library/`}
           className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
@@ -112,10 +123,10 @@ export default function NavBar() {
           Recommend
         </Link>
         {/* User menu dropdown */}
-        <div className="relative">
+        <div className="relative h-full">
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
-            className="flex items-center justify-center h-full px-4 cursor-pointer text-white"
+            className="flex items-center justify-center h-full px-4 cursor-pointer text-white hover:bg-[#004aad] transition-all duration-500 ease-in-out"
           >
             <Menu />
           </button>

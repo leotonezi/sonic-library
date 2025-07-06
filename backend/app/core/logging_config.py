@@ -3,7 +3,7 @@ import logging
 from logging.config import dictConfig
 import os
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 def setup_logging():
     log_dir = "logs"

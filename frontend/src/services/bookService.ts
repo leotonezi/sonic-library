@@ -23,3 +23,15 @@ export const searchExternalBooks = async (query: string): Promise<ExternalBook[]
     throw error;
   }
 };
+
+export const getPopularBooks = async (): Promise<ExternalBook[]> => {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/books/popular`);
+    if (!response.ok) throw new Error('Failed to fetch popular books');
+    const data = await response.json();
+    return data.data as ExternalBook[];
+  } catch (error) {
+    console.error('Error fetching popular books:', error);
+    throw error;
+  }
+};

@@ -64,12 +64,9 @@ def create(
                 )
         book_id = book.id
 
-    # Debug print
-    print(f"[DEBUG] user_books.create: current_user.id={current_user.id}, book_id={book_id}")
-
     # Check for duplicate user_book
     existing = user_book_service.get_by_user_and_book(current_user.id, book_id)
-    print(f"[DEBUG] user_books.create: existing user_book for user_id={current_user.id}, book_id={book_id}: {existing}")
+
     if existing:
         raise HTTPException(
             status_code=400,
