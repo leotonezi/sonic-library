@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from "sonner";
 import { useAuthStore } from '@/store/useAuthStore';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -98,66 +99,83 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-[#0a1128] text-[#e0f0ff] flex items-center justify-center px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-[#001f3f] border border-[#0077cc] p-6 rounded-lg shadow-lg"
-      >
-        <h1 className="text-3xl font-bold text-[#00aaff] mb-6 text-center">Login</h1>
+      <div className="w-full max-w-md -mt-16">
+        {/* Logo and Title Section */}
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/sonic-library-logo.png"
+              alt="Sonic Library Logo"
+              width={120}
+              height={120}
+              className="object-contain"
+            />
+          </div>
+          <h1 className="text-4xl font-bold text-[#00aaff] mb-2">Sonic Library</h1>
+          <p className="text-[#cceeff] text-lg">Your fastest digital library</p>
+        </div>
 
-        {error && (
-          <p className="text-red-400 bg-red-950 px-4 py-2 rounded mb-4 text-center">
-            {error}
-          </p>
-        )}
-
-        <label className="block mb-4">
-          <span className="text-sm text-[#cceeff]">Email</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input-primary"
-            required
-            disabled={isLoading}
-          />
-        </label>
-
-        <label className="block mb-6">
-          <span className="text-sm text-[#cceeff]">Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input-primary"
-            required
-            disabled={isLoading}
-          />
-        </label>
-
-        <button 
-          type="submit" 
-          className="btn-primary w-full relative"
-          disabled={isLoading}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-[#001f3f] border border-[#0077cc] p-6 rounded-lg shadow-lg"
         >
-          {isLoading ? (
-            <>
-              <span className="opacity-0">Sign In</span>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
-              </div>
-            </>
-          ) : (
-            'Sign In'
-          )}
-        </button>
+          <h1 className="text-3xl font-bold text-[#00aaff] mb-6 text-center">Login</h1>
 
-        <p className="text-center text-sm text-white mt-4">
-          Don&apos;t have an account?{' '}
-          <a href="/signup" className="text-[#00aaff] hover:underline">
-            Sign up here
-          </a>
-        </p>
-      </form>
+          {error && (
+            <p className="text-red-400 bg-red-950 px-4 py-2 rounded mb-4 text-center">
+              {error}
+            </p>
+          )}
+
+          <label className="block mb-4">
+            <span className="text-sm text-[#cceeff]">Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input-primary"
+              required
+              disabled={isLoading}
+            />
+          </label>
+
+          <label className="block mb-6">
+            <span className="text-sm text-[#cceeff]">Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input-primary"
+              required
+              disabled={isLoading}
+            />
+          </label>
+
+          <button 
+            type="submit" 
+            className="btn-primary w-full relative"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="opacity-0">Sign In</span>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin"></div>
+                </div>
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </button>
+
+          <p className="text-center text-sm text-white mt-4">
+            Don&apos;t have an account?{' '}
+            <a href="/signup" className="text-[#00aaff] hover:underline">
+              Sign up here
+            </a>
+          </p>
+        </form>
+      </div>
     </main>
   );
 }

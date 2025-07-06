@@ -7,10 +7,16 @@ import LoadingScreen from '@/components/loading';
 
 export default function Home() {
   const router = useRouter();
-  const { isLoading, checkAuth } = useAuthStore();
+  const { isLoading, checkAuth, user } = useAuthStore();
 
   useEffect(() => {
     const initAuth = async () => {
+      // If we already have user data, redirect immediately
+      if (user) {
+        router.replace('/books');
+        return;
+      }
+
       try {
         const isAuthenticated = await checkAuth();
         if (isAuthenticated) {
@@ -27,7 +33,7 @@ export default function Home() {
     };
 
     initAuth();
-  }, [checkAuth, router]);
+  }, [checkAuth, router, user]);
 
   // Show loading screen while checking authentication
   if (isLoading) {
