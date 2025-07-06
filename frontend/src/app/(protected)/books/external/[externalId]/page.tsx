@@ -26,8 +26,8 @@ async function getExternalBookData(
       userBook: UserBook;
       reviews: Review[];
     }>;
-
     const data = response.data;
+    console.log(data);
 
     if (!data || !data.book || !data.book.external_id) {
       throw new Error("Invalid book data received");

@@ -58,14 +58,30 @@ jobs:
       - name: Create test database
         run: docker compose exec -T db psql -U postgres -c "CREATE DATABASE fastlibrary_test;"
 
-      - name: Use test environment variables
-        run: cp backend/.env.test backend/.env
-
       - name: 🛠️ Install test dependencies
         run: docker compose exec -T fastapi pip install faker
 
-      - name: 🧪 Run backend tests
-        run: docker compose exec -T fastapi pytest -vv --log-cli-level=DEBUG
+      - name: 🗄️ Apply migrations to test database
+        run: |
+          docker compose exec -T fastapi bash -c "
+            export TEST_DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
+            cd /app && TEST_DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test alembic upgrade head
+          "
+
+      - name: 🧪 Run backend tests with test environment
+        run: |
+          docker compose exec -T fastapi bash -c "
+            export DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
+            export TEST_DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary_test
+            export ENV=test
+            export PROJECT_NAME=SonicLibraryTest
+            export SECRET_KEY=test_key
+            export ALGORITHM=HS256
+            export ACCESS_TOKEN_EXPIRE_MINUTES=15
+            export PYTHONPATH=/app
+            cd /app && python -c \"from app.core.config import settings; print(f'DATABASE_URL: {settings.DATABASE_URL}')\"
+            cd /app && pytest -vv --log-cli-level=DEBUG
+          "
         timeout-minutes: 10
 
       - name: 📜 Output container logs on test failure

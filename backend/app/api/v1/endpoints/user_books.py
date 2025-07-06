@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.user_book_service import UserBookService
@@ -45,7 +45,7 @@ def create(
     external_book_id = user_book.external_book_id
 
     if book_id:
-        book = book_service.get(book_id)
+        book = book_service.get_by_id(book_id)
         if not book:
             raise HTTPException(status_code=404, detail="Book with this ID does not exist.")
     elif external_book_id:
@@ -66,6 +66,7 @@ def create(
 
     # Check for duplicate user_book
     existing = user_book_service.get_by_user_and_book(current_user.id, book_id)
+
     if existing:
         raise HTTPException(
             status_code=400,
@@ -85,11 +86,11 @@ def create(
 @log_exceptions("GET /user-books/my-books")
 def get_my_books(
     current_user: User = Depends(get_current_user),
-    user_book_service: UserBookService = Depends(get_user_book_service)
+    user_book_service: UserBookService = Depends(get_user_book_service),
+    status: str | None = Query(None, description="Filter by reading status: TO READ, READ, READING")
 ):
-    """Get all books in the user's library."""
-    books = user_book_service.get_books_by_user(current_user.id)
-
+    """Get all books in the user's library, optionally filtered by status."""
+    books = user_book_service.get_books_by_user(current_user.id, status=status)
     return ApiResponse(data=[serialize_user_book(b) for b in books])
 
 @router.get("/book/{book_id}", response_model=ApiResponse[UserBookResponse])

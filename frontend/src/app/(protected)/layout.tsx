@@ -15,6 +15,11 @@ export default function ProtectedLayout({
 
   useEffect(() => {
     const initAuth = async () => {
+      // If we already have user data, no need to check again
+      if (user) {
+        return;
+      }
+
       try {
         const isAuthenticated = await checkAuth();
         if (!isAuthenticated) {
@@ -28,7 +33,7 @@ export default function ProtectedLayout({
     };
 
     initAuth();
-  }, [checkAuth, logout, router]);
+  }, [checkAuth, logout, router, user]);
 
   // Show loading screen while checking authentication
   if (isLoading) {

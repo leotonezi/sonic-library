@@ -3,12 +3,11 @@ from typing import Optional
 
 class ReviewBase(BaseModel):
     book_id: int
-    user_id: int
     content: str
     rate: int
 
 class ReviewCreate(ReviewBase):
-    pass
+    user_id: Optional[int] = None
 
 class ReviewUpdate(BaseModel):
     content: Optional[str] = Field(default=None, min_length=1)
@@ -25,5 +24,8 @@ class ReviewUpdate(BaseModel):
 
 class ReviewResponse(ReviewBase):
     id: int
+    user_id: int
+    user_name: Optional[str] = None
+    user_profile_picture: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

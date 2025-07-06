@@ -7,8 +7,14 @@ from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.user_service import UserService
+from typing import Dict, Optional
+import time
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Simple in-memory cache for user authentication
+_user_cache: Dict[str, tuple] = {}  # email -> (user_data_dict, timestamp)
+CACHE_TTL = 300  # 5 minutes cache TTL
 
 def hash_password(password: str) -> str:
     """Hash a password."""
@@ -22,11 +28,28 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     """Generate a JWT token."""
     to_encode = data.copy()
     expire = datetime.now(UTC) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
+    to_encode["exp"] = str(int(expire.timestamp()))
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+def _get_cached_user(email: str) -> Optional[object]:
+    """Get user from cache if not expired."""
+    if email in _user_cache:
+        user_data_dict, timestamp = _user_cache[email]
+        if time.time() - timestamp < CACHE_TTL:
+            # Return None to force database lookup to avoid session issues
+            return None
+        else:
+            # Remove expired cache entry
+            del _user_cache[email]
+    return None
+
+def _cache_user(email: str, user_data: object):
+    """Cache user data with timestamp."""
+    # Don't cache to avoid session issues
+    pass
 
 async def get_current_user(
     request: Request,
@@ -50,13 +73,13 @@ async def get_current_user(
             settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM]
         )
-        user_email: str = payload.get("sub")
-        if user_email is None:
+        user_email = payload.get("sub")
+        if user_email is None or not isinstance(user_email, str):
             raise credentials_exception
     except JWTError:
         raise credentials_exception
 
-    # Get user from database
+    # Get user from database (no caching to avoid session issues)
     user_service = UserService(db)
     user = user_service.get_user_by_email(user_email)
     if user is None:
@@ -68,7 +91,7 @@ def create_activation_token(email: str, expires_delta: timedelta | None = None) 
     """Generate a JWT token specifically for account activation."""
     to_encode = {"sub": email}
     expire = datetime.now(UTC) + (expires_delta or timedelta(hours=24))
-    to_encode.update({"exp": expire})
+    to_encode["exp"] = str(int(expire.timestamp()))
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
@@ -76,8 +99,8 @@ def verify_activation_token(token: str) -> str:
     """Verify the activation token and extract the email."""
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
+        email = payload.get("sub")
+        if email is None or not isinstance(email, str):
             raise ValueError("Invalid token payload.")
         return email
     except JWTError:

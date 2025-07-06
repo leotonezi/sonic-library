@@ -1,7 +1,8 @@
 // app/profile/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { Mail, User as UserIcon } from 'lucide-react';
+import { Mail, User as UserIcon, Settings } from 'lucide-react';
+import Link from 'next/link';
 import User from '@/interfaces/user';
 
 export default async function ProfilePage() {
@@ -25,19 +26,41 @@ export default async function ProfilePage() {
 
   const { data: profile }: { data: User } = await res.json();
 
+  const getProfilePictureUrl = (filename?: string) => {
+    if (!filename) return undefined;
+    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/profile_pictures/${filename}`;
+  };
+
   return (
     <main className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
       <div className="bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full mb-6">
-        <div className="flex items-center gap-6 mb-6">
-          <div className="w-24 h-24 bg-blue-800 border-2 border-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-4xl text-blue-200">
-              {profile.name.charAt(0).toUpperCase()}
-            </span>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-6">
+            {profile.profile_picture ? (
+              <img
+                src={getProfilePictureUrl(profile.profile_picture)}
+                alt="Profile"
+                className="w-24 h-24 rounded-full object-cover border-2 border-blue-500"
+              />
+            ) : (
+              <div className="w-24 h-24 bg-blue-800 border-2 border-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-4xl text-blue-200">
+                  {profile.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center text-blue-200">
+              <UserIcon size={32} className="mr-2" />
+              <h1 className="text-3xl font-bold text-blue-500">{profile.name}</h1>
+            </div>
           </div>
-          <div className="flex items-center text-blue-200">
-            <UserIcon size={32} className="mr-2" />
-            <h1 className="text-3xl font-bold text-blue-500">{profile.name}</h1>
-          </div>
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-600 text-blue-100 px-4 py-2 rounded transition-colors"
+          >
+            <Settings size={16} />
+            Settings
+          </Link>
         </div>
         <div className="space-y-4">
           <div className="bg-blue-800 p-4 rounded-lg">

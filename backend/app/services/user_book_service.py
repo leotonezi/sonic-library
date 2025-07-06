@@ -11,16 +11,16 @@ class UserBookService(BaseService[UserBook]):
     def get_by_user(self, user_id: int):
         return self.db.query(self.model).filter(self.model.user_id == user_id).all()
 
-    def get_books_by_user(self, user_id: int):
-        """
-        Return all UserBook entries for the user with the related Book loaded.
-        """
-        return (
+    def get_books_by_user(self, user_id: int, status: str | None = None):
+        query = (
             self.db.query(self.model)
-            .options(joinedload(self.model.book))  # eager load the Book relationship
+            .options(joinedload(self.model.book))
             .filter(self.model.user_id == user_id)
-            .all()
         )
+        if status:
+            query = query.filter(self.model.status == status)
+        return query.all()
+
     def get_by_book(self, book_id: int):
         return self.db.query(self.model).filter(self.model.book_id == book_id).all()
 
@@ -81,3 +81,6 @@ class UserBookService(BaseService[UserBook]):
           )
           .all()
       )
+
+    def create(self, obj_in: dict):
+        return super().create(obj_in)
