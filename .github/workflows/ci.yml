@@ -189,7 +189,7 @@ jobs:
         run: docker compose -f docker-compose.test.yml down --volumes --remove-orphans
 
   release:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     needs: [backend, frontend]
     runs-on: ubuntu-latest
     steps:
