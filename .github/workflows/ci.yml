@@ -123,7 +123,7 @@ jobs:
         run: docker compose down --volumes --remove-orphans
 
   release:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     needs: [backend, frontend]
     runs-on: ubuntu-latest
     steps:
