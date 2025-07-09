@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Type, TypeVar, Generic
-from datetime import datetime
+from datetime import datetime, UTC
 
 T = TypeVar("T")  # Type hint for models
 
@@ -24,7 +24,7 @@ class BaseService(Generic[T]):
             return None
 
         if 'updated_at' in self.model.__table__.columns:
-            obj_in['updated_at'] = datetime.utcnow()
+            obj_in['updated_at'] = datetime.now(UTC)
 
         for field, value in obj_in.items():
             setattr(db_obj, field, value)
@@ -34,7 +34,7 @@ class BaseService(Generic[T]):
         return db_obj
 
     def create(self, obj_in: dict):
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
 
         if 'created_at' in self.model.__table__.columns and 'created_at' not in obj_in:
             obj_in['created_at'] = now

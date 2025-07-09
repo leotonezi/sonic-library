@@ -21,8 +21,8 @@ export default function NavBar() {
 
   const searchQuery = useSearchBookStore((state) => state.searchQuery);
   const setSearchQuery = useSearchBookStore((state) => state.setSearchQuery);
-  const fetchExternalBooks = useSearchBookStore(
-    (state) => state.fetchExternalBooks,
+  const fetchExternalBooksPaginated = useSearchBookStore(
+    (state) => state.fetchExternalBooksPaginated,
   );
 
   // Don't render navbar if still loading or no user
@@ -42,9 +42,16 @@ export default function NavBar() {
   const handleSearch = async () => {
     setIsSearching(true);
     try {
-      await fetchExternalBooks(genreInput);
-      toast.success("Search Complete!!!");
-      router.push("/books");
+      let query = searchQuery;
+      if (genreInput) {
+        query = `subject:${genreInput} ${searchQuery}`.trim();
+      }
+      
+      if (query.trim()) {
+        await fetchExternalBooksPaginated(query, 1, 10);
+        toast.success("Search Complete!!!");
+        router.push("/books");
+      }
     } catch (error) {
       console.error("Search failed:", error);
       toast.error("Search failed. Please try again.");
