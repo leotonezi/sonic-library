@@ -1,8 +1,14 @@
 import os
+import sys
 from dotenv import load_dotenv
 
 # Detect if running tests
-is_testing = os.getenv("PYTEST_CURRENT_TEST") is not None
+is_testing = (
+    os.getenv("PYTEST_CURRENT_TEST") is not None or
+    os.getenv("TESTING") == "true" or
+    "pytest" in sys.modules or
+    "test" in sys.argv[0] if sys.argv else False
+)
 
 load_dotenv(override=True)
 
