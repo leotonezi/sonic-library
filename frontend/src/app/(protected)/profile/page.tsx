@@ -28,7 +28,7 @@ export default async function ProfilePage() {
   const { data: profile }: { data: User } = await res.json();
 
   const getProfilePictureUrl = (filename?: string) => {
-    if (!filename) return undefined;
+    if (!filename) return '';
     return `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/profile_pictures/${filename}`;
   };
 
