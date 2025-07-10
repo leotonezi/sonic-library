@@ -1,6 +1,7 @@
 import Review from "@/interfaces/review";
 import ReviewActions from "./review-actions";
 import { Star, User } from "lucide-react";
+import Image from "next/image";
 
 const renderStars = (rate: number) => {
   return Array.from({ length: 5 }, (_, i) => (
@@ -41,9 +42,11 @@ export default function ReviewsList({ reviews = [] }: { reviews?: Review[] }) {
               {review.user_name && (
                 <div className="flex items-center gap-3 mb-3">
                   {review.user_profile_picture ? (
-                    <img
+                    <Image
                       src={getProfilePictureUrl(review.user_profile_picture)}
                       alt={review.user_name}
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full object-cover border border-blue-500"
                     />
                   ) : (

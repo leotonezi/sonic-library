@@ -92,6 +92,8 @@ sonic-library/
 - **State Management**: Zustand for global state (auth, search)
 - **Protected Routes**: Authentication wrapper for protected pages
 - **API Integration**: Service layer in `services/` for backend communication
+- **Folder Structure**: Feature-based organization with `lib/`, `types/`, `hooks/`, `components/ui/`
+- **Import Patterns**: Barrel exports and TypeScript path mappings (@/lib, @/types, @/hooks)
 
 ### Database Models
 - **User**: Authentication and profile data
