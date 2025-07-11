@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Camera, Save, X, CheckCircle, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
@@ -24,27 +24,7 @@ export default function SettingsPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  useEffect(() => {
-    // Show success/error messages from URL params
-    const success = searchParams.get('success');
-    const error = searchParams.get('error');
-    
-    if (success === 'true') {
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-    } else if (success === 'picture_uploaded') {
-      setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
-    } else if (error === 'update_failed') {
-      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
-    } else if (error === 'upload_failed') {
-      setMessage({ type: 'error', text: 'Failed to upload profile picture. Please try again.' });
-    }
-  }, [searchParams]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me`, {
         credentials: 'include',
@@ -63,7 +43,27 @@ export default function SettingsPage() {
       console.error('Error fetching profile:', error);
       router.push('/login');
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    // Show success/error messages from URL params
+    const success = searchParams.get('success');
+    const error = searchParams.get('error');
+    
+    if (success === 'true') {
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+    } else if (success === 'picture_uploaded') {
+      setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
+    } else if (error === 'update_failed') {
+      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+    } else if (error === 'upload_failed') {
+      setMessage({ type: 'error', text: 'Failed to upload profile picture. Please try again.' });
+    }
+  }, [searchParams]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

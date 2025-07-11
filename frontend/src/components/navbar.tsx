@@ -118,7 +118,7 @@ export default function NavBar() {
       {/* Right-aligned Navigation Links and User Menu */}
       <div className="flex h-full">
         <Link
-          href={`/library/`}
+          href="/library"
           className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-white"
         >
           My Library

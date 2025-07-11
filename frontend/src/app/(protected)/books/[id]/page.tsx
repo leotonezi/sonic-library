@@ -27,7 +27,7 @@ async function getBookData(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/book/${bookId}`,
         accessToken,
         {
-          next: { revalidate: 60 },
+          cache: 'no-store',
         },
       ),
     ])) as [ApiResponse<Book>, ApiResponse<Review[]>];

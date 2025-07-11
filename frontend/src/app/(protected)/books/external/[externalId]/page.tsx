@@ -21,6 +21,9 @@ async function getExternalBookData(
     const response = (await serverSideApiFetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/books/external/${externalId}`,
       accessToken,
+      {
+        cache: 'no-store',
+      },
     )) as ApiResponse<{
       book: ExternalBook;
       userBook: UserBook;

@@ -1,13 +1,20 @@
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from typing import Optional
 
 class ReviewBase(BaseModel):
-    book_id: int
+    book_id: Optional[int] = None
+    external_book_id: Optional[str] = None
     content: str
     rate: int
 
 class ReviewCreate(ReviewBase):
     user_id: Optional[int] = None
+    
+    @model_validator(mode='after')
+    def validate_book_reference(self):
+        if not self.book_id and not self.external_book_id:
+            raise ValueError('Either book_id or external_book_id must be provided')
+        return self
 
 class ReviewUpdate(BaseModel):
     content: Optional[str] = Field(default=None, min_length=1)

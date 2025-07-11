@@ -43,9 +43,8 @@ export default function AddReviewForm({ bookId }: { bookId: number | null }) {
       setReview("");
       setRate("");
 
+      // Refresh the page to show the new review
       router.refresh();
-      //window.location.reload();
-      router.push(`/books/${bookId}`);
     } catch (error) {
       toast.error("Failed to submit review");
       console.error("Review submission failed:", error);

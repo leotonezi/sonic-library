@@ -233,7 +233,11 @@ def get_book_by_external_id(
         reviews_data = review_service.get_by_external_book_with_user(external_id) if external_id else []
         reviews = [
             ReviewResponse.model_validate(
-                {**review.__dict__, "user_name": user_name, "user_profile_picture": user_profile_picture}
+                {
+                    **review.__dict__, 
+                    "user_name": user_name, 
+                    "user_profile_picture": user_profile_picture
+                }
             )
             for review, user_name, user_profile_picture in reviews_data
         ]
