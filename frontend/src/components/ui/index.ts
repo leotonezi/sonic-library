@@ -1,2 +1,2 @@
 // Barrel exports for UI components
-export * from './button';
+// Note: Add UI components here as they are created
