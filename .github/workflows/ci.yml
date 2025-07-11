@@ -115,9 +115,6 @@ jobs:
       - name: 🐳 Start Docker Compose (frontend only)
         run: docker compose -f docker-compose.yml up -d frontend
 
-      - name: 🛠️ Build frontend
-        run: docker compose exec -T frontend npm run build
-
       - name: 🧹 Teardown
         if: always()
         run: docker compose down --volumes --remove-orphans

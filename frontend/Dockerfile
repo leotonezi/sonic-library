@@ -6,28 +6,33 @@ WORKDIR /app
 ARG NEXT_PUBLIC_BACKEND_URL
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 
-# Copy only deps first
+# Copy package files first (for better caching)
 COPY package.json package-lock.json ./
 
-# Install deps (will also run postinstall)
-RUN npm install
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci
 
-# Copy tsconfig.json and next.config.ts first for proper module resolution
-COPY tsconfig.json next.config.ts ./
-
-# Copy rest of project
+# Copy the entire project (excluding node_modules and .next via .dockerignore)
 COPY . .
 
-# Patch swc and lightningcss deps again
-RUN npm install --force
-
-# Clear Next.js cache and build
-RUN rm -rf .next
+# Build the application
 RUN npm run build
 
-# Production
-FROM node:20-slim
+# Production stage
+FROM node:20-slim AS production
+
 WORKDIR /app
-COPY --from=builder /app ./
+
+# Copy package files for production dependencies
+COPY package.json package-lock.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
 EXPOSE 3000
+
 CMD ["npm", "start"]

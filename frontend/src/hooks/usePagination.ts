@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { generatePageNumbers } from '../lib/utils';
+import { generatePageNumbers } from '@/lib/utils';
 
 export interface UsePaginationProps {
   totalItems: number;
