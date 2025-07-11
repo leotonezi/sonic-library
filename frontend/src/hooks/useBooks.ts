@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Book, PaginatedResponse, BookSearchParams } from '@/types';
-import { apiClient } from '@/lib/api-client';
+import { Book, PaginatedResponse, BookSearchParams } from '../types';
+import { apiClient } from '../lib/api-client';
 
 export const useBooks = (params: BookSearchParams = {}) => {
   const [books, setBooks] = useState<Book[]>([]);
