@@ -12,13 +12,17 @@ COPY package.json package-lock.json ./
 # Install deps (will also run postinstall)
 RUN npm install
 
+# Copy tsconfig.json and next.config.ts first for proper module resolution
+COPY tsconfig.json next.config.ts ./
+
 # Copy rest of project
 COPY . .
 
 # Patch swc and lightningcss deps again
 RUN npm install --force
 
-# Now that all deps and native binaries are available
+# Clear Next.js cache and build
+RUN rm -rf .next
 RUN npm run build
 
 # Production
