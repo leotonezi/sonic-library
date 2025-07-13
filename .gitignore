@@ -16,7 +16,7 @@ downloads/
 eggs/
 logfile
 .eggs/
-lib/
+backend/lib/
 lib64/
 parts/
 sdist/
