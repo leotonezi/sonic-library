@@ -1,28 +1,32 @@
 // app/library/[user_id]/page.tsx
 
 import UserBookActions from "@/components/user-book-actions";
-import { ApiResponse } from "@/interfaces/auth";
-import { UserBook } from "@/interfaces/book";
+import { UserBook, PaginatedResponse, PaginationMetadata } from "@/interfaces/book";
 import { serverSideApiFetch } from "@/utils/api";
 import { convertBookToExternalBook } from "@/utils/book";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import LibraryPagination from "@/components/library-pagination";
 
 export const metadata: Metadata = {
   title: "My Library",
   description: "Your personal book library",
 };
 
-async function getMyBooks(
+async function getMyBooksPaginated(
   accessToken: string,
+  page: number = 1,
+  pageSize: number = 10,
   status?: string,
-): Promise<ApiResponse<UserBook[]> | null> {
+): Promise<PaginatedResponse<UserBook> | null> {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!backendUrl) throw new Error("NEXT_PUBLIC_BACKEND_URL is not set");
 
-  const url = new URL(`${backendUrl}/user-books/my-books`);
+  const url = new URL(`${backendUrl}/user-books/my-books/paginated`);
+  url.searchParams.append("page", page.toString());
+  url.searchParams.append("page_size", pageSize.toString());
   if (status) {
     url.searchParams.append("status", status);
   }
@@ -37,10 +41,12 @@ async function getMyBooks(
 export default async function LibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; page?: string; page_size?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const statusFilter = resolvedSearchParams.status;
+  const page = parseInt(resolvedSearchParams.page || "1", 10);
+  const pageSize = parseInt(resolvedSearchParams.page_size || "10", 10);
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
 
@@ -54,11 +60,13 @@ export default async function LibraryPage({
   }
 
   let userBooks: UserBook[] = [];
+  let paginationData: PaginationMetadata | null = null;
 
   try {
-    const data = await getMyBooks(accessToken, statusFilter);
+    const data = await getMyBooksPaginated(accessToken, page, pageSize, statusFilter);
     if (data && data.data) {
       userBooks = data.data;
+      paginationData = data.pagination;
     }
   } catch (error) {
     console.error("Failed to fetch user books:", error);
@@ -164,6 +172,14 @@ export default async function LibraryPage({
           })
         )}
       </section>
+      
+      {/* Pagination */}
+      {paginationData && (
+        <LibraryPagination 
+          pagination={paginationData} 
+          statusFilter={statusFilter}
+        />
+      )}
     </main>
   );
 }

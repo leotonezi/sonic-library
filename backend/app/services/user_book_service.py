@@ -3,6 +3,7 @@ from app.services.base_service import BaseService
 from app.models.user_book import StatusEnum
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
+from typing import Tuple, List, Optional
 
 class UserBookService(BaseService[UserBook]):
     def __init__(self, db):
@@ -20,6 +21,40 @@ class UserBookService(BaseService[UserBook]):
         if status:
             query = query.filter(self.model.status == status)
         return query.all()
+
+    def get_books_by_user_paginated(
+        self, 
+        user_id: int, 
+        page: int = 1, 
+        page_size: int = 10, 
+        status: Optional[str] = None
+    ) -> Tuple[List[UserBook], int, int, int]:
+        """
+        Get paginated books for a user.
+        
+        Returns:
+            Tuple of (books, total_count, total_pages, current_page)
+        """
+        query = (
+            self.db.query(self.model)
+            .options(joinedload(self.model.book))
+            .filter(self.model.user_id == user_id)
+        )
+        
+        if status:
+            query = query.filter(self.model.status == status)
+        
+        # Get total count
+        total_count = query.count()
+        
+        # Calculate pagination
+        offset = (page - 1) * page_size
+        total_pages = (total_count + page_size - 1) // page_size
+        
+        # Get paginated results
+        books = query.offset(offset).limit(page_size).all()
+        
+        return books, total_count, total_pages, page
 
     def get_by_book(self, book_id: int):
         return self.db.query(self.model).filter(self.model.book_id == book_id).all()
@@ -49,7 +84,7 @@ class UserBookService(BaseService[UserBook]):
     def get_by_external_book(self, external_book_id: str):
       return self.db.query(self.model).filter(self.model.external_book_id == external_book_id).first()
 
-    def get_by_internal_or_external_book(self, external_book_id: str = None, internal_book_id: int = None):
+    def get_by_internal_or_external_book(self, external_book_id: Optional[str] = None, internal_book_id: Optional[int] = None):
         query = self.db.query(self.model)
         if external_book_id and internal_book_id:
             return query.filter(

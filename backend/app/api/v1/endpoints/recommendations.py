@@ -11,22 +11,18 @@ from app.core.logging_decorator import log_exceptions
 
 router = APIRouter()
 
-@router.get("/{user_id}")
-@log_exceptions("GET /recommendations/{user_id}")
+@router.get("/")
+@log_exceptions("GET /recommendations")
 def get_recommendations(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
     ):
     user_reviews = db.query(Review).filter(Review.user_id == current_user.id).all()
     if not user_reviews:
-        raise HTTPException(status_code=404, detail="User has no reviews")
-
-    books = db.query(Book).all()
+        raise HTTPException(status_code=404, detail="User has no reviews to base recommendations on")
 
     from app.schemas.review import ReviewResponse
-    from app.schemas.book import BookResponse
     user_reviews_pydantic = [ReviewResponse.model_validate(r) for r in user_reviews]
-    books_pydantic = [BookResponse.from_orm_with_genres(b) for b in books]
 
-    recommendations = generate_book_recommendations(user_reviews_pydantic, books_pydantic)
+    recommendations = generate_book_recommendations(user_reviews_pydantic)
     return ApiResponse(data=recommendations)

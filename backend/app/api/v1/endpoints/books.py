@@ -4,7 +4,7 @@ from app.core.database import get_db
 from app.services.book_service import BookService
 from app.services.user_book_service import UserBookService
 from app.services.review_service import ReviewService
-from app.schemas.base_schema import ApiResponse
+from app.schemas.base_schema import ApiResponse, PaginationResponse
 from app.schemas.book import BookCreate, BookResponse
 from app.schemas.user_book import serialize_user_book
 from app.schemas.review import ReviewResponse
@@ -56,6 +56,11 @@ def set_cached_popular_books(max_results: int, data: list):
 
 def get_book_service(
     db: Session = Depends(get_db),
+) -> BookService:
+    return BookService(db)
+
+def get_book_service_auth(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> BookService:
     return BookService(db)
@@ -74,7 +79,7 @@ def get_user_book_service(
 
 @router.post("/", response_model=ApiResponse[BookResponse], status_code=201)
 @log_exceptions("POST /books", log_response=False)
-def create(book: BookCreate, book_service: BookService = Depends(get_book_service)):
+def create(book: BookCreate, book_service: BookService = Depends(get_book_service_auth)):
     try:
         obj = book_service.create(book.model_dump())
         response = BookResponse.from_orm_with_genres(obj)
@@ -82,34 +87,60 @@ def create(book: BookCreate, book_service: BookService = Depends(get_book_servic
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating book: {e}")
 
-@router.get("/", response_model=ApiResponse[list[BookResponse]])
+@router.get("/", response_model=PaginationResponse[BookResponse])
 @log_exceptions("GET /books", log_response=False)
 def index(
     search: str = Query(default=None, description="Search books by title or author"),
     genre: str = Query(default=None, description="Filter by genre"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
     book_service: BookService = Depends(get_book_service)
 ):
     try:
-        books = book_service.filter_books(search=search, genre=genre)
-        return ApiResponse(data=[BookResponse.from_orm_with_genres(b) for b in books])
+        books, total_count, total_pages, current_page = book_service.filter_books_paginated(
+            page=page, page_size=page_size, search=search, genre=genre
+        )
+        pagination_info = {
+            "current_page": current_page,
+            "total_pages": total_pages,
+            "total_count": total_count,
+            "page_size": page_size,
+            "has_next": current_page < total_pages,
+            "has_previous": current_page > 1,
+            "start_index": (current_page - 1) * page_size,
+            "end_index": min(current_page * page_size, total_count)
+        }
+        return PaginationResponse(
+            data=[BookResponse.from_orm_with_genres(b) for b in books],
+            pagination=pagination_info,
+            message="Books fetched successfully",
+            status="ok"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error listing books: " + str(e))
 
-@router.get("/search-external", response_model=ApiResponse)
+@router.get("/search-external", response_model=PaginationResponse)
 @log_exceptions("GET /books/search-external", log_response=False)
 def search_external_books(
     q: str = Query(..., description="Search books by title, author, or ISBN"),
     max_results: int = Query(10, ge=1, le=40),
+    page: int = Query(1, ge=1, description="Page number (Google Books API limitation: max 40 results per page)"),
 ):
     """
     Search for books using the Google Books API and return normalized results.
+    Note: Google Books API has a limitation of 40 results per page.
     """
     GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
     GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 
+    # Google Books API has a limit of 40 results per page
+    max_results_per_page = min(max_results, 40)
+    start_index = (page - 1) * max_results_per_page
+
     params = {
         "q": q,
-        "maxResults": max_results,
+        "maxResults": max_results_per_page,
+        "startIndex": start_index,
     }
     if GOOGLE_BOOKS_API_KEY:
         params["key"] = GOOGLE_BOOKS_API_KEY
@@ -134,11 +165,27 @@ def search_external_books(
                 "language": info.get("language"),
             })
 
-        return {
-            "data": books,
-            "message": "Books fetched successfully",
-            "status": "ok"
+        # Calculate pagination info
+        total_items = data.get("totalItems", 0)
+        total_pages = (total_items + max_results_per_page - 1) // max_results_per_page if total_items > 0 else 0
+        
+        pagination_info = {
+            "current_page": page,
+            "total_pages": total_pages,
+            "total_count": total_items,
+            "page_size": max_results_per_page,
+            "has_next": page < total_pages,
+            "has_previous": page > 1,
+            "start_index": start_index,
+            "end_index": start_index + len(books)
         }
+
+        return PaginationResponse(
+            data=books,
+            pagination=pagination_info,
+            message="Books fetched successfully",
+            status="ok"
+        )
 
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
@@ -186,7 +233,11 @@ def get_book_by_external_id(
         reviews_data = review_service.get_by_external_book_with_user(external_id) if external_id else []
         reviews = [
             ReviewResponse.model_validate(
-                {**review.__dict__, "user_name": user_name, "user_profile_picture": user_profile_picture}
+                {
+                    **review.__dict__, 
+                    "user_name": user_name, 
+                    "user_profile_picture": user_profile_picture
+                }
             )
             for review, user_name, user_profile_picture in reviews_data
         ]
@@ -204,10 +255,11 @@ def get_book_by_external_id(
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
 
-@router.get("/popular", response_model=ApiResponse)
+@router.get("/popular", response_model=PaginationResponse)
 @log_exceptions("GET /books/popular", log_response=False)
 def get_popular_books(
     max_results: int = Query(12, ge=1, le=40),
+    page: int = Query(1, ge=1, description="Page number"),
 ):
     """
     Fetch popular books using the Google Books API with curated search terms.
@@ -216,11 +268,31 @@ def get_popular_books(
     # Check cache first
     cached_books = get_cached_popular_books(max_results)
     if cached_books:
-        return {
-            "data": cached_books,
-            "message": "Popular books fetched from cache",
-            "status": "ok"
+        # Apply pagination to cached results
+        start_index = (page - 1) * max_results
+        end_index = start_index + max_results
+        paginated_books = cached_books[start_index:end_index]
+        
+        total_items = len(cached_books)
+        total_pages = (total_items + max_results - 1) // max_results
+        
+        pagination_info = {
+            "current_page": page,
+            "total_pages": total_pages,
+            "total_count": total_items,
+            "page_size": max_results,
+            "has_next": page < total_pages,
+            "has_previous": page > 1,
+            "start_index": start_index,
+            "end_index": min(end_index, total_items)
         }
+        
+        return PaginationResponse(
+            data=paginated_books,
+            pagination=pagination_info,
+            message="Popular books fetched from cache",
+            status="ok"
+        )
 
     GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
     GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
@@ -283,11 +355,31 @@ def get_popular_books(
     # Cache the results
     set_cached_popular_books(max_results, final_books)
 
-    return {
-        "data": final_books,
-        "message": "Popular books fetched successfully",
-        "status": "ok"
+    # Apply pagination
+    start_index = (page - 1) * max_results
+    end_index = start_index + max_results
+    paginated_books = final_books[start_index:end_index]
+    
+    total_items = len(final_books)
+    total_pages = (total_items + max_results - 1) // max_results
+    
+    pagination_info = {
+        "current_page": page,
+        "total_pages": total_pages,
+        "total_count": total_items,
+        "page_size": max_results,
+        "has_next": page < total_pages,
+        "has_previous": page > 1,
+        "start_index": start_index,
+        "end_index": min(end_index, total_items)
     }
+
+    return PaginationResponse(
+        data=paginated_books,
+        pagination=pagination_info,
+        message="Popular books fetched successfully",
+        status="ok"
+    )
 
 @router.get("/popular/cache/status", response_model=ApiResponse)
 @log_exceptions("GET /books/popular/cache/status", log_response=False)
@@ -336,7 +428,7 @@ def clear_popular_books_cache():
 
 @router.get("/{book_id}", response_model=ApiResponse[BookResponse])
 @log_exceptions("GET /books/{book_id}", log_response=False)
-def get(book_id: int, book_service: BookService = Depends(get_book_service)):
+def get(book_id: int, book_service: BookService = Depends(get_book_service_auth)):
     try:
         book = book_service.get_by_id(book_id)
         if not book:

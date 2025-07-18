@@ -1,0 +1,67 @@
+// Next.js App Router .cursorrules
+
+// Next.js App Router best practices
+
+const nextjsAppRouterBestPractices = [
+  "Use server components by default",
+  "Implement client components only when necessary",
+  "Utilize the new file-based routing system",
+  "Use layout.js for shared layouts",
+  "Implement loading.js for loading states",
+  "Use error.js for error handling",
+  "Utilize route handlers for API routes",
+];
+
+// Folder structure
+
+const folderStructure = `
+src/
+├── app/                    # Next.js App Router
+│   ├── (protected)/       # Protected routes
+│   ├── (public)/          # Public routes
+│   └── api/               # API routes
+├── components/
+│   ├── ui/                # Reusable UI components
+│   ├── features/          # Feature-specific components
+│   └── layout/            # Layout components
+├── lib/                   # Shared utilities & config
+├── hooks/                 # Custom React hooks
+├── types/                 # TypeScript type definitions
+├── services/              # API services & external integrations
+│   └── api/               # API client configuration
+├── store/                 # State management (Zustand)
+│   └── slices/            # Store slices
+├── assets/                # Static assets
+│   ├── icons/             # Icon files
+│   ├── images/            # Image files
+│   └── fonts/             # Font files
+├── styles/                # Global styles & themes
+├── utils/                 # Utility functions
+└── interfaces/            # Legacy interface definitions (to be migrated to types/)
+tests/
+├── __mocks__/             # Test mocks
+├── components/            # Component tests
+├── pages/                 # Page tests
+└── utils/                 # Utility tests
+docs/                      # Documentation
+public/                    # Public assets
+`;
+
+// Additional instructions
+
+const additionalInstructions = `
+1. Use TypeScript for type safety
+2. Implement proper metadata for SEO
+3. Utilize Next.js Image component for optimized images
+4. Use CSS Modules or Tailwind CSS for styling
+5. Implement proper error boundaries
+6. Follow Next.js naming conventions for special files
+7. Use environment variables for configuration
+8. Organize components by feature in components/features/
+9. Keep reusable UI components in components/ui/
+10. Use custom hooks in hooks/ for shared logic
+11. Centralize types in types/ instead of interfaces/
+12. Use lib/ for shared utilities and configurations
+13. Implement barrel exports (index.ts) for clean imports
+14. Follow the established folder structure for consistency
+`;
