@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: pytest
         name: Run backend tests
-        entry: bash -c "cd backend && pytest"
+        entry: bash -c "cd backend && source venv/bin/activate && pytest"
         language: system
         pass_filenames: false
 
