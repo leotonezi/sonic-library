@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "@/utils/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
+import BookRecommendationGraph from '@/components/features/BookRecommendationGraph';
 
 interface BookRecommendation {
   external_id: string;
@@ -213,6 +214,13 @@ export default function RecommendationPage() {
           </div>
         )}
       </div>
+      <div className="flex items-center gap-3 mb-4 mt-12">
+        <h2 className="text-2xl font-bold">Visual Book Recommendation Graph</h2>
+        <span className="bg-[#fa8537] text-white text-xs font-semibold px-2 py-1 rounded-full">
+          Beta
+        </span>
+      </div>
+      <BookRecommendationGraph />
     </div>
   );
 }

@@ -63,6 +63,7 @@ pydantic_core==2.33.1
 Pygments==2.19.1
 PyJWT==2.10.1
 pytest==8.3.5
+faker==37.4.2
 python-dotenv==1.0.1
 python-jose==3.4.0
 python-multipart==0.0.20
