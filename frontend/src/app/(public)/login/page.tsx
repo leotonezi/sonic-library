@@ -98,7 +98,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a1128] text-[#e0f0ff] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#0a1128] text-[#e0f0ff] flex items-center justify-center px-4">
       <div className="w-full max-w-md -mt-16">
         {/* Logo and Title Section */}
         <div className="text-center mb-6">
@@ -176,6 +176,6 @@ export default function LoginPage() {
           </p>
         </form>
       </div>
-    </main>
+    </div>
   );
 }

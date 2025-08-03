@@ -145,14 +145,14 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <main className="p-6 bg-blue-950 text-blue-50 min-h-screen flex items-center justify-center">
+      <div className="p-6 bg-blue-950 text-blue-50 min-h-screen flex items-center justify-center">
         <div className="text-xl">Loading...</div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="p-6 bg-blue-950 text-blue-50 min-h-screen">
+    <div className="p-6 bg-blue-950 text-blue-50 min-h-screen">
       <div className="max-w-2xl mx-auto">
         {/* Message Display */}
         {message && (
@@ -305,6 +305,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 } 

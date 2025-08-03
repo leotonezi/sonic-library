@@ -137,7 +137,7 @@ export default function RecommendationPage() {
         ) : parsedRecommendations.length > 0 ? (
           <div className="grid gap-6">
             {parsedRecommendations.map((book, index) => (
-              <div key={book.external_id || index} className="bg-blue-900 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 border border-blue-600 text-white">
+              <div key={`${book.external_id}-${index}`} className="bg-blue-900 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 border border-blue-600 text-white">
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">

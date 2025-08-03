@@ -81,7 +81,7 @@ export default async function BookPage({
     }
 
     return (
-      <main className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
+      <div className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
         <div className="relative bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full mb-6">
           <div className="flex justify-between items-start">
             <h1 className="text-3xl font-bold text-blue-500 mb-2">
@@ -102,7 +102,7 @@ export default async function BookPage({
 
         <AddReviewForm bookId={book?.id} />
         <ReviewsList reviews={reviews || []} />
-      </main>
+      </div>
     );
   } catch (error) {
     console.error("Error in BookPage:", error);
