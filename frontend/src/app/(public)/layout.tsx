@@ -19,5 +19,5 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
   if (!mounted) return null;
 
-  return <>{children}</>;
+  return <main>{children}</main>;
 }

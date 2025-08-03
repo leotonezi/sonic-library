@@ -38,17 +38,17 @@ export default function BooksPage() {
   // Show loading spinner when search is in progress
   if (isLoading) {
     return (
-      <main className="p-6 bg-[#0a1128] text-white min-h-screen flex items-center justify-center">
+      <div className="p-6 bg-[#0a1128] text-white min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
           <p className="text-blue-200 text-lg">Searching for books...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="p-6 bg-[#0a1128] text-white min-h-screen">
+    <div className="p-6 bg-[#0a1128] text-white min-h-screen">
       {/* Show popular books when no search has been performed */}
       {!hasSearched && popularBooks.length > 0 && (
         <div className="mb-8">
@@ -175,7 +175,7 @@ export default function BooksPage() {
           )}
         </div>
       )}
-    </main>
+    </div>
   );
 }
 
