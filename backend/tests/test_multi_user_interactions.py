@@ -43,7 +43,7 @@ class MultiUserTestHelper:
         }
 
         try:
-            validated = validate_email(user_data["email"])
+            validated = validate_email(user_data["email"], check_deliverability=False)
             user_data["email"] = validated.normalized
         except EmailNotValidError as e:
             raise AssertionError(f"Generated invalid email: {user_data['email']}") from e
