@@ -25,7 +25,7 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME:-disabled}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-disabled}
       MAIL_SERVER: ${MAIL_SERVER:-disabled}
-      MAIL_FROM: ${MAIL_FROM:-noreply@test.local}
+      MAIL_FROM: ${MAIL_FROM:-noreply@example.com}
       MAIL_DISABLED: "true"
     ports:
       - "8000:8000"
