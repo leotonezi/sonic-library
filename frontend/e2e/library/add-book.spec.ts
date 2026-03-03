@@ -12,8 +12,8 @@ test.describe('Add Book to Library', () => {
   });
 
   test('should display books page after login', async ({ page }) => {
-    // Just verify we're on the books page - use first() to avoid strict mode violation
-    await expect(page.getByRole('heading', { name: /books|library|catalog/i }).first()).toBeVisible();
+    // Verify we're on the books page by checking for the search input or navigation elements
+    await expect(page.getByPlaceholder(/search/i)).toBeVisible({ timeout: 10000 });
   });
 
   test('should search for a book', async ({ page }) => {

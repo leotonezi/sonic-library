@@ -28,29 +28,17 @@ def seed_test_users():
 
         test_users = [
             {
-                "email": "test@cypress.test",
+                "email": "test@e2etest.example.com",
                 "name": "Test User",
                 "password": "TestPassword123!",
                 "is_active": True,
             },
             {
-                "email": "admin@cypress.test",
+                "email": "admin@e2etest.example.com",
                 "name": "Admin User",
                 "password": "AdminPassword123!",
                 "is_active": True,
             },
-            {
-                "email": "test@playwright.test",
-                "name": "Test User",
-                "password": "TestPassword123!",
-                "is_active": True,
-            },
-            {
-                "email": "admin@playwright.test",
-                "name": "Admin User",
-                "password": "AdminPassword123!",
-                "is_active": True,
-            }
         ]
 
         for user_data in test_users:
@@ -78,9 +66,9 @@ def seed_test_users():
 
         print("\n✅ Test users seeded successfully!")
         print("\nTest credentials:")
-        print("  Email: test@cypress.test")
+        print("  Email: test@e2etest.example.com")
         print("  Password: TestPassword123!")
-        print("\n  Email: admin@cypress.test")
+        print("\n  Email: admin@e2etest.example.com")
         print("  Password: AdminPassword123!")
 
     except Exception as e:

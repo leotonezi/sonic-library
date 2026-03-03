@@ -24,7 +24,7 @@ test.describe('Signup', () => {
   });
 
   test('should signup successfully with new user', async ({ page }) => {
-    const uniqueEmail = `newuser_${Date.now()}@playwright.test`;
+    const uniqueEmail = `newuser_${Date.now()}@example.com`;
 
     await page.getByLabel('Name').fill('New User');
     await page.getByLabel('Email').fill(uniqueEmail);

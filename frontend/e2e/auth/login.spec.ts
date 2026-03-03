@@ -18,8 +18,8 @@ test.describe('Login', () => {
     await page.getByLabel('Password').fill(invalidUser.password);
     await page.getByRole('button', { name: 'Sign In' }).click();
 
-    // Wait for error message
-    await expect(page.getByText(/invalid|incorrect|failed/i)).toBeVisible({ timeout: 10000 });
+    // Wait for error message (use .first() to avoid strict mode violation when both form error and toast appear)
+    await expect(page.getByText(/invalid|incorrect|failed/i).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should login successfully with valid credentials', async ({ page }) => {

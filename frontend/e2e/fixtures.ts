@@ -1,12 +1,12 @@
 // Test user data
 export const testUser = {
-  email: 'test@playwright.test',
+  email: 'test@e2etest.example.com',
   password: 'TestPassword123!',
   name: 'Test User',
 };
 
 export const adminUser = {
-  email: 'admin@playwright.test',
+  email: 'admin@e2etest.example.com',
   password: 'AdminPassword123!',
   name: 'Admin User',
 };
