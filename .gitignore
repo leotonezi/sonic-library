@@ -182,3 +182,8 @@ cython_debug/
 
 # Profile picture files
 backend/uploads/profile_pictures/*
+
+# Cypress
+frontend/cypress/videos/
+frontend/cypress/screenshots/
+frontend/cypress/downloads/

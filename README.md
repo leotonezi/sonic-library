@@ -1,114 +1,114 @@
-# 📚 Sonic Library
+# Sonic Library
 
-Sonic Library is a modern, full-stack digital library platform built with FastAPI and Next.js. It allows users to browse books, write reviews, and receive AI-powered recommendations based on their reading history and preferences.
+A full-stack digital library platform where users can browse books, track their reading, write reviews, and receive AI-powered recommendations based on their reading history.
 
- 
+## The Problem
 
-⸻
+Readers often struggle to:
+- Keep track of books they want to read, are reading, or have finished
+- Discover new books tailored to their tastes
+- Find a centralized place to review and rate their reads
 
-## ⚙️ Tech Stack
+Sonic Library solves this by combining personal library management with AI-driven recommendations.
 
-| Layer      | Tech                              |
-|------------|-----------------------------------|
-| Backend    | Python, FastAPI, SQLAlchemy       |
-| Frontend   | React, Next.js 15 (App Router)    |
-| AI Engine  | LangChain + OpenAI (or local LLMs)|
-| Database   | PostgreSQL (via Docker)           |
-| DevOps  | Docker, pre-commit, GitHub Actions, Pytest, ESLint |
+## Tech Stack
 
+| Layer | Technology |
+|-------|------------|
+| Backend | Python 3.10+, FastAPI, SQLAlchemy, PostgreSQL |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS |
+| AI | LangChain + OpenAI GPT-3.5 |
+| State | Zustand |
+| Testing | Pytest, Cypress |
+| Infrastructure | Docker, Docker Compose |
 
+## Features
 
-⸻
+- **Authentication** - JWT-based auth with HTTP-only cookies
+- **Book Search** - Search local database + Google Books API
+- **Personal Library** - Track books as "To Read", "Reading", or "Read"
+- **Reviews & Ratings** - Rate books 1-5 stars with written reviews
+- **AI Recommendations** - Get personalized suggestions based on your reviews
+- **Recommendation Graph** - Visual exploration of book relationships
 
-## 🚀 Features
-- 🔒 JWT-based authentication
-- 📖 Book listing with genres and tags
-- ✍️ User reviews and star ratings
-- 🧠 AI-based book recommendation system
-- 💻 Responsive UI with dark mode
-- 🐳 Dockerized development environment
-- ✅ Git hooks for linting and testing via pre-commit
-- 📦 REST API documented with OpenAPI (Swagger)
+## Quick Start
 
-⸻
+### Requirements
 
-## 📂 Project Structure
+- Docker & Docker Compose
+- Node.js 18+ (for local frontend development)
+- Python 3.10+ (for local backend development)
 
-<pre>
+### Run with Docker
+
+```bash
+# Start all services
+docker-compose up --build
+```
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+| API Docs | http://localhost:8000/docs |
+
+### Environment Variables
+
+Create `.env` in `backend/`:
+
+```env
+DATABASE_URL=postgresql+psycopg2://postgres:password@db:5432/fastlibrary
+SECRET_KEY=your-secret-key
+OPENAI_API_KEY=sk-...
+FRONTEND_URL=http://localhost:3000
+BACKEND_URL=http://localhost:8000
+```
+
+Create `.env.local` in `frontend/`:
+
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+```
+
+## Project Structure
 
 ```
 sonic-library/
-├── backend/                # FastAPI app
+├── backend/              # FastAPI application
 │   ├── app/
-│   ├── alembic/            # DB migrations
-│   └── tests/              # Pytest-based tests
-├── frontend/               # Next.js 15 app
-│   └── src/app/            # App Router pages
-├── .github/                # PR & issue templates, CI config
-├── docker-compose.yml
-└── README.md
+│   │   ├── api/v1/       # API endpoints
+│   │   ├── core/         # Config, database, security
+│   │   ├── models/       # SQLAlchemy models
+│   │   ├── schemas/      # Pydantic schemas
+│   │   └── services/     # Business logic
+│   ├── alembic/          # Database migrations
+│   └── tests/
+├── frontend/             # Next.js application
+│   └── src/
+│       ├── app/          # App Router pages
+│       ├── components/
+│       ├── store/        # Zustand state
+│       └── services/     # API client
+└── docker-compose.yml
 ```
 
-</pre>
+## Running Tests
 
+```bash
+# Backend
+cd backend && pytest
 
-⸻
+# Frontend lint
+cd frontend && npm run lint
 
-## 🚀 Getting Started
+# E2E tests
+cd frontend && npm run cypress:run
+```
 
-### 📦 Requirements
-	•	Docker & Docker Compose
-	•	Python 3.10+
-	•	Node.js 18+
+## Contributing
 
-⸻
+See the [Project Board](https://github.com/leotonezi/sonic-library/projects) for planned features and open issues.
 
-## 🐳 Start with Docker
+## License
 
-### Build and run everything
-docker-compose up --build
-
-Access the frontend at http://localhost:3000
-Access the backend API docs at http://localhost:8000/docs
-
-⸻
-
-## 🧪 Run Tests
-
-Backend tests (pytest):
-
-cd backend
-pytest
-
-Frontend lint:
-
-cd frontend
-npm install
-npm run lint
-
-
-
-⸻
-
-## 🧹 Pre-commit Hooks
-
-### One-time setup
-pre-commit install
-
-### Run all hooks manually
-pre-commit run --all-files
-
-That’s looking super clean and professional, Leo! 🔥 Here’s the final section you can append to your README.md:
-
-⸻
-
-## 🧭 Next Steps
-Check out the [Project board](https://github.com/leotonezi/sonic-library/projects) to see what’s coming next!
-We’re actively working on new features like:
-- User profile pages
-- OAuth login
-- Admin dashboard
-- Genre-based book filters
-- More AI enhancements
-
-Stay tuned and feel free to contribute!
+MIT
