@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.book_service import BookService
@@ -12,6 +12,8 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
 from app.core.config import settings
+from app.core.rate_limiter import RateLimiter
+from app.core.redis import get_redis
 
 import re, html, requests, os
 import time
@@ -77,6 +79,25 @@ def get_user_book_service(
 ) -> UserBookService:
     return UserBookService(db)
 
+
+def check_search_rate_limit(request: Request) -> None:
+    """FastAPI dependency that enforces per-user rate limiting on search endpoints."""
+    redis_client = get_redis()
+    limiter = RateLimiter(
+        redis_client=redis_client,
+        max_requests=settings.SEARCH_RATE_LIMIT,
+        window_seconds=settings.SEARCH_RATE_LIMIT_WINDOW,
+    )
+
+    # Identify by user ID if authenticated, otherwise by IP
+    identifier = str(request.client.host) if request.client else "unknown"
+
+    allowed, retry_after = limiter.is_allowed(identifier)
+    if not allowed:
+        from app.core.exceptions import RateLimitExceeded
+        raise RateLimitExceeded(retry_after=retry_after)
+
+
 @router.post("/", response_model=ApiResponse[BookResponse], status_code=201)
 @log_exceptions("POST /books", log_response=False)
 def create(book: BookCreate, book_service: BookService = Depends(get_book_service_auth)):
@@ -125,6 +146,7 @@ def search_external_books(
     q: str = Query(..., description="Search books by title, author, or ISBN"),
     max_results: int = Query(10, ge=1, le=40),
     page: int = Query(1, ge=1, description="Page number (Google Books API limitation: max 40 results per page)"),
+    _rate_limit: None = Depends(check_search_rate_limit),
 ):
     """
     Search for books using the Google Books API and return normalized results.
