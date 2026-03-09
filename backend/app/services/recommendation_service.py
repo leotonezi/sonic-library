@@ -1,7 +1,11 @@
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from app.schemas.review import ReviewResponse
+from app.core.config import settings
+from app.core.redis import get_redis
+from app.core.rate_limiter import GlobalRateLimiter
 import os
+import logging
 import requests
 import time
 import hashlib
@@ -13,6 +17,8 @@ from app.models.book import Book
 from app.models.review import Review
 from app.models.user_book import UserBook
 import re
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -28,14 +34,31 @@ llm = ChatOpenAI(temperature=0.3, model="gpt-3.5-turbo")
 _recommendations_cache: Dict[str, Dict[str, Any]] = {}
 CACHE_TTL = 3600  # 1 hour cache
 
+def _get_google_books_global_limiter() -> GlobalRateLimiter:
+    """Return a GlobalRateLimiter for Google Books API calls."""
+    redis_client = get_redis()
+    return GlobalRateLimiter(
+        redis_client=redis_client,
+        max_requests=settings.GOOGLE_BOOKS_GLOBAL_RATE_LIMIT,
+        window_seconds=60,
+        key="global_rate_limit:google_books",
+    )
+
+
 def get_google_books_by_genre(genres: List[str], max_results: int = 20) -> List[Dict]:
     """Fetch books from Google Books API based on genres."""
+    # Check global rate limit
+    limiter = _get_google_books_global_limiter()
+    if not limiter.is_allowed():
+        logger.warning("Google Books global rate limit exceeded, returning empty list")
+        return []
+
     GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
     GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
-    
+
     # Create search query from genres
     genre_query = " OR ".join([f"subject:{genre}" for genre in genres])
-    
+
     params = {
         "q": genre_query,
         "maxResults": min(max_results, 40),
@@ -43,12 +66,12 @@ def get_google_books_by_genre(genres: List[str], max_results: int = 20) -> List[
     }
     if GOOGLE_BOOKS_API_KEY:
         params["key"] = GOOGLE_BOOKS_API_KEY
-    
+
     try:
         resp = requests.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
         resp.raise_for_status()
         data = resp.json()
-        
+
         books = []
         for item in data.get("items", []):
             info = item.get("volumeInfo", {})

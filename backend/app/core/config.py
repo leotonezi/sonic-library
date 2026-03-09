@@ -35,6 +35,7 @@ class Settings:
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
     SEARCH_RATE_LIMIT: int = int(os.getenv("SEARCH_RATE_LIMIT", 30))
     SEARCH_RATE_LIMIT_WINDOW: int = int(os.getenv("SEARCH_RATE_LIMIT_WINDOW", 60))
+    GOOGLE_BOOKS_GLOBAL_RATE_LIMIT: int = int(os.getenv("GOOGLE_BOOKS_GLOBAL_RATE_LIMIT", 100))
 
 
 settings = Settings()

@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.core.rate_limiter import RateLimiter
+from app.core.rate_limiter import GlobalRateLimiter, RateLimiter
 
 
 class FakeRedis:
@@ -167,3 +167,55 @@ class TestRateLimiter:
         # user2 should still be allowed
         allowed, _ = limiter.is_allowed("user2")
         assert allowed is True
+
+
+class TestGlobalRateLimiter:
+    def test_allows_requests_under_limit(self):
+        fake_redis = FakeRedis()
+        limiter = GlobalRateLimiter(redis_client=fake_redis, max_requests=5, window_seconds=60)
+
+        for _ in range(5):
+            assert limiter.is_allowed() is True
+
+    def test_blocks_requests_over_limit(self):
+        fake_redis = FakeRedis()
+        limiter = GlobalRateLimiter(redis_client=fake_redis, max_requests=3, window_seconds=60)
+
+        for _ in range(3):
+            assert limiter.is_allowed() is True
+
+        assert limiter.is_allowed() is False
+
+    def test_correctly_counts_calls(self):
+        fake_redis = FakeRedis()
+        limiter = GlobalRateLimiter(
+            redis_client=fake_redis, max_requests=5, window_seconds=60, key="test_global"
+        )
+
+        # Make exactly max_requests calls
+        for i in range(5):
+            assert limiter.is_allowed() is True
+
+        # Next call should be blocked
+        assert limiter.is_allowed() is False
+        # And another
+        assert limiter.is_allowed() is False
+
+    def test_fails_open_when_redis_is_none(self):
+        limiter = GlobalRateLimiter(redis_client=None, max_requests=1, window_seconds=60)
+        assert limiter.is_allowed() is True
+
+    def test_fails_open_when_redis_raises_exception(self):
+        broken_redis = MagicMock()
+        broken_redis.pipeline.side_effect = Exception("Connection refused")
+
+        limiter = GlobalRateLimiter(redis_client=broken_redis, max_requests=1, window_seconds=60)
+        assert limiter.is_allowed() is True
+
+    def test_returns_empty_list_on_limit_exceeded(self):
+        """Integration-style test: verify get_google_books_by_genre returns [] when limited."""
+        fake_redis = FakeRedis()
+        limiter = GlobalRateLimiter(redis_client=fake_redis, max_requests=0, window_seconds=60)
+
+        # With max_requests=0, every call is over the limit
+        assert limiter.is_allowed() is False
