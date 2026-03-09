@@ -36,6 +36,8 @@ class Settings:
     SEARCH_RATE_LIMIT: int = int(os.getenv("SEARCH_RATE_LIMIT", 30))
     SEARCH_RATE_LIMIT_WINDOW: int = int(os.getenv("SEARCH_RATE_LIMIT_WINDOW", 60))
     GOOGLE_BOOKS_GLOBAL_RATE_LIMIT: int = int(os.getenv("GOOGLE_BOOKS_GLOBAL_RATE_LIMIT", 100))
+    CB_GOOGLE_FAILURE_THRESHOLD: int = int(os.getenv("CB_GOOGLE_FAILURE_THRESHOLD", 5))
+    CB_GOOGLE_RECOVERY_TIMEOUT: int = int(os.getenv("CB_GOOGLE_RECOVERY_TIMEOUT", 30))
 
 
 settings = Settings()

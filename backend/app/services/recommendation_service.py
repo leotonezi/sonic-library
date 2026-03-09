@@ -4,6 +4,7 @@ from app.schemas.review import ReviewResponse
 from app.core.config import settings
 from app.core.redis import get_redis
 from app.core.rate_limiter import GlobalRateLimiter
+from app.core.circuit_breaker import CircuitBreaker
 import os
 import logging
 import requests
@@ -45,8 +46,24 @@ def _get_google_books_global_limiter() -> GlobalRateLimiter:
     )
 
 
+def _get_google_books_circuit_breaker() -> CircuitBreaker:
+    """Return a CircuitBreaker instance for Google Books API."""
+    return CircuitBreaker(
+        name="google_books",
+        failure_threshold=settings.CB_GOOGLE_FAILURE_THRESHOLD,
+        recovery_timeout=settings.CB_GOOGLE_RECOVERY_TIMEOUT,
+        redis_client=get_redis(),
+    )
+
+
 def get_google_books_by_genre(genres: List[str], max_results: int = 20) -> List[Dict]:
     """Fetch books from Google Books API based on genres."""
+    # Check circuit breaker
+    cb = _get_google_books_circuit_breaker()
+    if not cb.is_call_permitted():
+        logger.warning("Google Books circuit breaker open, returning empty list")
+        return []
+
     # Check global rate limit
     limiter = _get_google_books_global_limiter()
     if not limiter.is_allowed():
@@ -87,8 +104,10 @@ def get_google_books_by_genre(genres: List[str], max_results: int = 20) -> List[
                 "pageCount": info.get("pageCount"),
                 "language": info.get("language")
             })
+        cb.record_success()
         return books
-    except:
+    except Exception:
+        cb.record_failure()
         return []
 
 def create_cache_key(user_reviews: List[ReviewResponse]) -> str:
