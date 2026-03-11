@@ -277,3 +277,242 @@ class TestGetStats:
         assert stats["total_reviews"] == 2
         assert stats["total_user_books"] == 1
         assert stats["avg_rating"] == 3.0
+
+
+# ===========================================================================
+# US-008: Write endpoint tests
+# ===========================================================================
+
+
+class TestUpdateUser:
+    """PUT /api/v1/admin/users/{id}"""
+
+    def test_update_user_name(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.put(
+            f"/api/v1/admin/users/{user.id}",
+            json={"name": "Updated Name"},
+            cookies=cookies,
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["name"] == "Updated Name"
+        assert data["email"] == REGULAR_EMAIL  # unchanged
+
+    def test_update_user_email(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.put(
+            f"/api/v1/admin/users/{user.id}",
+            json={"email": "newemail@example.com"},
+            cookies=cookies,
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["email"] == "newemail@example.com"
+        assert data["name"] == "Regular User"  # unchanged
+
+    def test_update_user_is_active(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.put(
+            f"/api/v1/admin/users/{user.id}",
+            json={"is_active": False},
+            cookies=cookies,
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["is_active"] is False
+
+    def test_update_nonexistent_user_returns_404(self, client, db_session):
+        _create_admin_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.put(
+            "/api/v1/admin/users/99999",
+            json={"name": "Ghost"},
+            cookies=cookies,
+        )
+        assert resp.status_code == 404
+
+
+class TestDeleteUser:
+    """DELETE /api/v1/admin/users/{id}"""
+
+    def test_soft_deletes_user(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.delete(f"/api/v1/admin/users/{user.id}", cookies=cookies)
+        assert resp.status_code == 200
+        assert "deactivated" in resp.json()["message"]
+
+        # Verify user still exists but is inactive
+        db_session.refresh(user)
+        assert user.is_active is False
+
+    def test_delete_nonexistent_user_returns_404(self, client, db_session):
+        _create_admin_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.delete("/api/v1/admin/users/99999", cookies=cookies)
+        assert resp.status_code == 404
+
+
+class TestResetUserPassword:
+    """POST /api/v1/admin/users/{id}/reset-password"""
+
+    def test_returns_new_password(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.post(
+            f"/api/v1/admin/users/{user.id}/reset-password", cookies=cookies
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "new_password" in data
+        assert len(data["new_password"]) > 0
+
+    def test_user_can_authenticate_with_new_password(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.post(
+            f"/api/v1/admin/users/{user.id}/reset-password", cookies=cookies
+        )
+        new_password = resp.json()["new_password"]
+
+        # Old password should no longer work
+        old_resp = client.post(
+            "/auth/token", data={"username": user.email, "password": PASSWORD}
+        )
+        assert old_resp.status_code == 401
+
+        # New password should work
+        new_resp = client.post(
+            "/auth/token", data={"username": user.email, "password": new_password}
+        )
+        assert new_resp.status_code == 200
+
+    def test_reset_nonexistent_user_returns_404(self, client, db_session):
+        _create_admin_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.post(
+            "/api/v1/admin/users/99999/reset-password", cookies=cookies
+        )
+        assert resp.status_code == 404
+
+
+class TestUpdateReview:
+    """PUT /api/v1/admin/reviews/{id}"""
+
+    def test_update_review_content(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        book = _create_book(db_session, title="Review Edit Book", external_id="ext-re-1")
+        review = _create_review(db_session, user_id=user.id, book_id=book.id, content="Original", rate=3)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.put(
+            f"/api/v1/admin/reviews/{review.id}",
+            json={"content": "Updated content"},
+            cookies=cookies,
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["content"] == "Updated content"
+        assert data["rate"] == 3  # unchanged
+
+    def test_update_review_rate(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        review = _create_review(db_session, user_id=user.id, content="Rate test", rate=2)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.put(
+            f"/api/v1/admin/reviews/{review.id}",
+            json={"rate": 5},
+            cookies=cookies,
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["rate"] == 5
+        assert data["content"] == "Rate test"  # unchanged
+
+    def test_update_nonexistent_review_returns_404(self, client, db_session):
+        _create_admin_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.put(
+            "/api/v1/admin/reviews/99999",
+            json={"content": "Ghost"},
+            cookies=cookies,
+        )
+        assert resp.status_code == 404
+
+
+class TestDeleteReview:
+    """DELETE /api/v1/admin/reviews/{id}"""
+
+    def test_deletes_review(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        review = _create_review(db_session, user_id=user.id, content="Delete me", rate=1)
+        review_id = review.id
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.delete(f"/api/v1/admin/reviews/{review_id}", cookies=cookies)
+        assert resp.status_code == 200
+        assert "deleted" in resp.json()["message"]
+
+        # Verify review is actually gone from DB
+        from app.models.review import Review as ReviewModel
+        gone = db_session.query(ReviewModel).filter(ReviewModel.id == review_id).first()
+        assert gone is None
+
+    def test_delete_nonexistent_review_returns_404(self, client, db_session):
+        _create_admin_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.delete("/api/v1/admin/reviews/99999", cookies=cookies)
+        assert resp.status_code == 404
+
+
+class TestDeleteUserBook:
+    """DELETE /api/v1/admin/user-books/{id}"""
+
+    def test_deletes_user_book(self, client, db_session):
+        admin = _create_admin_user(db_session)
+        user = _create_regular_user(db_session)
+        book = _create_book(db_session, title="UB Delete Book", external_id="ext-ubd-1")
+        ub = _create_user_book(db_session, user_id=user.id, book_id=book.id)
+        ub_id = ub.id
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.delete(f"/api/v1/admin/user-books/{ub_id}", cookies=cookies)
+        assert resp.status_code == 200
+        assert "deleted" in resp.json()["message"]
+
+        # Verify user-book is actually gone from DB
+        from app.models.user_book import UserBook as UserBookModel
+        gone = db_session.query(UserBookModel).filter(UserBookModel.id == ub_id).first()
+        assert gone is None
+
+    def test_delete_nonexistent_user_book_returns_404(self, client, db_session):
+        _create_admin_user(db_session)
+        cookies = _login(client, ADMIN_EMAIL)
+
+        resp = client.delete("/api/v1/admin/user-books/99999", cookies=cookies)
+        assert resp.status_code == 404
