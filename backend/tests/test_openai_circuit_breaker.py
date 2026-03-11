@@ -75,9 +75,7 @@ class TestOpenAICircuitBreakerInRecommendations:
 
         mock_result = MagicMock()
         mock_result.content = "Recommendation text"
-        mock_chain = MagicMock()
-        mock_chain.invoke.return_value = mock_result
-        mock_llm.__or__ = MagicMock(return_value=mock_chain)
+        mock_llm.return_value = mock_result
 
         fake_review = MagicMock()
         fake_review.book_id = 1
@@ -109,9 +107,7 @@ class TestOpenAICircuitBreakerInRecommendations:
         mock_cache.return_value = None
         mock_google.return_value = []
 
-        mock_chain = MagicMock()
-        mock_chain.invoke.side_effect = Exception("OpenAI API error")
-        mock_llm.__or__ = MagicMock(return_value=mock_chain)
+        mock_llm.side_effect = Exception("OpenAI API error")
 
         fake_review = MagicMock()
         fake_review.book_id = 1
@@ -132,67 +128,74 @@ class TestRecommendationsEndpointFallback:
     """Test the /recommendations/ endpoint fallback when circuit is open."""
 
     @patch("app.api.v1.endpoints.recommendations.generate_book_recommendations")
-    @patch("app.api.v1.endpoints.recommendations.get_current_user")
-    def test_recommendations_returns_fallback_when_circuit_open(
-        self, mock_auth, mock_gen
-    ):
+    def test_recommendations_returns_fallback_when_circuit_open(self, mock_gen):
         from fastapi.testclient import TestClient
         from app.main import app
+        from app.core.security import get_current_user
+        from app.core.database import get_db
 
         mock_user = MagicMock()
         mock_user.id = 1
-        mock_auth.return_value = mock_user
+
+        mock_session = MagicMock()
+        mock_review = MagicMock()
+        mock_review.id = 1
+        mock_review.user_id = 1
+        mock_review.book_id = 1
+        mock_review.external_book_id = None
+        mock_review.content = "Great book"
+        mock_review.rate = 5
+        mock_review.user_name = "Test User"
+        mock_review.user_profile_picture = None
+        mock_session.query.return_value.filter.return_value.all.return_value = [mock_review]
+
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[get_db] = lambda: mock_session
 
         # generate_book_recommendations returns None when circuit is open
         mock_gen.return_value = None
 
-        client = TestClient(app)
-
-        # Mock the DB query to return some reviews
-        with patch("app.api.v1.endpoints.recommendations.get_db") as mock_db:
-            mock_session = MagicMock()
-            mock_review = MagicMock()
-            mock_review.user_id = 1
-            mock_session.query.return_value.filter.return_value.all.return_value = [mock_review]
-            mock_db.return_value = mock_session
-
+        try:
+            client = TestClient(app)
             response = client.get("/recommendations/")
 
-        assert response.status_code == 200
-        body = response.json()
-        assert body["data"] is None
-        assert body["message"] == "AI recommendations are temporarily unavailable. Please try again shortly."
-        assert body["status"] == "ok"
+            assert response.status_code == 200
+            body = response.json()
+            assert body["data"] is None
+            assert body["message"] == "AI recommendations are temporarily unavailable. Please try again shortly."
+            assert body["status"] == "ok"
+        finally:
+            app.dependency_overrides.clear()
 
     @patch("app.api.v1.endpoints.recommendations.generate_book_recommendations")
-    @patch("app.api.v1.endpoints.recommendations.get_current_user")
-    def test_graph_returns_only_user_books_when_circuit_open(
-        self, mock_auth, mock_gen
-    ):
+    def test_graph_returns_only_user_books_when_circuit_open(self, mock_gen):
         from fastapi.testclient import TestClient
         from app.main import app
+        from app.core.security import get_current_user
+        from app.core.database import get_db
 
         mock_user = MagicMock()
         mock_user.id = 1
-        mock_auth.return_value = mock_user
+
+        mock_session = MagicMock()
+        mock_session.query.return_value.filter.return_value.all.return_value = []
+        mock_session.query.return_value.filter.return_value.first.return_value = None
+
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        app.dependency_overrides[get_db] = lambda: mock_session
 
         # generate_book_recommendations returns None when circuit is open
         mock_gen.return_value = None
 
-        client = TestClient(app)
-
-        with patch("app.api.v1.endpoints.recommendations.get_db") as mock_db:
-            mock_session = MagicMock()
-            # No reviews for simpler test
-            mock_session.query.return_value.filter.return_value.all.return_value = []
-            mock_session.query.return_value.filter.return_value.first.return_value = None
-            mock_db.return_value = mock_session
-
+        try:
+            client = TestClient(app)
             response = client.get("/recommendations/graph")
 
-        assert response.status_code == 200
-        body = response.json()
-        graph = body["data"]
-        # No recommendation nodes when circuit is open and no reviews
-        assert all(n["type"] != "recommendations" for n in graph["nodes"])
-        assert graph["edges"] == []
+            assert response.status_code == 200
+            body = response.json()
+            graph = body["data"]
+            # No recommendation nodes when circuit is open and no reviews
+            assert all(n["type"] != "recommendations" for n in graph["nodes"])
+            assert graph["edges"] == []
+        finally:
+            app.dependency_overrides.clear()
