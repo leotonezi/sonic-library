@@ -17,6 +17,7 @@ from app.schemas.admin import (
     AdminUserBookResponse,
     AdminStatsResponse,
     AdminUserUpdate,
+    AdminReviewUpdate,
     PaginationResponse,
 )
 from app.schemas.base_schema import ApiResponse
@@ -362,3 +363,85 @@ def reset_user_password(
     db.commit()
 
     return {"message": "Password has been reset", "new_password": new_password}
+
+
+@router.put("/reviews/{review_id}", response_model=ApiResponse[AdminReviewResponse])
+@log_exceptions("PUT /admin/reviews/{review_id}")
+def update_review(
+    review_id: int,
+    review_update: AdminReviewUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """Update review fields (content, rate)."""
+    review = db.query(Review).filter(Review.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    if review_update.content is not None:
+        review.content = review_update.content
+    if review_update.rate is not None:
+        review.rate = review_update.rate
+
+    db.commit()
+    db.refresh(review)
+
+    # Get user_name and book_title for the response
+    user = db.query(User).filter(User.id == review.user_id).first()
+    user_name = user.name if user else ""
+
+    book_title = None
+    if review.book_id:
+        book = db.query(Book).filter(Book.id == review.book_id).first()
+        if book:
+            book_title = book.title
+
+    return ApiResponse(
+        data=AdminReviewResponse(
+            id=review.id,
+            user_id=review.user_id,
+            user_name=user_name,
+            book_id=review.book_id,
+            external_book_id=review.external_book_id,
+            book_title=book_title,
+            content=review.content,
+            rate=review.rate,
+            created_at=review.created_at,
+        )
+    )
+
+
+@router.delete("/reviews/{review_id}")
+@log_exceptions("DELETE /admin/reviews/{review_id}")
+def delete_review(
+    review_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """Hard delete a review."""
+    review = db.query(Review).filter(Review.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+
+    db.delete(review)
+    db.commit()
+
+    return {"message": f"Review {review_id} has been deleted"}
+
+
+@router.delete("/user-books/{user_book_id}")
+@log_exceptions("DELETE /admin/user-books/{user_book_id}")
+def delete_user_book(
+    user_book_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """Hard delete a user-book record."""
+    user_book = db.query(UserBook).filter(UserBook.id == user_book_id).first()
+    if not user_book:
+        raise HTTPException(status_code=404, detail="User-book record not found")
+
+    db.delete(user_book)
+    db.commit()
+
+    return {"message": f"User-book record {user_book_id} has been deleted"}
