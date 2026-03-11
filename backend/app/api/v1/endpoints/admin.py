@@ -1,9 +1,10 @@
 import math
+import secrets
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from app.core.database import get_db
-from app.core.security import get_admin_user
+from app.core.security import get_admin_user, hash_password
 from app.core.logging_decorator import log_exceptions
 from app.models.user import User
 from app.models.review import Review
@@ -15,6 +16,7 @@ from app.schemas.admin import (
     AdminReviewResponse,
     AdminUserBookResponse,
     AdminStatsResponse,
+    AdminUserUpdate,
     PaginationResponse,
 )
 from app.schemas.base_schema import ApiResponse
@@ -284,3 +286,79 @@ def get_stats(
     )
 
     return ApiResponse(data=stats)
+
+
+@router.put("/users/{user_id}", response_model=ApiResponse[AdminUserResponse])
+@log_exceptions("PUT /admin/users/{user_id}")
+def update_user(
+    user_id: int,
+    user_update: AdminUserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """Update user fields (name, email, is_active)."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user_update.name is not None:
+        user.name = user_update.name
+    if user_update.email is not None:
+        user.email = user_update.email
+    if user_update.is_active is not None:
+        user.is_active = user_update.is_active
+
+    db.commit()
+    db.refresh(user)
+
+    books_count = db.query(func.count(UserBook.id)).filter(UserBook.user_id == user.id).scalar() or 0
+    reviews_count = db.query(func.count(Review.id)).filter(Review.user_id == user.id).scalar() or 0
+
+    return ApiResponse(
+        data=AdminUserResponse(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            is_active=user.is_active,
+            profile_picture=user.profile_picture,
+            books_count=books_count,
+            reviews_count=reviews_count,
+        )
+    )
+
+
+@router.delete("/users/{user_id}")
+@log_exceptions("DELETE /admin/users/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """Soft delete a user by setting is_active=False."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_active = False
+    db.commit()
+
+    return {"message": f"User {user_id} has been deactivated"}
+
+
+@router.post("/users/{user_id}/reset-password")
+@log_exceptions("POST /admin/users/{user_id}/reset-password")
+def reset_user_password(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """Reset a user's password to a random generated password."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    new_password = secrets.token_urlsafe(12)
+    user.password = hash_password(new_password)
+    db.commit()
+
+    return {"message": "Password has been reset", "new_password": new_password}
