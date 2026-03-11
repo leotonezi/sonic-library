@@ -87,6 +87,15 @@ async def get_current_user(
 
     return user
 
+async def get_admin_user(
+    current_user=Depends(get_current_user),
+):
+    """Require current user to be an admin (email in ADMIN_EMAILS)."""
+    if current_user.email not in settings.ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+
 def create_activation_token(email: str, expires_delta: timedelta | None = None) -> str:
     """Generate a JWT token specifically for account activation."""
     to_encode = {"sub": email}
