@@ -19,6 +19,7 @@ export default function RecommendationPage() {
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [recommendationText, setRecommendationText] = useState<string>("");
   const [parsedRecommendations, setParsedRecommendations] = useState<BookRecommendation[]>([]);
+  const [unavailableMessage, setUnavailableMessage] = useState<string | null>(null);
 
   const parseRecommendations = (text: string): BookRecommendation[] => {
     const recommendations: BookRecommendation[] = [];
@@ -97,15 +98,31 @@ export default function RecommendationPage() {
         });
 
         if (rec) {
+          setUnavailableMessage(null);
           const cleanText = rec
             .replace(/[*_~`>#-]/g, '')
             .replace(/$begin:math:display$(.*?)$end:math:display$$begin:math:text$.*?$end:math:text$/g, '$1')
             .replace(/\n{2,}/g, '\n\n');
           setRecommendationText(cleanText);
-          
+
           // Try to parse structured recommendations
           const parsed = parseRecommendations(cleanText);
           setParsedRecommendations(parsed);
+        } else {
+          // Data is null - check if AI is unavailable by fetching full response
+          const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+          if (BASE_URL) {
+            const fullRes = await fetch(`${BASE_URL}/recommendations`, {
+              credentials: 'include',
+              cache: 'no-store',
+            });
+            if (fullRes.ok) {
+              const json = await fullRes.json();
+              if (json.data === null && json.message) {
+                setUnavailableMessage(json.message);
+              }
+            }
+          }
         }
       } catch (error) {
         console.error("❌ Error fetching recommendations:", error);
@@ -199,6 +216,15 @@ export default function RecommendationPage() {
             <div className="prose prose-gray max-w-none">
               <pre className="whitespace-pre-wrap text-blue-100 leading-relaxed">{recommendationText}</pre>
             </div>
+          </div>
+        ) : unavailableMessage ? (
+          <div className="text-center py-16">
+            <div className="mb-6 flex justify-center">
+              <div className="flex items-center gap-3 rounded-lg border border-yellow-600 bg-yellow-900/50 p-4 text-yellow-200">
+                <p>{unavailableMessage}</p>
+              </div>
+            </div>
+            <p className="text-gray-400">Please check back shortly for personalized recommendations.</p>
           </div>
         ) : (
           <div className="text-center py-16">

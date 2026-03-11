@@ -16,6 +16,7 @@ interface SearchState {
   hasSearched: boolean;
   searchPagination: PaginationMetadata | null;
   popularPagination: PaginationMetadata | null;
+  searchMessage: string | null;
   setSearchQuery: (query: string) => void;
   fetchExternalBooks: (genre?: string) => Promise<void>;
   fetchPopularBooks: () => Promise<void>;
@@ -31,6 +32,7 @@ export const useSearchBookStore = create<SearchState>((set, get) => ({
   hasSearched: false,
   searchPagination: null,
   popularPagination: null,
+  searchMessage: null,
   setSearchQuery: (query) => set({ searchQuery: query }),
   
   fetchPopularBooks: async () => {
@@ -81,14 +83,15 @@ export const useSearchBookStore = create<SearchState>((set, get) => ({
     try {
       const response = await searchExternalBooks(query, page, maxResults);
       if (response) {
-        set({ 
+        set({
           searchResults: response.data,
-          searchPagination: response.pagination 
+          searchPagination: response.pagination,
+          searchMessage: response.message || null,
         });
       }
     } catch (error) {
       console.error("Error fetching external books:", error);
-      set({ searchResults: [], searchPagination: null });
+      set({ searchResults: [], searchPagination: null, searchMessage: null });
     } finally {
       set({ isLoading: false });
     }

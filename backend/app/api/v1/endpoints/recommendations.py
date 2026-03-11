@@ -24,6 +24,14 @@ def get_recommendations(
     user_reviews_pydantic = [ReviewResponse.model_validate(r) for r in user_reviews]
 
     recommendations = generate_book_recommendations(user_reviews_pydantic)
+
+    if recommendations is None:
+        return ApiResponse(
+            data=None,
+            message="AI recommendations are temporarily unavailable. Please try again shortly.",
+            status="ok",
+        )
+
     return ApiResponse(data=recommendations)
 
 @router.get("/graph")
