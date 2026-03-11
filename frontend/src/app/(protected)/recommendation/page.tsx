@@ -221,7 +221,6 @@ export default function RecommendationPage() {
           <div className="text-center py-16">
             <div className="mb-6 flex justify-center">
               <div className="flex items-center gap-3 rounded-lg border border-yellow-600 bg-yellow-900/50 p-4 text-yellow-200">
-                <AlertTriangle className="h-5 w-5 flex-shrink-0 text-yellow-400" />
                 <p>{unavailableMessage}</p>
               </div>
             </div>

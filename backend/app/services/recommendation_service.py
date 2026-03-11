@@ -714,7 +714,14 @@ def _parse_ai_recommendations(ai_result: str) -> List[Dict[str, Any]]:
     
     return recommendations
 
-def generate_book_recommendations(user_reviews: List[ReviewResponse]) -> str:
+def generate_book_recommendations(user_reviews: List[ReviewResponse]) -> Optional[str]:
+    """Generate book recommendations. Returns None when OpenAI circuit is open."""
+    # Check OpenAI circuit breaker first
+    openai_cb = _get_openai_circuit_breaker()
+    if not openai_cb.is_call_permitted():
+        logger.warning("OpenAI circuit breaker open, skipping recommendation generation")
+        return None
+
     # Check cache first
     cache_key = create_cache_key(user_reviews)
     cached_result = get_cached_recommendations(cache_key)
@@ -728,18 +735,15 @@ def generate_book_recommendations(user_reviews: List[ReviewResponse]) -> str:
         return "No positive reviews found. Please rate some books you enjoyed to get better recommendations."
 
     # Extract genres from positive reviews to search Google Books
-    # This is a simple approach - in a real implementation you'd want to store book metadata
     all_genres = []
     for review in positive_reviews:
-        # You could enhance this by storing book genres in your review or book model
-        # For now, we'll use some common genres as fallback
         all_genres.extend(["fiction", "literature", "bestseller"])
 
     # Get books from Google Books API
     google_books = get_google_books_by_genre(list(set(all_genres)), max_results=30)
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are an expert book recommendation engine. Analyze the user's 
+        ("system", """You are an expert book recommendation engine. Analyze the user's
          reading preferences based on their positive reviews and recommend books from the provided collection.
 
 Guidelines:
