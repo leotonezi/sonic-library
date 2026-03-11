@@ -12,6 +12,9 @@ from app.models.book import Book
 from app.schemas.admin import (
     AdminUserResponse,
     AdminUserDetailResponse,
+    AdminReviewResponse,
+    AdminUserBookResponse,
+    AdminStatsResponse,
     PaginationResponse,
 )
 from app.schemas.base_schema import ApiResponse
@@ -140,3 +143,144 @@ def get_user(
     )
 
     return ApiResponse(data=detail)
+
+
+@router.get("/reviews", response_model=PaginationResponse[AdminReviewResponse])
+@log_exceptions("GET /admin/reviews")
+def list_reviews(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    search: str = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """List all reviews with pagination and search."""
+    query = db.query(Review, User.name.label("user_name")).join(
+        User, Review.user_id == User.id
+    )
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.outerjoin(Book, Review.book_id == Book.id).filter(
+            or_(
+                User.name.ilike(search_filter),
+                Book.title.ilike(search_filter),
+            )
+        )
+
+    total = query.count()
+    total_pages = math.ceil(total / page_size) if total > 0 else 1
+    offset = (page - 1) * page_size
+    results = query.offset(offset).limit(page_size).all()
+
+    items = []
+    for review, user_name in results:
+        book_title = None
+        if review.book_id:
+            book = db.query(Book).filter(Book.id == review.book_id).first()
+            if book:
+                book_title = book.title
+        items.append(
+            AdminReviewResponse(
+                id=review.id,
+                user_id=review.user_id,
+                user_name=user_name,
+                book_id=review.book_id,
+                external_book_id=review.external_book_id,
+                book_title=book_title,
+                content=review.content,
+                rate=review.rate,
+                created_at=review.created_at,
+            )
+        )
+
+    return PaginationResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
+
+
+@router.get("/user-books", response_model=PaginationResponse[AdminUserBookResponse])
+@log_exceptions("GET /admin/user-books")
+def list_user_books(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    search: str = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """List all user-book records with pagination and search."""
+    query = db.query(UserBook, User.name.label("user_name")).join(
+        User, UserBook.user_id == User.id
+    )
+
+    if search:
+        search_filter = f"%{search}%"
+        query = query.outerjoin(Book, UserBook.book_id == Book.id).filter(
+            or_(
+                User.name.ilike(search_filter),
+                Book.title.ilike(search_filter),
+            )
+        )
+
+    total = query.count()
+    total_pages = math.ceil(total / page_size) if total > 0 else 1
+    offset = (page - 1) * page_size
+    results = query.offset(offset).limit(page_size).all()
+
+    items = []
+    for ub, user_name in results:
+        book_title = None
+        if ub.book_id:
+            book = db.query(Book).filter(Book.id == ub.book_id).first()
+            if book:
+                book_title = book.title
+        items.append(
+            AdminUserBookResponse(
+                id=ub.id,
+                user_id=ub.user_id,
+                user_name=user_name,
+                book_id=ub.book_id,
+                external_book_id=ub.external_book_id,
+                book_title=book_title,
+                status=ub.status.value if hasattr(ub.status, "value") else str(ub.status),
+                created_at=ub.created_at,
+            )
+        )
+
+    return PaginationResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
+
+
+@router.get("/stats", response_model=ApiResponse[AdminStatsResponse])
+@log_exceptions("GET /admin/stats")
+def get_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user),
+):
+    """Get aggregate admin statistics."""
+    total_users = db.query(func.count(User.id)).scalar() or 0
+    total_active_users = db.query(func.count(User.id)).filter(User.is_active == True).scalar() or 0
+    total_books = db.query(func.count(Book.id)).scalar() or 0
+    total_reviews = db.query(func.count(Review.id)).scalar() or 0
+    total_user_books = db.query(func.count(UserBook.id)).scalar() or 0
+    avg_rating = db.query(func.avg(Review.rate)).scalar() or 0.0
+
+    stats = AdminStatsResponse(
+        total_users=total_users,
+        total_active_users=total_active_users,
+        total_books=total_books,
+        total_reviews=total_reviews,
+        total_user_books=total_user_books,
+        avg_rating=round(float(avg_rating), 2),
+    )
+
+    return ApiResponse(data=stats)
