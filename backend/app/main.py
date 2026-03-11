@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1.endpoints import books, users, reviews, recommendations, auth, user_books
+from app.api.v1.endpoints import books, users, reviews, recommendations, auth, user_books, admin
 from app.core.logging_config import setup_logging
 from app.core.file_utils import UPLOAD_DIR
 import logging
@@ -28,3 +28,4 @@ app.include_router(user_books.router, prefix="/user-books", tags=["User-Books"])
 app.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
 app.include_router(recommendations.router, prefix="/recommendations", tags=["Recommendations"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
