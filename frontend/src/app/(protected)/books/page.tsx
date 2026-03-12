@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { useSearchBookStore } from "@/store/useSearchBookStore";
 import { AlertTriangle, Book, Loader2 } from "lucide-react";
-import Pagination from "@/components/pagination";
+import { Pagination } from "@/components/pagination";
 
 export default function BooksPage() {
   const searchResults = useSearchBookStore((state) => state.searchResults);
