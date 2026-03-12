@@ -279,11 +279,6 @@ class TestGetStats:
         assert stats["avg_rating"] == 3.0
 
 
-# ===========================================================================
-# US-008: Write endpoint tests
-# ===========================================================================
-
-
 class TestUpdateUser:
     """PUT /api/v1/admin/users/{id}"""
 
