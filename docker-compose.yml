@@ -12,6 +12,15 @@ services:
       interval: 10s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+
   fastapi:
     build:
       context: ./backend
@@ -19,13 +28,17 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:password@db:5432/fastlibrary
+      REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY}
-      MAIL_USERNAME: ${MAIL_USERNAME:-test_username}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-test_password}
-      MAIL_SERVER: ${MAIL_SERVER:-smtp.example.com}
-      MAIL_FROM: ${MAIL_FROM:-test@example.com}
+      MAIL_USERNAME: ${MAIL_USERNAME:-disabled}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-disabled}
+      MAIL_SERVER: ${MAIL_SERVER:-disabled}
+      MAIL_FROM: ${MAIL_FROM:-noreply@example.com}
+      MAIL_DISABLED: "true"
     ports:
       - "8000:8000"
     mem_limit: 2048m
@@ -41,3 +54,9 @@ services:
       NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
     ports:
       - "3000:3000"
+    depends_on:
+      - fastapi
+
+networks:
+  default:
+    name: sonic-library-network

@@ -54,6 +54,7 @@ def get_by_book(book_id: int, review_service: ReviewService = Depends(get_review
         review_dict = {
             "id": review_data.id,
             "book_id": review_data.book_id,
+            "external_book_id": review_data.external_book_id,
             "content": review_data.content,
             "rate": review_data.rate,
             "user_id": review_data.user_id,
@@ -75,6 +76,7 @@ def get_by_external_book(book_id: str, review_service: ReviewService = Depends(g
         review_dict = {
             "id": review_data.id,
             "book_id": review_data.book_id,
+            "external_book_id": review_data.external_book_id,
             "content": review_data.content,
             "rate": review_data.rate,
             "user_id": review_data.user_id,

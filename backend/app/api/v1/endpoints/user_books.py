@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.user_book_service import UserBookService
 from app.services.book_service import BookService
-from app.schemas.base_schema import ApiResponse
+from app.schemas.base_schema import ApiResponse, PaginationResponse
 from app.core.security import get_current_user
 from app.models.user import User
 from app.schemas.user_book import UserBookCreate, UserBookResponse, UserBookUpdate, serialize_user_book
@@ -12,17 +12,10 @@ from app.models.user_book import StatusEnum
 
 router = APIRouter()
 
-def get_user_book_service(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-) -> UserBookService:
-    """Inject UserBookService, requiring authenticated user."""
+def get_user_book_service(db: Session = Depends(get_db)) -> UserBookService:
     return UserBookService(db)
 
-def get_book_service(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> BookService:
+def get_book_service(db: Session = Depends(get_db)) -> BookService:
     return BookService(db)
 
 @router.post("/", response_model=ApiResponse[UserBookResponse], status_code=201)
@@ -73,7 +66,7 @@ def create(
             detail="This book is already in the user's library."
         )
 
-    data = user_book.dict(exclude_unset=True)
+    data = user_book.model_dump(exclude_unset=True)
     data["user_id"] = current_user.id
 
     data.pop("book", None)
@@ -92,6 +85,34 @@ def get_my_books(
     """Get all books in the user's library, optionally filtered by status."""
     books = user_book_service.get_books_by_user(current_user.id, status=status)
     return ApiResponse(data=[serialize_user_book(b) for b in books])
+
+@router.get("/my-books/paginated", response_model=PaginationResponse[UserBookResponse])
+@log_exceptions("GET /user-books/my-books/paginated")
+def get_my_books_paginated(
+    current_user: User = Depends(get_current_user),
+    user_book_service: UserBookService = Depends(get_user_book_service),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+    status: str | None = Query(None, description="Filter by reading status: TO READ, READ, READING")
+):
+    """Get paginated books in the user's library, optionally filtered by status."""
+    books, total_count, total_pages, current_page = user_book_service.get_books_by_user_paginated(
+        current_user.id, page=page, page_size=page_size, status=status
+    )
+    
+    pagination_info = {
+        "current_page": current_page,
+        "total_pages": total_pages,
+        "total_count": total_count,
+        "page_size": page_size,
+        "has_next": current_page < total_pages,
+        "has_previous": current_page > 1
+    }
+    
+    return PaginationResponse(
+        data=[serialize_user_book(b) for b in books],
+        pagination=pagination_info
+    )
 
 @router.get("/book/{book_id}", response_model=ApiResponse[UserBookResponse])
 @log_exceptions("GET /user-books/book/{book_id}")

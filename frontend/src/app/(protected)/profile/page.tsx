@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Mail, User as UserIcon, Settings } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import User from '@/interfaces/user';
 
 export default async function ProfilePage() {
@@ -27,19 +28,21 @@ export default async function ProfilePage() {
   const { data: profile }: { data: User } = await res.json();
 
   const getProfilePictureUrl = (filename?: string) => {
-    if (!filename) return undefined;
+    if (!filename) return '';
     return `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/profile_pictures/${filename}`;
   };
 
   return (
-    <main className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
+    <div className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
       <div className="bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full mb-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-6">
             {profile.profile_picture ? (
-              <img
+              <Image
                 src={getProfilePictureUrl(profile.profile_picture)}
                 alt="Profile"
+                width={96}
+                height={96}
                 className="w-24 h-24 rounded-full object-cover border-2 border-blue-500"
               />
             ) : (
@@ -77,6 +80,6 @@ export default async function ProfilePage() {
           Reading history and reviews will appear here soon.
         </p>
       </div>
-    </main>
+    </div>
   );
 }

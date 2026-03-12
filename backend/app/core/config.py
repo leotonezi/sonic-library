@@ -1,8 +1,14 @@
 import os
+import sys
 from dotenv import load_dotenv
 
 # Detect if running tests
-is_testing = os.getenv("PYTEST_CURRENT_TEST") is not None
+is_testing = (
+    os.getenv("PYTEST_CURRENT_TEST") is not None or
+    os.getenv("TESTING") == "true" or
+    "pytest" in sys.modules or
+    "test" in sys.argv[0] if sys.argv else False
+)
 
 load_dotenv(override=True)
 
@@ -27,6 +33,14 @@ class Settings:
     ENVIRONMENT: str = "local"
     POPULAR_BOOKS_CACHE_TTL: int = int(os.getenv("POPULAR_BOOKS_CACHE_TTL", 3600))  # 1 hour default
     ADMIN_EMAILS: list[str] = ["admin@sonic.com"]
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
+    SEARCH_RATE_LIMIT: int = int(os.getenv("SEARCH_RATE_LIMIT", 30))
+    SEARCH_RATE_LIMIT_WINDOW: int = int(os.getenv("SEARCH_RATE_LIMIT_WINDOW", 60))
+    GOOGLE_BOOKS_GLOBAL_RATE_LIMIT: int = int(os.getenv("GOOGLE_BOOKS_GLOBAL_RATE_LIMIT", 100))
+    CB_GOOGLE_FAILURE_THRESHOLD: int = int(os.getenv("CB_GOOGLE_FAILURE_THRESHOLD", 5))
+    CB_GOOGLE_RECOVERY_TIMEOUT: int = int(os.getenv("CB_GOOGLE_RECOVERY_TIMEOUT", 30))
+    CB_OPENAI_FAILURE_THRESHOLD: int = int(os.getenv("CB_OPENAI_FAILURE_THRESHOLD", 5))
+    CB_OPENAI_RECOVERY_TIMEOUT: int = int(os.getenv("CB_OPENAI_RECOVERY_TIMEOUT", 30))
 
 
 settings = Settings()

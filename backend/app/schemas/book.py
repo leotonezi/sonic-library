@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional, List
 
 class BookBase(BaseModel):
@@ -16,7 +16,8 @@ class BookBase(BaseModel):
     language: Optional[str] = Field("pt-BR", max_length=10)
     genres: Optional[List[str]] = []
 
-    @validator("isbn")
+    @field_validator("isbn")
+    @classmethod
     def validate_isbn(cls, v):
         if v is None:
             return v

@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.services.user_service import UserService
 from .users import get_user_service
 from app.core.security import verify_password, create_access_token, create_activation_token, verify_activation_token
-from app.core.config import settings
+from app.core.config import settings, is_testing
 from app.schemas.user import UserCreate
 from app.schemas.base_schema import ApiResponse
 from app.core.mail import send_activation_email
@@ -54,7 +54,7 @@ async def login_for_access_token(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=settings.ENVIRONMENT == "production",
+        secure=False if is_testing else settings.ENVIRONMENT == "production",
         samesite="lax",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/"
@@ -138,7 +138,7 @@ async def logout(response: Response):
     response.delete_cookie(
         key="access_token",
         httponly=True,
-        secure=settings.ENVIRONMENT == "production",
+        secure=False if is_testing else settings.ENVIRONMENT == "production",
         samesite="lax",
         path="/"
     )

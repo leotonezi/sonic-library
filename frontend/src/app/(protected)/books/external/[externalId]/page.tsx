@@ -21,6 +21,9 @@ async function getExternalBookData(
     const response = (await serverSideApiFetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/books/external/${externalId}`,
       accessToken,
+      {
+        cache: 'no-store',
+      },
     )) as ApiResponse<{
       book: ExternalBook;
       userBook: UserBook;
@@ -62,7 +65,7 @@ export default async function ExternalBookPage({ params }: Props) {
     if (!book) notFound();
 
     return (
-      <main className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
+      <div className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
         <div className="relative bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1">
@@ -133,7 +136,7 @@ export default async function ExternalBookPage({ params }: Props) {
             <ReviewsList reviews={reviews} />
           </div>
         </div>
-      </main>
+      </div>
     );
   } catch (error) {
     console.error("Error in ExternalBookPage:", error);

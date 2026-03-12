@@ -18,6 +18,18 @@ services:
       retries: 5
       timeout: 5s
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache_test
+    restart: always
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
   fastapi:
     build: .
     container_name: fastapi_app
@@ -25,10 +37,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db/${POSTGRES_DB:-fastlibrary}
+      REDIS_URL: redis://redis:6379/0
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       MAIL_USERNAME: ${MAIL_USERNAME:-test_username}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-test_password}

@@ -7,6 +7,9 @@ import sys
 import os
 from typing import Generator
 
+# Set testing environment variable
+os.environ["TESTING"] = "true"
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import settings after ensuring the environment is set up

@@ -1,3 +1,12 @@
+# [0.6.0](https://github.com/leotonezi/sonic-library/compare/v0.5.0...v0.6.0) (2025-07-18)
+
+
+### Features
+
+* add pagination && cursor configs ([b17a6ff](https://github.com/leotonezi/sonic-library/commit/b17a6ff51d3599fcd648ac85bbcc36e80735cc23))
+* fix act ([4dfa0d9](https://github.com/leotonezi/sonic-library/commit/4dfa0d93a266703121c7a3680811ca1ff120bc58))
+* improvement on recommendation service ([a22b8e7](https://github.com/leotonezi/sonic-library/commit/a22b8e737abf3b37927e2c3ac624e27f80d00165))
+
 # [0.5.0](https://github.com/leotonezi/sonic-library/compare/v0.4.0...v0.5.0) (2025-07-06)
 
 

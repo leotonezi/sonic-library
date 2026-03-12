@@ -47,10 +47,8 @@ export default function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-blue-950">
-      <main>
-        {children}
-      </main>
-    </div>
+    <main className="min-h-screen bg-blue-950">
+      {children}
+    </main>
   );
 }
