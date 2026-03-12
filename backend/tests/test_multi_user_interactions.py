@@ -28,7 +28,7 @@ class MultiUserTestHelper:
         
         # Generate unique email if not provided
         if email is None:
-            base_email = fake.unique.email(domain="test.com")
+            base_email = fake.unique.email(domain="gmail.com")
             # Add test suffix to ensure uniqueness across test runs
             email = f"{base_email.split('@')[0]}_{self.test_suffix}@{base_email.split('@')[1]}"
         else:
@@ -43,7 +43,7 @@ class MultiUserTestHelper:
         }
 
         try:
-            validated = validate_email(user_data["email"])
+            validated = validate_email(user_data["email"], check_deliverability=False)
             user_data["email"] = validated.normalized
         except EmailNotValidError as e:
             raise AssertionError(f"Generated invalid email: {user_data['email']}") from e
@@ -166,9 +166,9 @@ def test_multiple_users_can_add_reviews_to_same_book(multi_user_helper):
     print("\n=== Testing multiple users adding reviews to same book ===")
     
     # Create 3 users
-    user1 = multi_user_helper.create_user("Alice Johnson", "alice@test.com")
-    user2 = multi_user_helper.create_user("Bob Smith", "bob@test.com")
-    user3 = multi_user_helper.create_user("Carol Davis", "carol@test.com")
+    user1 = multi_user_helper.create_user("Alice Johnson", "alice@gmail.com")
+    user2 = multi_user_helper.create_user("Bob Smith", "bob@gmail.com")
+    user3 = multi_user_helper.create_user("Carol Davis", "carol@gmail.com")
     
     # User1 creates a book
     book = multi_user_helper.create_book(user1, {
@@ -231,8 +231,8 @@ def test_users_can_see_their_own_libraries(multi_user_helper):
     print("\n=== Testing users can see their own libraries ===")
     
     # Create 2 users
-    user1 = multi_user_helper.create_user("David Wilson", "david@test.com")
-    user2 = multi_user_helper.create_user("Emma Brown", "emma@test.com")
+    user1 = multi_user_helper.create_user("David Wilson", "david@gmail.com")
+    user2 = multi_user_helper.create_user("Emma Brown", "emma@gmail.com")
     
     # Create books
     book1 = multi_user_helper.create_book(user1, {
@@ -293,8 +293,8 @@ def test_users_can_see_other_users_reviews(multi_user_helper):
     print("\n=== Testing users can see other users' reviews ===")
     
     # Create 2 users
-    user1 = multi_user_helper.create_user("Frank Miller", "frank@test.com")
-    user2 = multi_user_helper.create_user("Grace Lee", "grace@test.com")
+    user1 = multi_user_helper.create_user("Frank Miller", "frank@gmail.com")
+    user2 = multi_user_helper.create_user("Grace Lee", "grace@gmail.com")
     
     # User1 creates a book
     book = multi_user_helper.create_book(user1, {
@@ -347,8 +347,8 @@ def test_user_cannot_modify_other_users_reviews(multi_user_helper):
     print("\n=== Testing users cannot modify other users' reviews ===")
     
     # Create 2 users
-    user1 = multi_user_helper.create_user("Henry Adams", "henry@test.com")
-    user2 = multi_user_helper.create_user("Ivy Chen", "ivy@test.com")
+    user1 = multi_user_helper.create_user("Henry Adams", "henry@gmail.com")
+    user2 = multi_user_helper.create_user("Ivy Chen", "ivy@gmail.com")
     
     # User1 creates a book and adds a review
     book = multi_user_helper.create_book(user1, {
@@ -389,8 +389,8 @@ def test_user_cannot_remove_other_users_books_from_library(multi_user_helper):
     print("\n=== Testing users cannot remove other users' books ===")
     
     # Create 2 users
-    user1 = multi_user_helper.create_user("Jack Wilson", "jack@test.com")
-    user2 = multi_user_helper.create_user("Kate Davis", "kate@test.com")
+    user1 = multi_user_helper.create_user("Jack Wilson", "jack@gmail.com")
+    user2 = multi_user_helper.create_user("Kate Davis", "kate@gmail.com")
     
     # User1 creates a book and adds it to their library
     book = multi_user_helper.create_book(user1, {
@@ -421,9 +421,9 @@ def test_comprehensive_multi_user_scenario(multi_user_helper):
     print("\n=== Testing comprehensive multi-user scenario ===")
     
     # Create 3 users
-    user1 = multi_user_helper.create_user("Liam O'Connor", "liam@test.com")
-    user2 = multi_user_helper.create_user("Mia Rodriguez", "mia@test.com")
-    user3 = multi_user_helper.create_user("Noah Thompson", "noah@test.com")
+    user1 = multi_user_helper.create_user("Liam O'Connor", "liam@gmail.com")
+    user2 = multi_user_helper.create_user("Mia Rodriguez", "mia@gmail.com")
+    user3 = multi_user_helper.create_user("Noah Thompson", "noah@gmail.com")
     
     # User1 creates multiple books
     book1 = multi_user_helper.create_book(user1, {
@@ -518,8 +518,8 @@ def test_user_isolation_and_data_integrity(multi_user_helper):
     print("\n=== Testing user isolation and data integrity ===")
     
     # Create 2 users
-    user1 = multi_user_helper.create_user("Oliver Garcia", "oliver@test.com")
-    user2 = multi_user_helper.create_user("Penelope Martinez", "penelope@test.com")
+    user1 = multi_user_helper.create_user("Oliver Garcia", "oliver@gmail.com")
+    user2 = multi_user_helper.create_user("Penelope Martinez", "penelope@gmail.com")
     
     # User1 creates a book and adds it to their library
     book = multi_user_helper.create_book(user1, {
