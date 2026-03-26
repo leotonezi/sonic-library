@@ -1,6 +1,6 @@
 from app.models.book import Book, Genre
 from sqlalchemy import or_
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from app.services.base_service import BaseService
 from typing import Tuple, List, Optional
 
@@ -66,6 +66,16 @@ class BookService(BaseService[Book]):
         
         return books, total_count, total_pages, page
 
+    def get_by_id(self, obj_id: int):
+        return self.db.query(self.model).options(
+            selectinload(Book.genres)
+        ).filter(self.model.id == obj_id).first()
+
+    def get_all(self):
+        return self.db.query(self.model).options(
+            selectinload(Book.genres)
+        ).all()
+
     def get_by_external_id(self, external_id: str):
         """
         Get a book by its external_id.
@@ -76,7 +86,9 @@ class BookService(BaseService[Book]):
         Returns:
             The book if found, None otherwise
         """
-        return self.db.query(self.model).filter(self.model.external_id == external_id).first()
+        return self.db.query(self.model).options(
+            selectinload(Book.genres)
+        ).filter(self.model.external_id == external_id).first()
 
     def create(self, obj_in: dict):
         try:
@@ -95,8 +107,13 @@ class BookService(BaseService[Book]):
             book = super().create(obj_in)
 
             if genre_names:
+                existing_genres = self.db.query(Genre).filter(
+                    Genre.name.in_(genre_names)
+                ).all()
+                existing_by_name = {g.name: g for g in existing_genres}
+
                 for genre_name in genre_names:
-                    genre = self.db.query(Genre).filter(Genre.name == genre_name).first()
+                    genre = existing_by_name.get(genre_name)
                     if not genre:
                         genre = Genre(name=genre_name)
                         self.db.add(genre)
