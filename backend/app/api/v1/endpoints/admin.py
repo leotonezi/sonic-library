@@ -105,20 +105,15 @@ def get_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Get user's books with book titles
-    user_books = (
-        db.query(UserBook)
-        .filter(UserBook.user_id == user_id)
+    # Get user's books with book titles via JOIN (no per-row queries)
+    user_books_rows = (
+        db.query(UserBook, Book.title.label("book_title"))
         .outerjoin(Book, UserBook.book_id == Book.id)
+        .filter(UserBook.user_id == user_id)
         .all()
     )
     books_list = []
-    for ub in user_books:
-        book_title = None
-        if ub.book_id:
-            book = db.query(Book).filter(Book.id == ub.book_id).first()
-            if book:
-                book_title = book.title
+    for ub, book_title in user_books_rows:
         books_list.append({
             "id": ub.id,
             "book_id": ub.book_id,
@@ -128,15 +123,15 @@ def get_user(
             "created_at": str(ub.created_at) if ub.created_at else None,
         })
 
-    # Get user's reviews with book titles
-    reviews = db.query(Review).filter(Review.user_id == user_id).all()
+    # Get user's reviews with book titles via JOIN (no per-row queries)
+    reviews_rows = (
+        db.query(Review, Book.title.label("book_title"))
+        .outerjoin(Book, Review.book_id == Book.id)
+        .filter(Review.user_id == user_id)
+        .all()
+    )
     reviews_list = []
-    for r in reviews:
-        book_title = None
-        if r.book_id:
-            book = db.query(Book).filter(Book.id == r.book_id).first()
-            if book:
-                book_title = book.title
+    for r, book_title in reviews_rows:
         reviews_list.append({
             "id": r.id,
             "book_id": r.book_id,
@@ -147,8 +142,8 @@ def get_user(
             "created_at": str(r.created_at) if r.created_at else None,
         })
 
-    books_count = len(user_books)
-    reviews_count = len(reviews)
+    books_count = len(user_books_rows)
+    reviews_count = len(reviews_rows)
 
     detail = AdminUserDetailResponse(
         id=user.id,
@@ -323,8 +318,21 @@ def update_user(
     db.commit()
     db.refresh(user)
 
-    books_count = db.query(func.count(UserBook.id)).filter(UserBook.user_id == user.id).scalar() or 0
-    reviews_count = db.query(func.count(Review.id)).filter(Review.user_id == user.id).scalar() or 0
+    books_count_subq = (
+        db.query(func.count(UserBook.id))
+        .filter(UserBook.user_id == user.id)
+        .correlate(User)
+        .scalar_subquery()
+    )
+    reviews_count_subq = (
+        db.query(func.count(Review.id))
+        .filter(Review.user_id == user.id)
+        .correlate(User)
+        .scalar_subquery()
+    )
+    counts = db.query(books_count_subq, reviews_count_subq).one()
+    books_count = counts[0] or 0
+    reviews_count = counts[1] or 0
 
     return ApiResponse(
         data=AdminUserResponse(
@@ -397,15 +405,15 @@ def update_review(
     db.commit()
     db.refresh(review)
 
-    # Get user_name and book_title for the response
-    user = db.query(User).filter(User.id == review.user_id).first()
-    user_name = user.name if user else ""
-
-    book_title = None
-    if review.book_id:
-        book = db.query(Book).filter(Book.id == review.book_id).first()
-        if book:
-            book_title = book.title
+    # Get user_name and book_title in a single query
+    result = (
+        db.query(User.name, Book.title)
+        .outerjoin(Book, Book.id == review.book_id)
+        .filter(User.id == review.user_id)
+        .first()
+    )
+    user_name = result[0] if result else ""
+    book_title = result[1] if result else None
 
     return ApiResponse(
         data=AdminReviewResponse(
