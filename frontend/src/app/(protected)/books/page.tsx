@@ -104,9 +104,9 @@ export default function BooksPage() {
           {/* Pagination for popular books */}
           {popularPagination && (
             <Pagination
-              pagination={popularPagination}
+              page={popularPagination.current_page}
+              totalPages={popularPagination.total_pages}
               onPageChange={handlePopularPagination}
-              loading={isLoading}
             />
           )}
         </div>
@@ -175,9 +175,9 @@ export default function BooksPage() {
           {/* Pagination for search results */}
           {searchPagination && (
             <Pagination
-              pagination={searchPagination}
+              page={searchPagination.current_page}
+              totalPages={searchPagination.total_pages}
               onPageChange={handleSearchPagination}
-              loading={isLoading}
             />
           )}
         </div>
