@@ -8,6 +8,7 @@ below a fixed threshold regardless of row count.
 """
 
 import pytest
+from unittest.mock import patch
 from contextlib import contextmanager
 from sqlalchemy import event
 from sqlalchemy.orm import Session, sessionmaker
@@ -238,8 +239,9 @@ class TestReviewsQueryPerformance:
 class TestRecommendationGraphQueryPerformance:
     """Verify recommendation graph generation uses bounded query count."""
 
+    @patch("app.services.recommendation_service._get_ai_book_recommendations", return_value=[])
     def test_graph_generation_bounded_queries(
-        self, db_session: Session, seed_books_with_genres, seed_user, seed_reviews, seed_user_books
+        self, mock_ai, db_session: Session, seed_books_with_genres, seed_user, seed_reviews, seed_user_books
     ):
         """Building the recommendation graph should use bounded queries
         regardless of how many books/reviews exist."""
