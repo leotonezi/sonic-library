@@ -1,3 +1,4 @@
+from sqlalchemy.orm import joinedload
 from app.models.review import Review
 from app.models.user import User
 from app.services.base_service import BaseService
@@ -7,10 +8,10 @@ class ReviewService(BaseService[Review]):
         super().__init__(db, Review)
 
     def get_by_book(self, book_id: int):
-        return self.db.query(self.model).filter(self.model.book_id == book_id).all()
+        return self.db.query(self.model).options(joinedload(Review.book)).filter(self.model.book_id == book_id).all()
 
     def get_by_external_book(self, book_id: str):
-        return self.db.query(self.model).filter(self.model.external_book_id == book_id).all()
+        return self.db.query(self.model).options(joinedload(Review.book)).filter(self.model.external_book_id == book_id).all()
 
     def delete_by_id(self, review_id: int):
         review = self.db.query(self.model).filter(self.model.id == review_id).first()
