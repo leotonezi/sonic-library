@@ -216,9 +216,10 @@ class TestReviewsQueryPerformance:
     """Verify /reviews/book/{id} doesn't N+1 on book/user data."""
 
     def test_reviews_for_book_bounded_queries(
-        self, client, seed_books_with_genres, seed_reviews
+        self, client, seed_books_with_genres, seed_user, seed_reviews
     ):
         """Fetching reviews for a book should use bounded queries."""
+        client.cookies.set("access_token", seed_user["access_token"])
         book = seed_books_with_genres[0]
 
         with count_queries() as counter:

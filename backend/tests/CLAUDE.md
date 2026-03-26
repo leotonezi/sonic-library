@@ -52,3 +52,4 @@ Tables are cleaned in reverse dependency order:
 - `test_openai_circuit_breaker.py` — OpenAI API circuit breaker
 - `test_rate_limiter.py` — Rate limiting
 - `test_multi_user_interactions.py` — Multi-user scenarios
+- `test_query_performance.py` — N+1 query regression tests (uses SQLAlchemy event listeners to count queries)
