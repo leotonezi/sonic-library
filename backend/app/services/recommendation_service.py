@@ -13,7 +13,7 @@ import hashlib
 import json
 from typing import Dict, Any, Optional, List, Tuple
 from dotenv import load_dotenv
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from app.models.book import Book
 from app.models.review import Review
 from app.models.user_book import UserBook
@@ -173,7 +173,7 @@ def create_book_recommendation_graph(db: Session, user_id: int) -> Dict[str, Any
         if user_book.book_id:
             book_ids.add(user_book.book_id)
     
-    books = db.query(Book).filter(Book.id.in_(book_ids)).all() if book_ids else []
+    books = db.query(Book).options(selectinload(Book.genres)).filter(Book.id.in_(book_ids)).all() if book_ids else []
     
     print(f"📖 Found {len(books)} books:")
     for book in books:

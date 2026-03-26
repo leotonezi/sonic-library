@@ -35,7 +35,26 @@ def list_users(
     current_user: User = Depends(get_admin_user),
 ):
     """List all users with pagination and search."""
-    query = db.query(User)
+    books_count_subq = (
+        db.query(UserBook.user_id, func.count(UserBook.id).label("books_count"))
+        .group_by(UserBook.user_id)
+        .subquery()
+    )
+    reviews_count_subq = (
+        db.query(Review.user_id, func.count(Review.id).label("reviews_count"))
+        .group_by(Review.user_id)
+        .subquery()
+    )
+
+    query = (
+        db.query(
+            User,
+            func.coalesce(books_count_subq.c.books_count, 0).label("books_count"),
+            func.coalesce(reviews_count_subq.c.reviews_count, 0).label("reviews_count"),
+        )
+        .outerjoin(books_count_subq, User.id == books_count_subq.c.user_id)
+        .outerjoin(reviews_count_subq, User.id == reviews_count_subq.c.user_id)
+    )
 
     if search:
         search_filter = f"%{search}%"
@@ -49,12 +68,10 @@ def list_users(
     total = query.count()
     total_pages = math.ceil(total / page_size) if total > 0 else 1
     offset = (page - 1) * page_size
-    users = query.offset(offset).limit(page_size).all()
+    results = query.offset(offset).limit(page_size).all()
 
     items = []
-    for user in users:
-        books_count = db.query(func.count(UserBook.id)).filter(UserBook.user_id == user.id).scalar() or 0
-        reviews_count = db.query(func.count(Review.id)).filter(Review.user_id == user.id).scalar() or 0
+    for user, books_count, reviews_count in results:
         items.append(
             AdminUserResponse(
                 id=user.id,
@@ -88,20 +105,15 @@ def get_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Get user's books with book titles
-    user_books = (
-        db.query(UserBook)
-        .filter(UserBook.user_id == user_id)
+    # Get user's books with book titles via JOIN (no per-row queries)
+    user_books_rows = (
+        db.query(UserBook, Book.title.label("book_title"))
         .outerjoin(Book, UserBook.book_id == Book.id)
+        .filter(UserBook.user_id == user_id)
         .all()
     )
     books_list = []
-    for ub in user_books:
-        book_title = None
-        if ub.book_id:
-            book = db.query(Book).filter(Book.id == ub.book_id).first()
-            if book:
-                book_title = book.title
+    for ub, book_title in user_books_rows:
         books_list.append({
             "id": ub.id,
             "book_id": ub.book_id,
@@ -111,15 +123,15 @@ def get_user(
             "created_at": str(ub.created_at) if ub.created_at else None,
         })
 
-    # Get user's reviews with book titles
-    reviews = db.query(Review).filter(Review.user_id == user_id).all()
+    # Get user's reviews with book titles via JOIN (no per-row queries)
+    reviews_rows = (
+        db.query(Review, Book.title.label("book_title"))
+        .outerjoin(Book, Review.book_id == Book.id)
+        .filter(Review.user_id == user_id)
+        .all()
+    )
     reviews_list = []
-    for r in reviews:
-        book_title = None
-        if r.book_id:
-            book = db.query(Book).filter(Book.id == r.book_id).first()
-            if book:
-                book_title = book.title
+    for r, book_title in reviews_rows:
         reviews_list.append({
             "id": r.id,
             "book_id": r.book_id,
@@ -130,8 +142,8 @@ def get_user(
             "created_at": str(r.created_at) if r.created_at else None,
         })
 
-    books_count = len(user_books)
-    reviews_count = len(reviews)
+    books_count = len(user_books_rows)
+    reviews_count = len(reviews_rows)
 
     detail = AdminUserDetailResponse(
         id=user.id,
@@ -158,13 +170,15 @@ def list_reviews(
     current_user: User = Depends(get_admin_user),
 ):
     """List all reviews with pagination and search."""
-    query = db.query(Review, User.name.label("user_name")).join(
-        User, Review.user_id == User.id
+    query = (
+        db.query(Review, User.name.label("user_name"), Book.title.label("book_title"))
+        .join(User, Review.user_id == User.id)
+        .outerjoin(Book, Review.book_id == Book.id)
     )
 
     if search:
         search_filter = f"%{search}%"
-        query = query.outerjoin(Book, Review.book_id == Book.id).filter(
+        query = query.filter(
             or_(
                 User.name.ilike(search_filter),
                 Book.title.ilike(search_filter),
@@ -177,12 +191,7 @@ def list_reviews(
     results = query.offset(offset).limit(page_size).all()
 
     items = []
-    for review, user_name in results:
-        book_title = None
-        if review.book_id:
-            book = db.query(Book).filter(Book.id == review.book_id).first()
-            if book:
-                book_title = book.title
+    for review, user_name, book_title in results:
         items.append(
             AdminReviewResponse(
                 id=review.id,
@@ -216,13 +225,15 @@ def list_user_books(
     current_user: User = Depends(get_admin_user),
 ):
     """List all user-book records with pagination and search."""
-    query = db.query(UserBook, User.name.label("user_name")).join(
-        User, UserBook.user_id == User.id
+    query = (
+        db.query(UserBook, User.name.label("user_name"), Book.title.label("book_title"))
+        .join(User, UserBook.user_id == User.id)
+        .outerjoin(Book, UserBook.book_id == Book.id)
     )
 
     if search:
         search_filter = f"%{search}%"
-        query = query.outerjoin(Book, UserBook.book_id == Book.id).filter(
+        query = query.filter(
             or_(
                 User.name.ilike(search_filter),
                 Book.title.ilike(search_filter),
@@ -235,12 +246,7 @@ def list_user_books(
     results = query.offset(offset).limit(page_size).all()
 
     items = []
-    for ub, user_name in results:
-        book_title = None
-        if ub.book_id:
-            book = db.query(Book).filter(Book.id == ub.book_id).first()
-            if book:
-                book_title = book.title
+    for ub, user_name, book_title in results:
         items.append(
             AdminUserBookResponse(
                 id=ub.id,
@@ -312,8 +318,21 @@ def update_user(
     db.commit()
     db.refresh(user)
 
-    books_count = db.query(func.count(UserBook.id)).filter(UserBook.user_id == user.id).scalar() or 0
-    reviews_count = db.query(func.count(Review.id)).filter(Review.user_id == user.id).scalar() or 0
+    books_count_subq = (
+        db.query(func.count(UserBook.id))
+        .filter(UserBook.user_id == user.id)
+        .correlate(User)
+        .scalar_subquery()
+    )
+    reviews_count_subq = (
+        db.query(func.count(Review.id))
+        .filter(Review.user_id == user.id)
+        .correlate(User)
+        .scalar_subquery()
+    )
+    counts = db.query(books_count_subq, reviews_count_subq).one()
+    books_count = counts[0] or 0
+    reviews_count = counts[1] or 0
 
     return ApiResponse(
         data=AdminUserResponse(
@@ -386,15 +405,15 @@ def update_review(
     db.commit()
     db.refresh(review)
 
-    # Get user_name and book_title for the response
-    user = db.query(User).filter(User.id == review.user_id).first()
-    user_name = user.name if user else ""
-
-    book_title = None
-    if review.book_id:
-        book = db.query(Book).filter(Book.id == review.book_id).first()
-        if book:
-            book_title = book.title
+    # Get user_name and book_title in a single query
+    result = (
+        db.query(User.name, Book.title)
+        .outerjoin(Book, Book.id == review.book_id)
+        .filter(User.id == review.user_id)
+        .first()
+    )
+    user_name = result[0] if result else ""
+    book_title = result[1] if result else None
 
     return ApiResponse(
         data=AdminReviewResponse(
