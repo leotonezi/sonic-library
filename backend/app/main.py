@@ -6,12 +6,15 @@ from app.api.v1.endpoints import books, users, reviews, recommendations, auth, u
 from app.core.logging_config import setup_logging
 from app.core.file_utils import UPLOAD_DIR
 from app.core.exceptions import RateLimitExceeded
+from app.core.middleware import RequestIDMiddleware
 import logging
 
 setup_logging()
 logger = logging.getLogger("sonic")
 
 app = FastAPI(title="SonicLibrary API")
+
+app.add_middleware(RequestIDMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,6 +25,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],
 )
 
 # Mount static files for profile pictures
