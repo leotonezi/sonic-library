@@ -186,9 +186,13 @@ def search_external_books(
         params["key"] = GOOGLE_BOOKS_API_KEY
 
     try:
+        start = time.perf_counter()
         resp = requests.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
         resp.raise_for_status()
         data = resp.json()
+
+        logger.info("external_api_call", service="google_books", endpoint="search_external", status_code=resp.status_code, duration_ms=duration_ms)
 
         books = []
         for item in data.get("items", []):
@@ -229,6 +233,8 @@ def search_external_books(
         )
 
     except requests.RequestException as e:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        logger.error("external_api_call_failed", service="google_books", endpoint="search_external", duration_ms=duration_ms, error=str(e), exc_info=True)
         cb.record_failure()
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
 
@@ -303,9 +309,13 @@ def get_book_by_external_id(
         raise HTTPException(status_code=502, detail="Google Books API is temporarily unavailable")
 
     try:
+        start = time.perf_counter()
         resp = requests.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
         resp.raise_for_status()
         item = resp.json()
+
+        logger.info("external_api_call", service="google_books", endpoint="get_by_external_id", status_code=resp.status_code, duration_ms=duration_ms)
 
         cb.record_success()
 
@@ -350,6 +360,8 @@ def get_book_by_external_id(
         }
 
     except requests.RequestException as e:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        logger.error("external_api_call_failed", service="google_books", endpoint="get_by_external_id", duration_ms=duration_ms, error=str(e), exc_info=True)
         cb.record_failure()
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
 
@@ -418,9 +430,13 @@ def get_popular_books(
             params["key"] = GOOGLE_BOOKS_API_KEY
 
         try:
+            start = time.perf_counter()
             resp = requests.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
+            duration_ms = round((time.perf_counter() - start) * 1000, 2)
             resp.raise_for_status()
             data = resp.json()
+
+            logger.info("external_api_call", service="google_books", endpoint="popular", status_code=resp.status_code, duration_ms=duration_ms)
 
             for item in data.get("items", []):
                 info = item.get("volumeInfo", {})
@@ -445,7 +461,8 @@ def get_popular_books(
                         break
 
         except requests.RequestException as e:
-            logger.warning("Error fetching books for query", query=query, error=str(e))
+            duration_ms = round((time.perf_counter() - start) * 1000, 2)
+            logger.error("external_api_call_failed", service="google_books", endpoint="popular", query=query, duration_ms=duration_ms, error=str(e), exc_info=True)
             continue
 
     final_books = all_books[:max_results]

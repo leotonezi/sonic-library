@@ -95,9 +95,13 @@ def get_google_books_by_genre(genres: List[str], max_results: int = 20) -> List[
         params["key"] = GOOGLE_BOOKS_API_KEY
 
     try:
+        start = time.perf_counter()
         resp = requests.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
         resp.raise_for_status()
         data = resp.json()
+
+        logger.info("external_api_call", service="google_books", endpoint="volumes_by_genre", status_code=resp.status_code, duration_ms=duration_ms)
 
         books = []
         for item in data.get("items", []):
@@ -116,7 +120,9 @@ def get_google_books_by_genre(genres: List[str], max_results: int = 20) -> List[
             })
         cb.record_success()
         return books
-    except Exception:
+    except Exception as e:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        logger.error("external_api_call_failed", service="google_books", endpoint="volumes_by_genre", duration_ms=duration_ms, error=str(e), exc_info=True)
         cb.record_failure()
         return []
 
@@ -780,10 +786,14 @@ Make sure to use the exact external_id value (the alphanumeric string with hyphe
 
     try:
         chain = prompt | llm
+        start = time.perf_counter()
         result = chain.invoke({
             "positive_reviews": reviews_text,
             "google_books": books_text
         }).content
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+
+        logger.info("external_api_call", service="openai", model="gpt-3.5-turbo", duration_ms=duration_ms)
 
         openai_cb.record_success()
 
@@ -792,6 +802,7 @@ Make sure to use the exact external_id value (the alphanumeric string with hyphe
 
         return result
     except Exception as e:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        logger.error("external_api_call_failed", service="openai", model="gpt-3.5-turbo", duration_ms=duration_ms, error=str(e), exc_info=True)
         openai_cb.record_failure()
-        logger.error(f"OpenAI API call failed: {e}")
         raise

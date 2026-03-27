@@ -1,9 +1,9 @@
-import logging
+import structlog
 import time
 from enum import Enum
 from typing import Any, Optional
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("circuit_breaker")
 
 
 class CircuitState(str, Enum):
@@ -52,7 +52,7 @@ class CircuitBreaker:
             data = self.redis_client.hgetall(self._key)
             return data if data else {}
         except Exception as e:
-            logger.warning(f"CircuitBreaker({self.name}) Redis read error, failing open: {e}")
+            logger.warning("circuit_breaker_redis_read_error", service=self.name, error=str(e))
             return {}
 
     def _set_state(self, state: str, failure_count: int, last_failure_time: float) -> None:
@@ -68,7 +68,7 @@ class CircuitBreaker:
                 },
             )
         except Exception as e:
-            logger.warning(f"CircuitBreaker({self.name}) Redis write error: {e}")
+            logger.warning("circuit_breaker_redis_write_error", service=self.name, error=str(e))
 
     # ------------------------------------------------------------------
     # Public API
@@ -90,7 +90,7 @@ class CircuitBreaker:
                 last_failure = float(data.get("last_failure_time", 0))
                 if time.time() - last_failure >= self.recovery_timeout:
                     # Transition to HALF_OPEN – allow one probe
-                    logger.info(f"CircuitBreaker({self.name}): OPEN → HALF_OPEN")
+                    logger.warning("circuit_breaker_state_change", service=self.name, from_state="open", to_state="half_open")
                     self._set_state(
                         CircuitState.HALF_OPEN,
                         int(data.get("failure_count", 0)),
@@ -106,7 +106,7 @@ class CircuitBreaker:
             return True  # unknown state → fail open
 
         except Exception as e:
-            logger.warning(f"CircuitBreaker({self.name}) is_call_permitted error, failing open: {e}")
+            logger.warning("circuit_breaker_check_error", service=self.name, error=str(e))
             return True
 
     def record_success(self) -> None:
@@ -119,12 +119,12 @@ class CircuitBreaker:
             old_state = data.get("state", CircuitState.CLOSED)
 
             if old_state == CircuitState.HALF_OPEN:
-                logger.info(f"CircuitBreaker({self.name}): HALF_OPEN → CLOSED")
+                logger.warning("circuit_breaker_state_change", service=self.name, from_state="half_open", to_state="closed")
 
             self._set_state(CircuitState.CLOSED, 0, 0)
 
         except Exception as e:
-            logger.warning(f"CircuitBreaker({self.name}) record_success error: {e}")
+            logger.warning("circuit_breaker_record_success_error", service=self.name, error=str(e))
 
     def record_failure(self) -> None:
         """Record a failed call.
@@ -142,12 +142,12 @@ class CircuitBreaker:
             now = time.time()
 
             if old_state == CircuitState.HALF_OPEN:
-                logger.info(f"CircuitBreaker({self.name}): HALF_OPEN → OPEN")
+                logger.warning("circuit_breaker_state_change", service=self.name, from_state="half_open", to_state="open")
                 self._set_state(CircuitState.OPEN, failure_count, now)
                 return
 
             if failure_count >= self.failure_threshold:
-                logger.info(f"CircuitBreaker({self.name}): CLOSED → OPEN (failures={failure_count})")
+                logger.warning("circuit_breaker_state_change", service=self.name, from_state="closed", to_state="open", failure_count=failure_count)
                 self._set_state(CircuitState.OPEN, failure_count, now)
             else:
                 self._set_state(
@@ -157,4 +157,4 @@ class CircuitBreaker:
                 )
 
         except Exception as e:
-            logger.warning(f"CircuitBreaker({self.name}) record_failure error: {e}")
+            logger.warning("circuit_breaker_record_failure_error", service=self.name, error=str(e))
