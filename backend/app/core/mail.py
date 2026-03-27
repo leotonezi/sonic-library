@@ -1,8 +1,11 @@
 # core/mail.py
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from pydantic import EmailStr, BaseModel
+import structlog
 
 from app.core.config import settings, is_testing  # assuming you have a settings.py for env variables
+
+logger = structlog.get_logger("mail")
 
 # Only create mail configuration if not in testing mode and mail settings are provided
 conf = None
@@ -25,7 +28,7 @@ class EmailSchema(BaseModel):
 async def send_activation_email(email: EmailStr, activation_link: str):
     # Skip email sending during tests or if mail is not configured
     if is_testing or conf is None:
-        print(f"[TEST] Email would be sent to {email} with activation link: {activation_link}")
+        logger.info("Activation email skipped", recipient=email, activation_link=activation_link, mode="test")
         return
     
     message = MessageSchema(

@@ -18,10 +18,10 @@ from app.core.circuit_breaker import CircuitBreaker
 
 import re, html, requests, os
 import time
-import logging
+import structlog
 from typing import Dict, Any, Optional
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("books")
 
 router = APIRouter()
 
@@ -445,7 +445,7 @@ def get_popular_books(
                         break
 
         except requests.RequestException as e:
-            print(f"Error fetching books for query '{query}': {str(e)}")
+            logger.warning("Error fetching books for query", query=query, error=str(e))
             continue
 
     final_books = all_books[:max_results]

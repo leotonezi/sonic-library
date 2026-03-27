@@ -8,6 +8,9 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
 from app.core.file_utils import save_profile_picture
+import structlog
+
+logger = structlog.get_logger("users")
 
 router = APIRouter()
 
@@ -22,10 +25,7 @@ def create(user: UserCreate, user_service: UserService = Depends(get_user_servic
         user_obj = user_service.create(user)
         return ApiResponse(data=UserResponse.model_validate(user_obj))
     except Exception as e:
-        # Log the full error details
-        print(f"Error creating user: {str(e)}")
-        import traceback
-        print(traceback.format_exc())
+        logger.error("Error creating user", error=str(e), exc_info=True)
         raise
 
 @router.get("/", response_model=ApiResponse[list[UserResponse]])

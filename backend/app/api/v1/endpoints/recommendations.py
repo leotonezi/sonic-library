@@ -7,6 +7,9 @@ from app.services.recommendation_service import generate_book_recommendations, c
 from app.schemas.base_schema import ApiResponse
 from app.core.security import get_current_user
 from app.core.logging_decorator import log_exceptions
+import structlog
+
+logger = structlog.get_logger("recommendations")
 
 router = APIRouter()
 
@@ -41,7 +44,7 @@ def get_recommendation_graph(
         current_user: User = Depends(get_current_user)
     ):
     """Get recommendation graph data with similarity vertices."""
-    print(f"🔍 GET /recommendations/graph called for user {current_user.id} ({current_user.name})")
+    logger.info("Graph endpoint called", user_id=current_user.id, user_name=current_user.name)
     graph_data = create_book_recommendation_graph(db, current_user.id)
-    print(f"📊 Graph generated: {len(graph_data.get('nodes', []))} nodes, {len(graph_data.get('edges', []))} edges")
+    logger.debug("Graph generated", user_id=current_user.id, node_count=len(graph_data.get('nodes', [])), edge_count=len(graph_data.get('edges', [])))
     return ApiResponse(data=graph_data)
