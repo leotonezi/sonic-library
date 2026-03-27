@@ -33,19 +33,20 @@ def get_cached_popular_books(max_results: int) -> Optional[list]:
     """Get popular books from cache if available and not expired."""
     cache_key = f"popular_books_{max_results}"
     cached_data = _popular_books_cache.get(cache_key)
-    
+
     if cached_data:
         current_time = time.time()
-        if current_time - cached_data["timestamp"] < CACHE_TTL:
-            logger.info(f"Cache hit for popular books with max_results={max_results}")
+        age = current_time - cached_data["timestamp"]
+        if age < CACHE_TTL:
+            ttl_remaining_s = round(CACHE_TTL - age, 2)
+            logger.info("cache_hit", service="popular_books_cache", cache_key=cache_key, ttl_remaining_s=ttl_remaining_s)
             return cached_data["data"]
         else:
-            # Remove expired cache entry
-            logger.info(f"Cache expired for popular books with max_results={max_results}")
+            logger.info("cache_miss", service="popular_books_cache", cache_key=cache_key, reason="expired")
             del _popular_books_cache[cache_key]
     else:
-        logger.info(f"Cache miss for popular books with max_results={max_results}")
-    
+        logger.info("cache_miss", service="popular_books_cache", cache_key=cache_key, reason="not_found")
+
     return None
 
 def set_cached_popular_books(max_results: int, data: list):
@@ -55,7 +56,7 @@ def set_cached_popular_books(max_results: int, data: list):
         "data": data,
         "timestamp": time.time()
     }
-    logger.info(f"Cached popular books with max_results={max_results}, data_count={len(data)}")
+    logger.debug("cache_set", service="popular_books_cache", cache_key=cache_key, ttl_s=CACHE_TTL, data_count=len(data))
 
 def _get_google_books_circuit_breaker() -> CircuitBreaker:
     """Return a CircuitBreaker instance for Google Books API."""
@@ -534,7 +535,8 @@ def clear_popular_books_cache():
     global _popular_books_cache
     cache_size = len(_popular_books_cache)
     _popular_books_cache.clear()
-    
+    logger.info("cache_clear", service="popular_books_cache", cleared_entries=cache_size)
+
     return {
         "data": {"cleared_entries": cache_size},
         "message": f"Popular books cache cleared. Removed {cache_size} cached entries.",

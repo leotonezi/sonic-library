@@ -135,14 +135,20 @@ def create_cache_key(user_reviews: List[ReviewResponse]) -> str:
 def get_cached_recommendations(cache_key: str) -> Optional[str]:
     """Get recommendations from cache if available and not expired."""
     cached_data = _recommendations_cache.get(cache_key)
-    
+
     if cached_data:
         current_time = time.time()
-        if current_time - cached_data["timestamp"] < CACHE_TTL:
+        age = current_time - cached_data["timestamp"]
+        if age < CACHE_TTL:
+            ttl_remaining_s = round(CACHE_TTL - age, 2)
+            logger.info("cache_hit", service="recommendation_cache", cache_key=cache_key, ttl_remaining_s=ttl_remaining_s)
             return cached_data["data"]
         else:
+            logger.info("cache_miss", service="recommendation_cache", cache_key=cache_key, reason="expired")
             del _recommendations_cache[cache_key]
-    
+    else:
+        logger.info("cache_miss", service="recommendation_cache", cache_key=cache_key, reason="not_found")
+
     return None
 
 def set_cached_recommendations(cache_key: str, data: str):
@@ -151,6 +157,7 @@ def set_cached_recommendations(cache_key: str, data: str):
         "data": data,
         "timestamp": time.time()
     }
+    logger.debug("cache_set", service="recommendation_cache", cache_key=cache_key, ttl_s=CACHE_TTL)
 
 def create_book_recommendation_graph(db: Session, user_id: int) -> Dict[str, Any]:
     """Create a recommendation graph with direct book-to-book edges."""
