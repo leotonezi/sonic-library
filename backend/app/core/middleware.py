@@ -18,7 +18,7 @@ request_id_ctx: ContextVar[str] = ContextVar("request_id", default="")
 logger = structlog.get_logger("middleware")
 
 # Paths excluded from request logging to reduce noise
-_EXCLUDED_PATHS: set[str] = {"/health", "/readiness", "/liveness"}
+_EXCLUDED_PATHS: set[str] = {"/health", "/readiness", "/liveness", "/metrics"}
 
 
 class RequestIDMiddleware(BaseHTTPMiddleware):

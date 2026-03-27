@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1.endpoints import books, users, reviews, recommendations, auth, user_books, admin
+from app.api.v1.endpoints import books, users, reviews, recommendations, auth, user_books, admin, metrics
 from app.core.logging_config import setup_logging
 from app.core.file_utils import UPLOAD_DIR
 from app.core.exceptions import RateLimitExceeded
@@ -51,3 +51,4 @@ app.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
 app.include_router(recommendations.router, prefix="/recommendations", tags=["Recommendations"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(metrics.router, tags=["Metrics"])
