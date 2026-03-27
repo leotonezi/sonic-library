@@ -1,8 +1,12 @@
+import structlog
+
 from app.models.book import Book, Genre
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload, selectinload
 from app.services.base_service import BaseService
 from typing import Tuple, List, Optional
+
+logger = structlog.get_logger("book_service")
 
 class BookService(BaseService[Book]):
     def __init__(self, db):
@@ -126,8 +130,9 @@ class BookService(BaseService[Book]):
 
             return book
         except Exception as e:
-            # Log the error with traceback
-            import traceback
-            print("Error in BookService.create:", e)
-            print(traceback.format_exc())
+            logger.error(
+                "Error in BookService.create",
+                service="book",
+                exc_info=True,
+            )
             raise

@@ -1,3 +1,5 @@
+import structlog
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import timedelta
@@ -7,6 +9,8 @@ from app.models.user import User
 from app.services.base_service import BaseService
 from app.schemas.user import UserCreate, UserUpdate, UserProfileUpdate
 from app.core.config import settings, is_testing
+
+logger = structlog.get_logger("user_service")
 
 
 class UserService(BaseService[User]):
@@ -42,9 +46,11 @@ class UserService(BaseService[User]):
             self.db.refresh(db_user)
             return db_user
         except Exception as e:
-            print(f"Error in UserService.create: {str(e)}")
-            import traceback
-            print(traceback.format_exc())
+            logger.error(
+                "Error in UserService.create",
+                service="user",
+                exc_info=True,
+            )
             raise
 
     def authenticate_user(self, email: str, password: str):
