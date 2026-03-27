@@ -20,6 +20,11 @@ import re, html, requests, os
 import time
 import structlog
 from typing import Dict, Any, Optional
+from app.core.metrics import (
+    external_api_requests_total,
+    external_api_duration_seconds,
+    cache_operations_total,
+)
 
 logger = structlog.get_logger("books")
 
@@ -40,12 +45,15 @@ def get_cached_popular_books(max_results: int) -> Optional[list]:
         if age < CACHE_TTL:
             ttl_remaining_s = round(CACHE_TTL - age, 2)
             logger.info("cache_hit", service="popular_books_cache", cache_key=cache_key, ttl_remaining_s=ttl_remaining_s)
+            cache_operations_total.labels(cache="popular_books", result="hit").inc()
             return cached_data["data"]
         else:
             logger.info("cache_miss", service="popular_books_cache", cache_key=cache_key, reason="expired")
+            cache_operations_total.labels(cache="popular_books", result="miss").inc()
             del _popular_books_cache[cache_key]
     else:
         logger.info("cache_miss", service="popular_books_cache", cache_key=cache_key, reason="not_found")
+        cache_operations_total.labels(cache="popular_books", result="miss").inc()
 
     return None
 
@@ -194,6 +202,8 @@ def search_external_books(
         data = resp.json()
 
         logger.info("external_api_call", service="google_books", endpoint="search_external", status_code=resp.status_code, duration_ms=duration_ms)
+        external_api_requests_total.labels(service="google_books", status="success").inc()
+        external_api_duration_seconds.labels(service="google_books").observe(duration_ms / 1000)
 
         books = []
         for item in data.get("items", []):
@@ -236,6 +246,8 @@ def search_external_books(
     except requests.RequestException as e:
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         logger.error("external_api_call_failed", service="google_books", endpoint="search_external", duration_ms=duration_ms, error=str(e), exc_info=True)
+        external_api_requests_total.labels(service="google_books", status="error").inc()
+        external_api_duration_seconds.labels(service="google_books").observe(duration_ms / 1000)
         cb.record_failure()
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
 
@@ -317,6 +329,8 @@ def get_book_by_external_id(
         item = resp.json()
 
         logger.info("external_api_call", service="google_books", endpoint="get_by_external_id", status_code=resp.status_code, duration_ms=duration_ms)
+        external_api_requests_total.labels(service="google_books", status="success").inc()
+        external_api_duration_seconds.labels(service="google_books").observe(duration_ms / 1000)
 
         cb.record_success()
 
@@ -363,6 +377,8 @@ def get_book_by_external_id(
     except requests.RequestException as e:
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         logger.error("external_api_call_failed", service="google_books", endpoint="get_by_external_id", duration_ms=duration_ms, error=str(e), exc_info=True)
+        external_api_requests_total.labels(service="google_books", status="error").inc()
+        external_api_duration_seconds.labels(service="google_books").observe(duration_ms / 1000)
         cb.record_failure()
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
 
@@ -438,6 +454,8 @@ def get_popular_books(
             data = resp.json()
 
             logger.info("external_api_call", service="google_books", endpoint="popular", status_code=resp.status_code, duration_ms=duration_ms)
+            external_api_requests_total.labels(service="google_books", status="success").inc()
+            external_api_duration_seconds.labels(service="google_books").observe(duration_ms / 1000)
 
             for item in data.get("items", []):
                 info = item.get("volumeInfo", {})
@@ -464,6 +482,8 @@ def get_popular_books(
         except requests.RequestException as e:
             duration_ms = round((time.perf_counter() - start) * 1000, 2)
             logger.error("external_api_call_failed", service="google_books", endpoint="popular", query=query, duration_ms=duration_ms, error=str(e), exc_info=True)
+            external_api_requests_total.labels(service="google_books", status="error").inc()
+            external_api_duration_seconds.labels(service="google_books").observe(duration_ms / 1000)
             continue
 
     final_books = all_books[:max_results]

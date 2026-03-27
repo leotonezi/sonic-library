@@ -9,6 +9,12 @@ import os
 import structlog
 import requests
 import time
+from app.core.metrics import (
+    external_api_requests_total,
+    external_api_duration_seconds,
+    cache_operations_total,
+    recommendation_generation_duration_seconds,
+)
 import hashlib
 import json
 from typing import Dict, Any, Optional, List, Tuple
@@ -102,6 +108,8 @@ def get_google_books_by_genre(genres: List[str], max_results: int = 20) -> List[
         data = resp.json()
 
         logger.info("external_api_call", service="google_books", endpoint="volumes_by_genre", status_code=resp.status_code, duration_ms=duration_ms)
+        external_api_requests_total.labels(service="google_books", status="success").inc()
+        external_api_duration_seconds.labels(service="google_books").observe(duration_ms / 1000)
 
         books = []
         for item in data.get("items", []):
@@ -123,6 +131,8 @@ def get_google_books_by_genre(genres: List[str], max_results: int = 20) -> List[
     except Exception as e:
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         logger.error("external_api_call_failed", service="google_books", endpoint="volumes_by_genre", duration_ms=duration_ms, error=str(e), exc_info=True)
+        external_api_requests_total.labels(service="google_books", status="error").inc()
+        external_api_duration_seconds.labels(service="google_books").observe(duration_ms / 1000)
         cb.record_failure()
         return []
 
@@ -142,12 +152,15 @@ def get_cached_recommendations(cache_key: str) -> Optional[str]:
         if age < CACHE_TTL:
             ttl_remaining_s = round(CACHE_TTL - age, 2)
             logger.info("cache_hit", service="recommendation_cache", cache_key=cache_key, ttl_remaining_s=ttl_remaining_s)
+            cache_operations_total.labels(cache="recommendations", result="hit").inc()
             return cached_data["data"]
         else:
             logger.info("cache_miss", service="recommendation_cache", cache_key=cache_key, reason="expired")
+            cache_operations_total.labels(cache="recommendations", result="miss").inc()
             del _recommendations_cache[cache_key]
     else:
         logger.info("cache_miss", service="recommendation_cache", cache_key=cache_key, reason="not_found")
+        cache_operations_total.labels(cache="recommendations", result="miss").inc()
 
     return None
 
@@ -801,6 +814,9 @@ Make sure to use the exact external_id value (the alphanumeric string with hyphe
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
 
         logger.info("external_api_call", service="openai", model="gpt-3.5-turbo", duration_ms=duration_ms)
+        external_api_requests_total.labels(service="openai", status="success").inc()
+        external_api_duration_seconds.labels(service="openai").observe(duration_ms / 1000)
+        recommendation_generation_duration_seconds.observe(duration_ms / 1000)
 
         openai_cb.record_success()
 
@@ -811,5 +827,7 @@ Make sure to use the exact external_id value (the alphanumeric string with hyphe
     except Exception as e:
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         logger.error("external_api_call_failed", service="openai", model="gpt-3.5-turbo", duration_ms=duration_ms, error=str(e), exc_info=True)
+        external_api_requests_total.labels(service="openai", status="error").inc()
+        external_api_duration_seconds.labels(service="openai").observe(duration_ms / 1000)
         openai_cb.record_failure()
         raise

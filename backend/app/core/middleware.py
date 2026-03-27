@@ -11,6 +11,7 @@ from starlette.responses import Response
 import structlog
 
 from app.core.config import settings
+from app.core.metrics import http_requests_total, http_request_duration_seconds
 
 # ContextVar accessible anywhere in the call stack
 request_id_ctx: ContextVar[str] = ContextVar("request_id", default="")
@@ -90,6 +91,14 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             duration_ms=duration_ms,
             user_id=user_id,
         )
+
+        # Record Prometheus metrics
+        http_requests_total.labels(
+            method=request.method, path=path, status_code=str(status_code)
+        ).inc()
+        http_request_duration_seconds.labels(
+            method=request.method, path=path
+        ).observe(duration_ms / 1000)
 
         if status_code >= 500:
             logger.error("request completed", **log_kwargs)

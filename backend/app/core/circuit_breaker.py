@@ -3,7 +3,11 @@ import time
 from enum import Enum
 from typing import Any, Optional
 
+from app.core.metrics import circuit_breaker_state as cb_state_gauge
+
 logger = structlog.get_logger("circuit_breaker")
+
+_CB_STATE_VALUES = {"closed": 0, "open": 1, "half_open": 2}
 
 
 class CircuitState(str, Enum):
@@ -91,6 +95,7 @@ class CircuitBreaker:
                 if time.time() - last_failure >= self.recovery_timeout:
                     # Transition to HALF_OPEN – allow one probe
                     logger.warning("circuit_breaker_state_change", service=self.name, from_state="open", to_state="half_open")
+                    cb_state_gauge.labels(service=self.name).set(_CB_STATE_VALUES["half_open"])
                     self._set_state(
                         CircuitState.HALF_OPEN,
                         int(data.get("failure_count", 0)),
@@ -121,6 +126,7 @@ class CircuitBreaker:
             if old_state == CircuitState.HALF_OPEN:
                 logger.warning("circuit_breaker_state_change", service=self.name, from_state="half_open", to_state="closed")
 
+            cb_state_gauge.labels(service=self.name).set(_CB_STATE_VALUES["closed"])
             self._set_state(CircuitState.CLOSED, 0, 0)
 
         except Exception as e:
@@ -143,11 +149,13 @@ class CircuitBreaker:
 
             if old_state == CircuitState.HALF_OPEN:
                 logger.warning("circuit_breaker_state_change", service=self.name, from_state="half_open", to_state="open")
+                cb_state_gauge.labels(service=self.name).set(_CB_STATE_VALUES["open"])
                 self._set_state(CircuitState.OPEN, failure_count, now)
                 return
 
             if failure_count >= self.failure_threshold:
                 logger.warning("circuit_breaker_state_change", service=self.name, from_state="closed", to_state="open", failure_count=failure_count)
+                cb_state_gauge.labels(service=self.name).set(_CB_STATE_VALUES["open"])
                 self._set_state(CircuitState.OPEN, failure_count, now)
             else:
                 self._set_state(
