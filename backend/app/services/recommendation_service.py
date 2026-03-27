@@ -6,7 +6,7 @@ from app.core.redis import get_redis
 from app.core.rate_limiter import GlobalRateLimiter
 from app.core.circuit_breaker import CircuitBreaker
 import os
-import logging
+import structlog
 import requests
 import time
 import hashlib
@@ -19,7 +19,7 @@ from app.models.review import Review
 from app.models.user_book import UserBook
 import re
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("recommendation_service")
 
 load_dotenv()
 
@@ -148,16 +148,16 @@ def set_cached_recommendations(cache_key: str, data: str):
 
 def create_book_recommendation_graph(db: Session, user_id: int) -> Dict[str, Any]:
     """Create a recommendation graph with direct book-to-book edges."""
-    print(f"🔍 Creating graph for user_id: {user_id}")
-    
+    logger.info("graph_creation_started", user_id=user_id, service="recommendation")
+
     # Get user's reviews and books
     user_reviews = db.query(Review).filter(Review.user_id == user_id).all()
     user_books = db.query(UserBook).filter(UserBook.user_id == user_id).all()
-    
-    print(f"📚 Found {len(user_reviews)} reviews and {len(user_books)} user books")
-    
+
+    logger.info("user_data_loaded", user_id=user_id, service="recommendation", review_count=len(user_reviews), book_count=len(user_books))
+
     if not user_reviews:
-        print("❌ No reviews found")
+        logger.warning("no_reviews_found", user_id=user_id, service="recommendation")
         return {"nodes": [], "edges": [], "message": "No reviews found for recommendation graph."}
     
     # Build similarity graph with direct edges
@@ -175,9 +175,9 @@ def create_book_recommendation_graph(db: Session, user_id: int) -> Dict[str, Any
     
     books = db.query(Book).options(selectinload(Book.genres)).filter(Book.id.in_(book_ids)).all() if book_ids else []
     
-    print(f"📖 Found {len(books)} books:")
+    logger.debug("books_loaded", user_id=user_id, service="recommendation", book_count=len(books))
     for book in books:
-        print(f"  - {book.title} by {book.author} (ID: {book.id})")
+        logger.debug("book_detail", user_id=user_id, service="recommendation", book_id=book.id, title=book.title, author=book.author)
     
     # Create nodes for user's books
     for book in books:
@@ -218,9 +218,9 @@ def create_book_recommendation_graph(db: Session, user_id: int) -> Dict[str, Any
     edges.extend(_create_direct_similarity_edges(books, user_reviews, user_id))
     
     # Get additional recommendations from AI
-    print("🤖 Getting AI recommendations...")
+    logger.info("ai_recommendations_requested", user_id=user_id, service="recommendation")
     ai_recommendations = _get_ai_book_recommendations(user_reviews, db)
-    print(f"🤖 Found {len(ai_recommendations)} AI recommendations")
+    logger.info("ai_recommendations_received", user_id=user_id, service="recommendation", recommendation_count=len(ai_recommendations))
     
     # Add AI recommendation nodes
     for i, rec in enumerate(ai_recommendations[:3]):  # Limit to 3 AI recommendations
@@ -302,8 +302,7 @@ def _create_direct_similarity_edges(books: List[Book], user_reviews: List[Review
             book1_specific = book1_genres - generic_genres
             book2_specific = book2_genres - generic_genres
             
-            print(f"   Book1 specific genres: {book1_specific}")
-            print(f"   Book2 specific genres: {book2_specific}")
+            logger.debug("genre_comparison", service="recommendation", book1_title=book1.title, book1_genres=list(book1_specific), book2_title=book2.title, book2_genres=list(book2_specific))
             
             # Define incompatible specific genre pairs
             incompatible_pairs = [
@@ -324,7 +323,7 @@ def _create_direct_similarity_edges(books: List[Book], user_reviews: List[Review
             for genre1 in book1_specific:
                 for genre2 in book2_specific:
                     if (genre1, genre2) in incompatible_pairs or (genre2, genre1) in incompatible_pairs:
-                        print(f"❌ Incompatible genres detected: {genre1} vs {genre2}")
+                        logger.debug("incompatible_genres_detected", service="recommendation", genre1=genre1, genre2=genre2)
                         is_incompatible = True
                         break
                 if is_incompatible:
@@ -335,14 +334,14 @@ def _create_direct_similarity_edges(books: List[Book], user_reviews: List[Review
                 # First try specific genres
                 common_specific = book1_specific.intersection(book2_specific)
                 if common_specific:
-                    print(f"✅ Compatible specific genres found: {common_specific}")
+                    logger.debug("compatible_specific_genres", service="recommendation", common_genres=list(common_specific))
                     if len(common_specific) >= 2:
                         similarities.append(("Same Genres", "#fc9957", 3))
                     else:
                         similarities.append(("Similar Genre", "#60a5fa", 2))
                 # If no specific match but not incompatible, allow broad similarity
                 elif book1_genres.intersection(book2_genres):
-                    print(f"✅ Broad genre compatibility found")
+                    logger.debug("broad_genre_compatibility", service="recommendation", book1_title=book1.title, book2_title=book2.title)
                     similarities.append(("Similar Category", "#60a5fa", 1))
             
             # Same universe - only for same author or very obvious series
@@ -373,10 +372,7 @@ def _create_direct_similarity_edges(books: List[Book], user_reviews: List[Review
                 strongest = similarities[0]
                 
                 # Debug logging to understand connections
-                print(f"📚 Connecting '{book1.title}' <-> '{book2.title}': {strongest[0]}")
-                print(f"   Book1 genres: {[g.name for g in book1.genres] if book1.genres else 'None'}")
-                print(f"   Book2 genres: {[g.name for g in book2.genres] if book2.genres else 'None'}")
-                print(f"   All similarities found: {[s[0] for s in similarities]}")
+                logger.debug("edge_created", service="recommendation", book1_title=book1.title, book2_title=book2.title, connection_type=strongest[0], book1_genres=[g.name for g in book1.genres] if book1.genres else [], book2_genres=[g.name for g in book2.genres] if book2.genres else [], all_similarities=[s[0] for s in similarities])
                 
                 # Convert hex color to rgba format like the working mock data
                 color_rgba = f"rgba({int(strongest[1][1:3], 16)}, {int(strongest[1][3:5], 16)}, {int(strongest[1][5:7], 16)}, 0.8)"
