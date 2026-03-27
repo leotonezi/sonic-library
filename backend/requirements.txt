@@ -94,4 +94,5 @@ uvloop==0.21.0
 watchfiles==1.0.4
 websockets==15.0.1
 yarl==1.18.3
+structlog==24.4.0
 zstandard==0.23.0
