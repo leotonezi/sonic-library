@@ -3,6 +3,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getBackendUrl } from "@/lib/api-client";
 
 type AddReviewModalProps = {
   open: boolean;
@@ -31,7 +32,7 @@ export default function AddReviewModal({
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/`,
+        `${getBackendUrl()}/reviews/`,
         {
           method: "POST",
           credentials: "include",

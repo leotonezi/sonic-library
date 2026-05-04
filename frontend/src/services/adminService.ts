@@ -1,5 +1,6 @@
 import { apiFetch, apiPut, apiDelete, apiPost } from "@/utils/api";
 import { handleTokenRefresh } from "@/utils/auth";
+import { getBackendUrl } from "@/lib/api-client";
 import type {
   AdminUser,
   AdminUserDetail,
@@ -18,11 +19,7 @@ const ADMIN_PREFIX = "/api/v1/admin";
 async function adminPaginatedFetch<T>(
   endpoint: string
 ): Promise<PaginationResponse<T> | null> {
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-  if (!BASE_URL) {
-    console.warn("⚠️ NEXT_PUBLIC_BACKEND_URL is not defined.");
-    return null;
-  }
+  const BASE_URL = getBackendUrl();
 
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
