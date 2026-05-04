@@ -17,6 +17,9 @@ const baseFetchConfig: RequestInit = {
 };
 
 function getBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return '/api/backend';
+  }
   const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!baseUrl) {
     throw new Error("NEXT_PUBLIC_BACKEND_URL is not defined");
