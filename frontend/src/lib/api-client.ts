@@ -16,7 +16,7 @@ const baseFetchConfig: RequestInit = {
   credentials: 'include',
 };
 
-function getBaseUrl(): string {
+export function getBackendUrl(): string {
   if (typeof window !== 'undefined') {
     return '/api/backend';
   }
@@ -31,7 +31,7 @@ export class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = getBaseUrl();
+    this.baseUrl = getBackendUrl();
   }
 
   async get<T>(endpoint: string, options?: ExtendedRequestInit): Promise<T | null> {

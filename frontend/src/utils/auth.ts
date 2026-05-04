@@ -1,3 +1,4 @@
+import { getBackendUrl } from '@/lib/api-client';
 
 interface AuthError extends Error {
   status?: number;
@@ -33,7 +34,7 @@ export class TokenRefreshError extends Error {
 
 export async function refreshToken(): Promise<boolean> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh`, {
+    const response = await fetch(`${getBackendUrl()}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
     });

@@ -5,6 +5,7 @@ import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getBackendUrl } from "@/lib/api-client";
 
 export default function AddReviewForm({ bookId }: { bookId: number | null }) {
   const [review, setReview] = useState("");
@@ -19,7 +20,7 @@ export default function AddReviewForm({ bookId }: { bookId: number | null }) {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/`,
+        `${getBackendUrl()}/reviews/`,
         {
           method: "POST",
           credentials: "include",

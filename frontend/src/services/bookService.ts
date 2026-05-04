@@ -1,5 +1,6 @@
 import { Book, ExternalBook, PaginatedResponse } from "@/interfaces/book";
 import { apiFetch } from "@/utils/api";
+import { getBackendUrl } from "@/lib/api-client";
 import { notFound } from "next/navigation";
 
 export async function getBooks(p0: string): Promise<Book[]> {
@@ -42,7 +43,7 @@ export const searchExternalBooks = async (
       max_results: maxResults.toString(),
     });
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/books/search-external?${params.toString()}`);
+    const response = await fetch(`${getBackendUrl()}/books/search-external?${params.toString()}`);
     if (!response.ok) throw new Error('Failed to fetch external books');
     const data = await response.json();
     return data as PaginatedResponse<ExternalBook>;
@@ -62,7 +63,7 @@ export const getPopularBooks = async (
       max_results: maxResults.toString(),
     });
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/books/popular?${params.toString()}`);
+    const response = await fetch(`${getBackendUrl()}/books/popular?${params.toString()}`);
     if (!response.ok) throw new Error('Failed to fetch popular books');
     const data = await response.json();
     return data as PaginatedResponse<ExternalBook>;

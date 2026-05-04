@@ -32,13 +32,13 @@ export default function SignupPage() {
     const formData = new FormData(e.currentTarget);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/signup`, {
+      const response = await fetch('/api/backend/auth/signup', {
         method: 'POST',
         body: formData,
+        redirect: 'manual',
       });
 
-      if (response.ok) {
-        // Redirect to login with success message
+      if (response.ok || response.status === 303 || response.type === 'opaqueredirect') {
         router.push('/login?signup_success=true');
       } else {
         const data = await response.json();

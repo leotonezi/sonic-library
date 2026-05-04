@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
+import { getBackendUrl } from '@/lib/api-client';
 import Review from '@/interfaces/review';
 
 type ReviewActionsProps = {
@@ -25,7 +26,7 @@ export default function ReviewActions({ review }: ReviewActionsProps) {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/${review.id}`,
+        `${getBackendUrl()}/reviews/${review.id}`,
         {
           method: 'DELETE',
           credentials: 'include',
@@ -50,7 +51,7 @@ export default function ReviewActions({ review }: ReviewActionsProps) {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/${review.id}`,
+        `${getBackendUrl()}/reviews/${review.id}`,
         {
           method: 'PUT',
           credentials: 'include',

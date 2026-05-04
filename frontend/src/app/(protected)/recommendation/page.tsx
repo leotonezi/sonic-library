@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/utils/api";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getBackendUrl } from "@/lib/api-client";
 import Link from "next/link";
 import BookRecommendationGraph from '@/components/features/BookRecommendationGraph';
 
@@ -110,7 +111,7 @@ export default function RecommendationPage() {
           setParsedRecommendations(parsed);
         } else {
           // Data is null - check if AI is unavailable by fetching full response
-          const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+          const BASE_URL = getBackendUrl();
           if (BASE_URL) {
             const fullRes = await fetch(`${BASE_URL}/recommendations`, {
               credentials: 'include',

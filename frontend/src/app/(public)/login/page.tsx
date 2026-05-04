@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from "sonner";
 import { useAuthStore } from '@/store/useAuthStore';
+import { getBackendUrl } from '@/lib/api-client';
 import Image from 'next/image';
 
 export default function LoginPage() {
@@ -61,7 +62,7 @@ export default function LoginPage() {
     });
 
     try {
-      const loginRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token`, {
+      const loginRes = await fetch(`${getBackendUrl()}/auth/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',

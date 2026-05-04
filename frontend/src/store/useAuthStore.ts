@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { AuthState } from "@/interfaces/auth";
 import User from "@/interfaces/user";
+import { getBackendUrl } from "@/lib/api-client";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -14,7 +15,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     try {
       set({ isLoading: true });
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+      await fetch(`${getBackendUrl()}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -33,7 +34,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true, isCheckingAuth: true });
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me`,
+        `${getBackendUrl()}/users/me`,
         {
           credentials: 'include',
         }

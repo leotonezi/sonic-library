@@ -1,5 +1,6 @@
 import { handleTokenRefresh } from "./auth";
 import { handleRateLimitResponse } from "../lib/rate-limit-toast";
+import { getBackendUrl } from "@/lib/api-client";
 
 type ExtendedRequestInit = RequestInit & {
   noCache?: boolean;
@@ -20,11 +21,7 @@ export async function apiFetch<T>(
   endpoint: string,
   options?: ExtendedRequestInit
 ): Promise<T | null> {
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-  if (!BASE_URL) {
-    console.warn("⚠️ NEXT_PUBLIC_BACKEND_URL is not defined.");
-    return null;
-  }
+  const BASE_URL = getBackendUrl();
 
   const noCache = options?.noCache;
 
@@ -75,10 +72,7 @@ export async function apiPost<T, D = unknown>(
   data: D,
   options?: RequestInit
 ): Promise<T> {
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-  if (!BASE_URL) {
-    throw new Error("NEXT_PUBLIC_BACKEND_URL is not defined.");
-  }
+  const BASE_URL = getBackendUrl();
 
   const rawContentType = options?.headers instanceof Headers
     ? options.headers.get("Content-Type")
@@ -141,12 +135,7 @@ export async function apiDelete<T = unknown>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T | null> {
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-  if (!BASE_URL) {
-    console.warn("⚠️ NEXT_PUBLIC_BACKEND_URL is not defined.");
-    return null;
-  }
+  const BASE_URL = getBackendUrl();
 
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {
@@ -197,12 +186,7 @@ export async function apiPut<T = unknown>(
   body: unknown,
   options?: RequestInit
 ): Promise<T | null> {
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-  if (!BASE_URL) {
-    console.warn("⚠️ NEXT_PUBLIC_BACKEND_URL is not defined.");
-    return null;
-  }
+  const BASE_URL = getBackendUrl();
 
   try {
     const res = await fetch(`${BASE_URL}${endpoint}`, {

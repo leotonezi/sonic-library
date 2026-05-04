@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Camera, Save, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { getBackendUrl } from '@/lib/api-client';
 import Image from 'next/image';
 
 interface UserProfile {
@@ -26,7 +27,7 @@ export default function SettingsPage() {
 
   const fetchProfile = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me`, {
+      const response = await fetch(`${getBackendUrl()}/users/me`, {
         credentials: 'include',
       });
 
@@ -84,7 +85,7 @@ export default function SettingsPage() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me/profile-picture`, {
+      const response = await fetch(`${getBackendUrl()}/users/me/profile-picture`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -114,7 +115,7 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me/profile`, {
+      const response = await fetch(`${getBackendUrl()}/users/me/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
