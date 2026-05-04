@@ -7,8 +7,30 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 def setup_logging():
     log_dir = "logs"
-    os.makedirs(log_dir, exist_ok=True)
-    
+    file_logging_available = False
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+        file_logging_available = True
+    except OSError:
+        pass
+
+    handlers = {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+        },
+    }
+    sonic_handlers = ["console"]
+
+    if file_logging_available:
+        handlers["file"] = {
+            "class": "logging.FileHandler",
+            "formatter": "default",
+            "filename": "logs/sonic.log",
+            "mode": "a",
+        }
+        sonic_handlers.append("file")
+
     dictConfig({
       "version": 1,
       "disable_existing_loggers": False,
@@ -17,25 +39,14 @@ def setup_logging():
               "format": "[%(asctime)s] [%(levelname)s] %(name)s - %(message)s",
           },
       },
-      "handlers": {
-          "console": {
-              "class": "logging.StreamHandler",
-              "formatter": "default",
-          },
-          "file": {
-              "class": "logging.FileHandler",
-              "formatter": "default",
-              "filename": "logs/sonic.log",
-              "mode": "a",
-          },
-      },
+      "handlers": handlers,
       "root": {
             "handlers": ["console"],
             "level": LOG_LEVEL,
-    },  
+    },
       "loggers": {
           "sonic": {
-              "handlers": ["console", "file"],
+              "handlers": sonic_handlers,
               "level": LOG_LEVEL,
               "propagate": False,
           },
