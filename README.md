@@ -2,6 +2,10 @@
 
 A full-stack digital library platform where users can browse books, track their reading, write reviews, and receive AI-powered recommendations based on their reading history.
 
+## Live Demo
+
+Try the live app: https://soniclibrary.vercel.app
+
 ## The Problem
 
 Readers often struggle to:
