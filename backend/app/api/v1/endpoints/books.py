@@ -230,7 +230,10 @@ def search_external_books(
 
     except requests.RequestException as e:
         cb.record_failure()
-        raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
+        error_msg = str(e)
+        if GOOGLE_BOOKS_API_KEY and GOOGLE_BOOKS_API_KEY in error_msg:
+            error_msg = error_msg.replace(GOOGLE_BOOKS_API_KEY, "[REDACTED]")
+        raise HTTPException(status_code=502, detail=f"Google Books API error: {error_msg}")
 
 def _search_local_books(q: str, max_results: int, page: int, db: Session) -> PaginationResponse:
     """Search the local books table by title/author ILIKE and return in the same format."""
