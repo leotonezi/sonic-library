@@ -10,7 +10,7 @@ class UserBookService(BaseService[UserBook]):
         super().__init__(db, UserBook)
 
     def get_by_user(self, user_id: int):
-        return self.db.query(self.model).filter(self.model.user_id == user_id).all()
+        return self.db.query(self.model).options(joinedload(self.model.book)).filter(self.model.user_id == user_id).all()
 
     def get_books_by_user(self, user_id: int, status: str | None = None):
         query = (
@@ -85,7 +85,7 @@ class UserBookService(BaseService[UserBook]):
       return self.db.query(self.model).filter(self.model.external_book_id == external_book_id).first()
 
     def get_by_internal_or_external_book(self, external_book_id: Optional[str] = None, internal_book_id: Optional[int] = None):
-        query = self.db.query(self.model)
+        query = self.db.query(self.model).options(joinedload(self.model.book))
         if external_book_id and internal_book_id:
             return query.filter(
                 or_(
@@ -110,6 +110,7 @@ class UserBookService(BaseService[UserBook]):
     def get_by_user_and_status(self, user_id: int, status: StatusEnum):
       return (
           self.db.query(self.model)
+          .options(joinedload(self.model.book))
           .filter(
               self.model.user_id == user_id,
               self.model.status == status

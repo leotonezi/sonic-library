@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect } from "react";
 import { useSearchBookStore } from "@/store/useSearchBookStore";
-import { Book, Loader2 } from "lucide-react";
-import Pagination from "@/components/pagination";
+import { AlertTriangle, Book, Loader2 } from "lucide-react";
+import { Pagination } from "@/components/pagination";
 
 export default function BooksPage() {
   const searchResults = useSearchBookStore((state) => state.searchResults);
@@ -17,6 +17,7 @@ export default function BooksPage() {
   const fetchPopularBooksPaginated = useSearchBookStore((state) => state.fetchPopularBooksPaginated);
   const fetchExternalBooksPaginated = useSearchBookStore((state) => state.fetchExternalBooksPaginated);
   const searchQuery = useSearchBookStore((state) => state.searchQuery);
+  const searchMessage = useSearchBookStore((state) => state.searchMessage);
 
   // Fetch popular books on component mount if no search has been performed
   useEffect(() => {
@@ -38,17 +39,17 @@ export default function BooksPage() {
   // Show loading spinner when search is in progress
   if (isLoading) {
     return (
-      <main className="p-6 bg-[#0a1128] text-white min-h-screen flex items-center justify-center">
+      <div className="p-6 bg-[#0a1128] text-white min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
           <p className="text-blue-200 text-lg">Searching for books...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="p-6 bg-[#0a1128] text-white min-h-screen">
+    <div className="p-6 bg-[#0a1128] text-white min-h-screen">
       {/* Show popular books when no search has been performed */}
       {!hasSearched && popularBooks.length > 0 && (
         <div className="mb-8">
@@ -103,9 +104,9 @@ export default function BooksPage() {
           {/* Pagination for popular books */}
           {popularPagination && (
             <Pagination
-              pagination={popularPagination}
+              page={popularPagination.current_page}
+              totalPages={popularPagination.total_pages}
               onPageChange={handlePopularPagination}
-              loading={isLoading}
             />
           )}
         </div>
@@ -114,6 +115,12 @@ export default function BooksPage() {
       {/* Show search results when a search has been performed */}
       {hasSearched && (
         <div>
+          {searchMessage && searchMessage.toLowerCase().includes("temporarily unavailable") && (
+            <div className="mb-4 flex items-center gap-3 rounded-lg border border-yellow-600 bg-yellow-900/50 p-4 text-yellow-200">
+              <AlertTriangle className="h-5 w-5 flex-shrink-0 text-yellow-400" />
+              <p>External search is temporarily unavailable. Showing results from our library.</p>
+            </div>
+          )}
           <ul className="space-y-4">
             {searchResults && searchResults.length > 0 ? (
               searchResults.map((book) => (
@@ -168,14 +175,14 @@ export default function BooksPage() {
           {/* Pagination for search results */}
           {searchPagination && (
             <Pagination
-              pagination={searchPagination}
+              page={searchPagination.current_page}
+              totalPages={searchPagination.total_pages}
               onPageChange={handleSearchPagination}
-              loading={isLoading}
             />
           )}
         </div>
       )}
-    </main>
+    </div>
   );
 }
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "@/utils/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
+import BookRecommendationGraph from '@/components/features/BookRecommendationGraph';
 
 interface BookRecommendation {
   external_id: string;
@@ -18,6 +19,7 @@ export default function RecommendationPage() {
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [recommendationText, setRecommendationText] = useState<string>("");
   const [parsedRecommendations, setParsedRecommendations] = useState<BookRecommendation[]>([]);
+  const [unavailableMessage, setUnavailableMessage] = useState<string | null>(null);
 
   const parseRecommendations = (text: string): BookRecommendation[] => {
     const recommendations: BookRecommendation[] = [];
@@ -96,15 +98,31 @@ export default function RecommendationPage() {
         });
 
         if (rec) {
+          setUnavailableMessage(null);
           const cleanText = rec
             .replace(/[*_~`>#-]/g, '')
             .replace(/$begin:math:display$(.*?)$end:math:display$$begin:math:text$.*?$end:math:text$/g, '$1')
             .replace(/\n{2,}/g, '\n\n');
           setRecommendationText(cleanText);
-          
+
           // Try to parse structured recommendations
           const parsed = parseRecommendations(cleanText);
           setParsedRecommendations(parsed);
+        } else {
+          // Data is null - check if AI is unavailable by fetching full response
+          const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+          if (BASE_URL) {
+            const fullRes = await fetch(`${BASE_URL}/recommendations`, {
+              credentials: 'include',
+              cache: 'no-store',
+            });
+            if (fullRes.ok) {
+              const json = await fullRes.json();
+              if (json.data === null && json.message) {
+                setUnavailableMessage(json.message);
+              }
+            }
+          }
         }
       } catch (error) {
         console.error("❌ Error fetching recommendations:", error);
@@ -136,7 +154,7 @@ export default function RecommendationPage() {
         ) : parsedRecommendations.length > 0 ? (
           <div className="grid gap-6">
             {parsedRecommendations.map((book, index) => (
-              <div key={book.external_id || index} className="bg-blue-900 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 border border-blue-600 text-white">
+              <div key={`${book.external_id}-${index}`} className="bg-blue-900 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 border border-blue-600 text-white">
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
@@ -199,6 +217,15 @@ export default function RecommendationPage() {
               <pre className="whitespace-pre-wrap text-blue-100 leading-relaxed">{recommendationText}</pre>
             </div>
           </div>
+        ) : unavailableMessage ? (
+          <div className="text-center py-16">
+            <div className="mb-6 flex justify-center">
+              <div className="flex items-center gap-3 rounded-lg border border-yellow-600 bg-yellow-900/50 p-4 text-yellow-200">
+                <p>{unavailableMessage}</p>
+              </div>
+            </div>
+            <p className="text-gray-400">Please check back shortly for personalized recommendations.</p>
+          </div>
         ) : (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">📖</div>
@@ -213,6 +240,13 @@ export default function RecommendationPage() {
           </div>
         )}
       </div>
+      <div className="flex items-center gap-3 mb-4 mt-12">
+        <h2 className="text-2xl font-bold">Visual Book Recommendation Graph</h2>
+        <span className="bg-[#fa8537] text-white text-xs font-semibold px-2 py-1 rounded-full">
+          Beta
+        </span>
+      </div>
+      <BookRecommendationGraph />
     </div>
   );
 }

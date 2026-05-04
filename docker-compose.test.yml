@@ -1,0 +1,53 @@
+services:
+  db-test:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fastlibrary_test
+    ports:
+      - "5433:5432"  # Different port to avoid conflict with dev DB
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+    tmpfs:
+      - /var/lib/postgresql/data  # Use tmpfs for faster test DB (data not persisted)
+
+  fastapi-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db-test:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:password@db-test:5432/fastlibrary_test
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-test-key}
+      MAIL_USERNAME: disabled
+      MAIL_PASSWORD: disabled
+      MAIL_SERVER: disabled
+      MAIL_FROM: noreply@example.com
+      MAIL_DISABLED: "true"
+      TESTING: "true"
+    ports:
+      - "8001:8000"  # Different port to avoid conflict with dev backend
+    mem_limit: 2048m
+    mem_reservation: 1024m
+
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: http://localhost:8001
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:8001
+    ports:
+      - "3001:3000"  # Different port to avoid conflict with dev frontend
+    depends_on:
+      - fastapi-test
+
+networks:
+  default:
+    name: sonic-library-test-network

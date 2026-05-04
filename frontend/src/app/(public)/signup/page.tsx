@@ -55,7 +55,7 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a1128] text-[#e0f0ff] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#0a1128] text-[#e0f0ff] flex items-center justify-center px-4">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md bg-[#001f3f] border border-[#0077cc] p-5 rounded-lg shadow-lg"
@@ -115,6 +115,6 @@ export default function SignupPage() {
           </Link>
         </p>
       </form>
-    </main>
+    </div>
   );
 }

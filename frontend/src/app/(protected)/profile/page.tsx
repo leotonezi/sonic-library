@@ -33,7 +33,7 @@ export default async function ProfilePage() {
   };
 
   return (
-    <main className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
+    <div className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
       <div className="bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full mb-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-6">
@@ -80,6 +80,6 @@ export default async function ProfilePage() {
           Reading history and reviews will appear here soon.
         </p>
       </div>
-    </main>
+    </div>
   );
 }

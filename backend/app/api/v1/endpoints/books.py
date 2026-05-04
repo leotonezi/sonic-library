@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.book_service import BookService
@@ -12,6 +12,9 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
 from app.core.config import settings
+from app.core.rate_limiter import RateLimiter
+from app.core.redis import get_redis
+from app.core.circuit_breaker import CircuitBreaker
 
 import re, html, requests, os
 import time
@@ -54,6 +57,16 @@ def set_cached_popular_books(max_results: int, data: list):
     }
     logger.info(f"Cached popular books with max_results={max_results}, data_count={len(data)}")
 
+def _get_google_books_circuit_breaker() -> CircuitBreaker:
+    """Return a CircuitBreaker instance for Google Books API."""
+    return CircuitBreaker(
+        name="google_books",
+        failure_threshold=settings.CB_GOOGLE_FAILURE_THRESHOLD,
+        recovery_timeout=settings.CB_GOOGLE_RECOVERY_TIMEOUT,
+        redis_client=get_redis(),
+    )
+
+
 def get_book_service(
     db: Session = Depends(get_db),
 ) -> BookService:
@@ -76,6 +89,25 @@ def get_user_book_service(
     current_user: User = Depends(get_current_user),
 ) -> UserBookService:
     return UserBookService(db)
+
+
+def check_search_rate_limit(request: Request) -> None:
+    """FastAPI dependency that enforces per-user rate limiting on search endpoints."""
+    redis_client = get_redis()
+    limiter = RateLimiter(
+        redis_client=redis_client,
+        max_requests=settings.SEARCH_RATE_LIMIT,
+        window_seconds=settings.SEARCH_RATE_LIMIT_WINDOW,
+    )
+
+    # Identify by user ID if authenticated, otherwise by IP
+    identifier = str(request.client.host) if request.client else "unknown"
+
+    allowed, retry_after = limiter.is_allowed(identifier)
+    if not allowed:
+        from app.core.exceptions import RateLimitExceeded
+        raise RateLimitExceeded(retry_after=retry_after)
+
 
 @router.post("/", response_model=ApiResponse[BookResponse], status_code=201)
 @log_exceptions("POST /books", log_response=False)
@@ -125,15 +157,23 @@ def search_external_books(
     q: str = Query(..., description="Search books by title, author, or ISBN"),
     max_results: int = Query(10, ge=1, le=40),
     page: int = Query(1, ge=1, description="Page number (Google Books API limitation: max 40 results per page)"),
+    _rate_limit: None = Depends(check_search_rate_limit),
+    db: Session = Depends(get_db),
 ):
     """
     Search for books using the Google Books API and return normalized results.
-    Note: Google Books API has a limitation of 40 results per page.
+    Falls back to local database search when the Google Books circuit breaker is open.
     """
+    cb = _get_google_books_circuit_breaker()
+
+    if not cb.is_call_permitted():
+        # Circuit is open – fall back to local database search
+        logger.warning("Google Books circuit open, falling back to local search")
+        return _search_local_books(q, max_results, page, db)
+
     GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
     GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 
-    # Google Books API has a limit of 40 results per page
     max_results_per_page = min(max_results, 40)
     start_index = (page - 1) * max_results_per_page
 
@@ -165,10 +205,9 @@ def search_external_books(
                 "language": info.get("language"),
             })
 
-        # Calculate pagination info
         total_items = data.get("totalItems", 0)
         total_pages = (total_items + max_results_per_page - 1) // max_results_per_page if total_items > 0 else 0
-        
+
         pagination_info = {
             "current_page": page,
             "total_pages": total_pages,
@@ -180,6 +219,8 @@ def search_external_books(
             "end_index": start_index + len(books)
         }
 
+        cb.record_success()
+
         return PaginationResponse(
             data=books,
             pagination=pagination_info,
@@ -188,7 +229,57 @@ def search_external_books(
         )
 
     except requests.RequestException as e:
+        cb.record_failure()
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
+
+def _search_local_books(q: str, max_results: int, page: int, db: Session) -> PaginationResponse:
+    """Search the local books table by title/author ILIKE and return in the same format."""
+    from sqlalchemy import or_
+    from app.models.book import Book
+
+    query = db.query(Book).filter(
+        or_(
+            Book.title.ilike(f"%{q}%"),
+            Book.author.ilike(f"%{q}%"),
+        )
+    )
+    total_count = query.count()
+    offset = (page - 1) * max_results
+    total_pages = (total_count + max_results - 1) // max_results if total_count > 0 else 0
+    results = query.offset(offset).limit(max_results).all()
+
+    books = []
+    for b in results:
+        books.append({
+            "external_id": b.external_id,
+            "title": b.title,
+            "authors": [b.author] if b.author else [],
+            "publishedDate": b.published_date,
+            "description": b.description,
+            "thumbnail": b.image_url,
+            "pageCount": b.page_count,
+            "categories": [g.name for g in b.genres] if b.genres else [],
+            "language": b.language,
+        })
+
+    pagination_info = {
+        "current_page": page,
+        "total_pages": total_pages,
+        "total_count": total_count,
+        "page_size": max_results,
+        "has_next": page < total_pages,
+        "has_previous": page > 1,
+        "start_index": offset,
+        "end_index": offset + len(books),
+    }
+
+    return PaginationResponse(
+        data=books,
+        pagination=pagination_info,
+        message="External search is temporarily unavailable. Showing results from our library.",
+        status="ok",
+    )
+
 
 @router.get("/external/{external_id}", response_model=ApiResponse)
 @log_exceptions("GET /books/external/{external_id}", log_response=False)
@@ -200,6 +291,7 @@ def get_book_by_external_id(
     """
     Fetch a single book from Google Books API by its external (Google) ID.
     """
+    cb = _get_google_books_circuit_breaker()
     GOOGLE_BOOKS_API_URL = f"https://www.googleapis.com/books/v1/volumes/{external_id}"
     GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 
@@ -207,10 +299,15 @@ def get_book_by_external_id(
     if GOOGLE_BOOKS_API_KEY:
         params["key"] = GOOGLE_BOOKS_API_KEY
 
+    if not cb.is_call_permitted():
+        raise HTTPException(status_code=502, detail="Google Books API is temporarily unavailable")
+
     try:
         resp = requests.get(GOOGLE_BOOKS_API_URL, params=params, timeout=10)
         resp.raise_for_status()
         item = resp.json()
+
+        cb.record_success()
 
         user_book = user_book_service.get_by_external_book(external_id)
 
@@ -234,8 +331,8 @@ def get_book_by_external_id(
         reviews = [
             ReviewResponse.model_validate(
                 {
-                    **review.__dict__, 
-                    "user_name": user_name, 
+                    **review.__dict__,
+                    "user_name": user_name,
                     "user_profile_picture": user_profile_picture
                 }
             )
@@ -253,6 +350,7 @@ def get_book_by_external_id(
         }
 
     except requests.RequestException as e:
+        cb.record_failure()
         raise HTTPException(status_code=502, detail=f"Google Books API error: {str(e)}")
 
 @router.get("/popular", response_model=PaginationResponse)

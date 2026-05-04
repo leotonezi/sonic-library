@@ -52,10 +52,10 @@ export default async function LibraryPage({
 
   if (!accessToken) {
     return (
-      <main className="max-w-4xl mx-auto p-4">
+      <div className="max-w-4xl mx-auto p-4">
         <h1 className="text-3xl font-bold mb-6">My Library</h1>
         <p>You must be logged in to view your library.</p>
-      </main>
+      </div>
     );
   }
 
@@ -84,7 +84,7 @@ export default async function LibraryPage({
   ];
 
   return (
-    <main className="p-6 bg-blue-950 text-blue-50 min-h-screen max-w-4xl mx-auto">
+    <div className="p-6 bg-blue-950 text-blue-50 min-h-screen max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-blue-500 mb-6 text-center">
         My Library
       </h1>
@@ -180,6 +180,6 @@ export default async function LibraryPage({
           statusFilter={statusFilter}
         />
       )}
-    </main>
+    </div>
   );
 }

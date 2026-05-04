@@ -55,7 +55,7 @@ async def login_for_access_token(
         value=access_token,
         httponly=True,
         secure=False if is_testing else settings.ENVIRONMENT == "production",
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/"
     )
@@ -139,7 +139,7 @@ async def logout(response: Response):
         key="access_token",
         httponly=True,
         secure=False if is_testing else settings.ENVIRONMENT == "production",
-        samesite="lax",
+        samesite=settings.COOKIE_SAMESITE,
         path="/"
     )
     return ApiResponse(data=None, status="success", message="Logged out")

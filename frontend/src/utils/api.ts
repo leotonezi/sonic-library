@@ -1,4 +1,5 @@
 import { handleTokenRefresh } from "./auth";
+import { handleRateLimitResponse } from "../lib/rate-limit-toast";
 
 type ExtendedRequestInit = RequestInit & {
   noCache?: boolean;
@@ -40,6 +41,10 @@ export async function apiFetch<T>(
     });
 
     if (!res.ok) {
+      if (handleRateLimitResponse(res)) {
+        return null;
+      }
+
       if (res.status === 401) {
         try {
           const refreshed = await handleTokenRefresh();
@@ -101,6 +106,10 @@ export async function apiPost<T, D = unknown>(
     });
 
     if (!res.ok) {
+      if (handleRateLimitResponse(res)) {
+        throw new Error('Rate limit exceeded');
+      }
+
       if (res.status === 401) {
         window.location.href = '/login';
         throw new Error('Session expired. Please login again.');
@@ -150,6 +159,10 @@ export async function apiDelete<T = unknown>(
     });
 
     if (!res.ok) {
+      if (handleRateLimitResponse(res)) {
+        return null;
+      }
+
       if (res.status === 401) {
         try {
           const refreshed = await handleTokenRefresh();
@@ -204,6 +217,10 @@ export async function apiPut<T = unknown>(
     });
 
     if (!res.ok) {
+      if (handleRateLimitResponse(res)) {
+        return null;
+      }
+
       if (res.status === 401) {
         try {
           const refreshed = await handleTokenRefresh();

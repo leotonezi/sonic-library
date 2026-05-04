@@ -1,4 +1,5 @@
 import { handleTokenRefresh } from "./auth";
+import { handleRateLimitResponse } from "./rate-limit-toast";
 
 export interface ApiResponse<T> {
   data: T;
@@ -46,6 +47,10 @@ export class ApiClient {
       });
 
       if (!res.ok) {
+        if (handleRateLimitResponse(res)) {
+          return null;
+        }
+
         if (res.status === 401) {
           try {
             const refreshed = await handleTokenRefresh();
@@ -102,6 +107,10 @@ export class ApiClient {
       });
 
       if (!res.ok) {
+        if (handleRateLimitResponse(res)) {
+          throw new Error('Rate limit exceeded');
+        }
+
         if (res.status === 401) {
           window.location.href = '/login';
           throw new Error('Session expired. Please login again.');
@@ -147,6 +156,10 @@ export class ApiClient {
       });
 
       if (!res.ok) {
+        if (handleRateLimitResponse(res)) {
+          return null;
+        }
+
         if (res.status === 401) {
           try {
             const refreshed = await handleTokenRefresh();
@@ -190,6 +203,10 @@ export class ApiClient {
       });
 
       if (!res.ok) {
+        if (handleRateLimitResponse(res)) {
+          return null;
+        }
+
         if (res.status === 401) {
           try {
             const refreshed = await handleTokenRefresh();
