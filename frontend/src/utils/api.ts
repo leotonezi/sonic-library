@@ -34,7 +34,7 @@ export async function apiFetch<T>(
           ? Object.fromEntries(options.headers.entries())
           : (options?.headers || {})),
       },
-      cache: noCache ? "no-store" : "force-cache",
+      cache: noCache === false ? "force-cache" : "no-store",
     });
 
     if (!res.ok) {
