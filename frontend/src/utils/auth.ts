@@ -1,30 +1,5 @@
 import { getBackendUrl } from '@/lib/api-client';
 
-interface AuthError extends Error {
-  status?: number;
-  code?: string;
-}
-
-interface QueueItem {
-  resolve: (token: string | null) => void;
-  reject: (error: AuthError) => void;
-}
-
-let isRefreshing = false;
-let failedQueue: QueueItem[] = [];
-
-const processQueue = (error: AuthError | null, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-
-  failedQueue = [];
-};
-
 export class TokenRefreshError extends Error {
   constructor(message: string, public status?: number) {
     super(message);
@@ -54,22 +29,13 @@ export async function refreshToken(): Promise<boolean> {
   }
 }
 
-export async function handleTokenRefresh(): Promise<string | null> {
-  if (!isRefreshing) {
-    isRefreshing = true;
+let inflight: Promise<boolean> | null = null;
 
-    try {
-      const success = await refreshToken();
-      processQueue(null, success ? 'refreshed' : null);
-    } catch (error) {
-      const authError: AuthError = error instanceof Error ? error : new Error('Unknown error');
-      processQueue(authError, null);
-    } finally {
-      isRefreshing = false;
-    }
+export function handleTokenRefresh(): Promise<boolean> {
+  if (!inflight) {
+    inflight = refreshToken().finally(() => {
+      inflight = null;
+    });
   }
-
-  return new Promise<string | null>((resolve, reject) => {
-    failedQueue.push({ resolve, reject });
-  });
+  return inflight;
 }
