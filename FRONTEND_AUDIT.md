@@ -382,7 +382,7 @@ Server component errors in `books/[id]/page.tsx:108-120` and `books/external/[ex
 ## Suggested Fix Order
 
 1. ~~Fix token-refresh queue (`src/lib/auth.ts`) + change `force-cache` default~~ ✅ Done (branch: fix/token-queue)
-2. Add `src/middleware.ts`
+2. ~~Add `src/middleware.ts`~~ ✅ Done (branch: fix/middleware)
 3. Consolidate type/util hierarchies (pick one tree, delete the other)
 4. Strip all `console.log`s, add ESLint `no-console`
 5. Dynamic import ReactFlow
