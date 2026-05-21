@@ -8,6 +8,7 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import LibraryPagination from "@/components/library-pagination";
 
 export const metadata: Metadata = {
@@ -166,10 +167,12 @@ export default async function LibraryPage({
       
       {/* Pagination */}
       {paginationData && (
-        <LibraryPagination 
-          pagination={paginationData} 
-          statusFilter={statusFilter}
-        />
+        <Suspense>
+          <LibraryPagination
+            pagination={paginationData}
+            statusFilter={statusFilter}
+          />
+        </Suspense>
       )}
     </div>
   );
