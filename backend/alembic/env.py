@@ -1,7 +1,11 @@
 import os
 from dotenv import load_dotenv
 from pathlib import Path
-if Path(".env.test").exists():
+
+# Load .env.test only when TESTING=true is already set in the environment.
+# Never infer test mode from file existence — that breaks Docker dev/prod
+# where .env.test may be present but DATABASE_URL is already correctly set.
+if os.environ.get("TESTING", "").lower() == "true":
     load_dotenv(".env.test", override=True)
 else:
     load_dotenv(override=True)
