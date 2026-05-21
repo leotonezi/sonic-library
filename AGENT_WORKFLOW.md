@@ -41,7 +41,17 @@ Invoke `feature-evaluator`. It checks:
 
 If evaluation fails → fix issues, re-evaluate.
 
-### 6. Open PR with pr-creator
+### 6. Validate build with build-validator
+Invoke `build-validator`. It runs the full pre-flight check that mirrors Vercel CI:
+- `npx tsc --noEmit` — TypeScript
+- ESLint on `src/` — lint errors only
+- `npm run build` — production build (catches SSR/prerender errors dev mode misses)
+- Architecture pattern scan — `useSearchParams` without Suspense, orphaned `'use client'`, `console.log`, etc.
+- Backend `pytest` suite
+
+If build-validator fails → route to the correct worker to fix, then re-run build-validator.
+
+### 7. Open PR with pr-creator
 Invoke `pr-creator`. It will:
 - Verify branch is not `master`
 - Target `development` (feature branch → development, development → master)
@@ -58,7 +68,8 @@ Invoke `pr-creator`. It will:
 | `frontend-worker` | Step 4 — frontend changes |
 | `backend-worker` | Step 4 — backend changes |
 | `feature-evaluator` | Step 5 — always |
-| `pr-creator` | Step 6 — always |
+| `build-validator` | Step 6 — always (before PR) |
+| `pr-creator` | Step 7 — always |
 
 ---
 
@@ -78,8 +89,9 @@ chore/issue-<N>-<short-slug>   # cleanup, tooling
 Issue #132 — Add middleware.ts for server-side auth gating
 
 1. git checkout -b feat/issue-132-middleware-auth
-2. project-planner  → plan tasks + acceptance criteria
-3. frontend-worker  → implement middleware.ts
-4. feature-evaluator → verify
-5. pr-creator       → open PR to development
+2. project-planner   → plan tasks + acceptance criteria
+3. frontend-worker   → implement middleware.ts
+4. feature-evaluator → verify implementation quality
+5. build-validator   → next build + tsc + lint + pytest
+6. pr-creator        → open PR to development
 ```
