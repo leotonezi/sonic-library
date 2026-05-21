@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { ADMIN_EMAILS } from "@/config";
@@ -10,6 +10,7 @@ import { StatsCards } from "@/components/admin/stats-cards";
 import { AdminUsersTable } from "@/components/admin/users-table";
 import { AdminReviewsTable } from "@/components/admin/reviews-table";
 import { AdminUserBooksTable } from "@/components/admin/user-books-table";
+
 const TABS = [
   { key: "users", label: "Users" },
   { key: "reviews", label: "Reviews" },
@@ -18,7 +19,7 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useAuthStore((state) => state.user);
@@ -52,7 +53,6 @@ export default function AdminDashboard() {
 
       <StatsCards stats={stats} />
 
-      {/* Tabs */}
       <div className="flex border-b border-blue-600 mb-6">
         {TABS.map(({ key, label }) => (
           <button
@@ -69,10 +69,17 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Tab Content */}
       {activeTab === "users" && <AdminUsersTable />}
       {activeTab === "reviews" && <AdminReviewsTable />}
       {activeTab === "user-books" && <AdminUserBooksTable />}
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 // app/(protected)/books/external/[externalId]/page.tsx
 
 import { cookies } from "next/headers";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ApiResponse } from "@/interfaces/auth";
 import { serverSideApiFetch } from "@/utils/api";
 import Image from "next/image";
@@ -50,11 +50,7 @@ type Props = {
 export default async function ExternalBookPage({ params }: Props) {
   const { externalId } = await params;
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("access_token")?.value;
-
-  if (!accessToken) {
-    redirect("/login");
-  }
+  const accessToken = cookieStore.get("access_token")?.value ?? '';
 
   try {
     const { book, userBook, reviews } = await getExternalBookData(

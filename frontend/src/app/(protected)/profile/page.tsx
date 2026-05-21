@@ -8,11 +8,7 @@ import User from '@/interfaces/user';
 
 export default async function ProfilePage() {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get('access_token')?.value;
-
-  if (!accessToken) {
-    redirect('/login');
-  }
+  const accessToken = cookieStore.get('access_token')?.value ?? '';
 
   const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/me`, {
     headers: {

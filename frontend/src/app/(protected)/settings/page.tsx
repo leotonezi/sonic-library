@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Camera, Save, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { getBackendUrl } from '@/lib/api-client';
@@ -13,7 +13,7 @@ interface UserProfile {
   profile_picture?: string;
 }
 
-export default function SettingsPage() {
+function SettingsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -308,4 +308,12 @@ export default function SettingsPage() {
       </div>
     </div>
   );
-} 
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense>
+      <SettingsPageContent />
+    </Suspense>
+  );
+}

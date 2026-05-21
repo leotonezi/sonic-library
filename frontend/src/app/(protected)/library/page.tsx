@@ -8,6 +8,7 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import LibraryPagination from "@/components/library-pagination";
 
 export const metadata: Metadata = {
@@ -48,16 +49,7 @@ export default async function LibraryPage({
   const page = parseInt(resolvedSearchParams.page || "1", 10);
   const pageSize = parseInt(resolvedSearchParams.page_size || "10", 10);
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("access_token")?.value;
-
-  if (!accessToken) {
-    return (
-      <div className="max-w-4xl mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-6">My Library</h1>
-        <p>You must be logged in to view your library.</p>
-      </div>
-    );
-  }
+  const accessToken = cookieStore.get("access_token")?.value ?? '';
 
   let userBooks: UserBook[] = [];
   let paginationData: PaginationMetadata | null = null;
@@ -175,10 +167,12 @@ export default async function LibraryPage({
       
       {/* Pagination */}
       {paginationData && (
-        <LibraryPagination 
-          pagination={paginationData} 
-          statusFilter={statusFilter}
-        />
+        <Suspense>
+          <LibraryPagination
+            pagination={paginationData}
+            statusFilter={statusFilter}
+          />
+        </Suspense>
       )}
     </div>
   );
