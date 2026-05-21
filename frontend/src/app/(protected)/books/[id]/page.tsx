@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import AddReviewForm from "./add-review-form";
 import ReviewsList from "./review-list";
@@ -63,11 +63,7 @@ export default async function BookPage({
 }) {
   const { id } = await params;
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("access_token")?.value;
-
-  if (!accessToken) {
-    redirect("/login");
-  }
+  const accessToken = cookieStore.get("access_token")?.value ?? '';
 
   if (!id || isNaN(Number(id))) {
     notFound();
