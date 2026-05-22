@@ -206,9 +206,6 @@ function NoResultsState() {
 
       <div className="flex flex-col sm:flex-row gap-4">
         <button
-          onClick={() => {
-            console.log("Browse popular books");
-          }}
           className="px-6 py-3 border border-blue-500 text-blue-400 rounded-lg font-medium hover:bg-blue-500 hover:text-white transition-colors"
         >
           Browse Popular Books
