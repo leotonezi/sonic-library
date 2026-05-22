@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getStats } from "@/services/adminService";
-import type { AdminStats } from "@/interfaces/admin";
+import type { AdminStats } from "@/types";
 import { StatsCards } from "@/components/admin/stats-cards";
 import { AdminUsersTable } from "@/components/admin/users-table";
 import { AdminReviewsTable } from "@/components/admin/reviews-table";

@@ -1,4 +1,4 @@
-import { Book, ExternalBook } from "@/interfaces/book";
+import { Book, ExternalBook } from "@/types";
 
 export function mapGoogleBookToBookCreate(googleBook: ExternalBook): Book {
   const parsedId = googleBook.external_id

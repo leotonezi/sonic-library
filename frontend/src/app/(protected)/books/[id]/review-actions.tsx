@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { getBackendUrl } from '@/lib/api-client';
-import Review from '@/interfaces/review';
+import { Review } from '@/types';
 
 type ReviewActionsProps = {
   review: Review;

@@ -74,4 +74,4 @@ export interface ExternalBookSearchParams {
   max_results?: number;
 }
 
-export type BookStatus = 'want_to_read' | 'currently_reading' | 'read';
+export type BookStatus = 'TO_READ' | 'READING' | 'READ';

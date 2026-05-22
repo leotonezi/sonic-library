@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/utils/api";
+import { apiFetch } from "@/lib/api-client";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getBackendUrl } from "@/lib/api-client";
 import Link from "next/link";

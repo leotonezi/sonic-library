@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { PaginationMetadata } from "@/interfaces/book";
+import { PaginationMetadata } from "@/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface LibraryPaginationProps {

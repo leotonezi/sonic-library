@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search, Trash2 } from "lucide-react";
-import type { AdminUserBook, PaginationResponse } from "@/interfaces/admin";
+import type { AdminUserBook, PaginationResponse } from "@/types";
 import { getUserBooks, deleteUserBook } from "@/services/adminService";
 import { Pagination } from "@/components/pagination";
 import { toast } from "sonner";
