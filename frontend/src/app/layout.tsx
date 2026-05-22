@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const merriwether = Merriweather({
+const merriweather = Merriweather({
   variable: "--font-merriweather",
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -38,7 +38,7 @@ export default function RootLayout({
     <html lang="en">
       <link rel="icon" href="/sonic-library.ico" />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${merriwether.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${merriweather.variable} antialiased`}
       >
         <AuthHydrator />
         <NavBar/>
