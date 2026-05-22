@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: /fixtures\.ts$/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -15,7 +16,7 @@ export default defineConfig({
   projects: [
     {
       name: 'setup',
-      testMatch: /auth\.setup\.ts/,
+      testMatch: '**/*.setup.ts',
     },
     {
       name: 'authenticated',
@@ -24,12 +25,12 @@ export default defineConfig({
         storageState: 'e2e/.auth/user.json',
       },
       dependencies: ['setup'],
-      testMatch: /(library|reviews)\/.*/,
+      testMatch: ['**/library/**/*.spec.ts', '**/reviews/**/*.spec.ts'],
     },
     {
       name: 'unauthenticated',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /auth\/.*/,
+      testMatch: '**/auth/**/*.spec.ts',
     },
   ],
 });
