@@ -1,85 +1,40 @@
-"use client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getBackendUrl } from "@/lib/api-client";
+import type User from "@/interfaces/user";
+import AdminDashboard from "./admin-dashboard";
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuthStore } from "@/store/useAuthStore";
-import { ADMIN_EMAILS } from "@/config";
-import { getStats } from "@/services/adminService";
-import type { AdminStats } from "@/interfaces/admin";
-import { StatsCards } from "@/components/admin/stats-cards";
-import { AdminUsersTable } from "@/components/admin/users-table";
-import { AdminReviewsTable } from "@/components/admin/reviews-table";
-import { AdminUserBooksTable } from "@/components/admin/user-books-table";
-
-const TABS = [
-  { key: "users", label: "Users" },
-  { key: "reviews", label: "Reviews" },
-  { key: "user-books", label: "User Books" },
-] as const;
-
-type TabKey = (typeof TABS)[number]["key"];
-
-function AdminDashboardContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const user = useAuthStore((state) => state.user);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-
-  const activeTab = (searchParams.get("tab") as TabKey) || "users";
-
-  useEffect(() => {
-    if (user && !ADMIN_EMAILS.includes(user.email)) {
-      router.replace("/books");
-    }
-  }, [user, router]);
-
-  useEffect(() => {
-    getStats().then((data) => {
-      if (data) setStats(data);
-    });
-  }, []);
-
-  const setTab = (tab: TabKey) => {
-    router.push(`/admin?tab=${tab}`);
-  };
-
-  if (!user || !ADMIN_EMAILS.includes(user.email)) {
-    return null;
-  }
-
-  return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-6">Admin Dashboard</h1>
-
-      <StatsCards stats={stats} />
-
-      <div className="flex border-b border-blue-600 mb-6">
-        {TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`px-6 py-3 text-sm font-medium transition-colors ${
-              activeTab === key
-                ? "text-orange-300 border-b-2 border-orange-300"
-                : "text-blue-400 hover:text-white"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "users" && <AdminUsersTable />}
-      {activeTab === "reviews" && <AdminReviewsTable />}
-      {activeTab === "user-books" && <AdminUserBooksTable />}
-    </div>
-  );
+interface ApiResponse<T> {
+  data: T;
 }
 
-export default function AdminDashboard() {
-  return (
-    <Suspense>
-      <AdminDashboardContent />
-    </Suspense>
-  );
+export default async function AdminPage() {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("access_token")?.value ?? "";
+
+  let isAdmin = false;
+
+  try {
+    const res = await fetch(`${getBackendUrl()}/users/me`, {
+      headers: {
+        Cookie: `access_token=${accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      redirect("/login");
+    }
+
+    const { data: user }: ApiResponse<User> = await res.json();
+    isAdmin = user.is_admin === true;
+  } catch {
+    redirect("/login");
+  }
+
+  if (!isAdmin) {
+    redirect("/books");
+  }
+
+  return <AdminDashboard />;
 }

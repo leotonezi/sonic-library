@@ -3,6 +3,7 @@ export interface User {
   name: string;
   email: string;
   profile_picture?: string;
+  is_admin: boolean;
 }
 
 export interface UserProfile extends User {

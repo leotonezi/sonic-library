@@ -9,7 +9,6 @@ import { Menu, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSearchBookStore } from "@/store/useSearchBookStore";
 import { toast } from "sonner";
-import { ADMIN_EMAILS } from "@/config";
 
 export default function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -118,7 +117,7 @@ export default function NavBar() {
 
       {/* Right-aligned Navigation Links and User Menu */}
       <div className="flex h-full">
-        {user && ADMIN_EMAILS.includes(user.email) && (
+        {user && user.is_admin && (
           <Link
             href="/admin"
             className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-orange-300 font-medium"

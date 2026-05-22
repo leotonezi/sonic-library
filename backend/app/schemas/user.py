@@ -18,6 +18,9 @@ class UserResponse(UserBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class MeResponse(UserResponse):
+    is_admin: bool
+
 class UserProfileUpdate(BaseModel):
     name: Optional[str] = None
     profile_picture: Optional[str] = None

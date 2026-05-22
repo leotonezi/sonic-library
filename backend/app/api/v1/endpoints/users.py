@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.user_service import UserService
-from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserProfileUpdate
+from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserProfileUpdate, MeResponse
+from app.core.config import settings
 from app.schemas.base_schema import ApiResponse
 from app.core.security import get_current_user
 from app.models.user import User
@@ -38,10 +39,12 @@ def index(
     users = user_service.get_all()
     return ApiResponse(data=[UserResponse.model_validate(u) for u in users])
 
-@router.get("/me", response_model=ApiResponse[UserResponse])
+@router.get("/me", response_model=ApiResponse[MeResponse])
 def get_me(current_user: User = Depends(get_current_user)):
     """Get details of the logged-in user (Protected Route)"""
-    return ApiResponse(data=UserResponse.model_validate(current_user))
+    is_admin = current_user.email.strip().lower() in settings.ADMIN_EMAILS
+    me = MeResponse(**UserResponse.model_validate(current_user).model_dump(), is_admin=is_admin)
+    return ApiResponse(data=me)
 
 @router.get("/{user_id}", response_model=ApiResponse[UserResponse])
 @log_exceptions("GET /users/{user_id}")
