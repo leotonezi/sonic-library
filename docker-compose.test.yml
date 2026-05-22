@@ -41,8 +41,10 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8001
+        BACKEND_INTERNAL_URL: http://fastapi-test:8000
     environment:
       NEXT_PUBLIC_BACKEND_URL: http://localhost:8001
+      BACKEND_INTERNAL_URL: http://fastapi-test:8000
     ports:
       - "3001:3000"  # Different port to avoid conflict with dev frontend
     depends_on:
