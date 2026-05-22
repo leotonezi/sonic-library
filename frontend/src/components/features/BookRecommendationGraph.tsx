@@ -113,44 +113,28 @@ const BookRecommendationGraph: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  console.log('🔧 BookRecommendationGraph component mounted, user:', user);
-  
   // Fetch graph data from API
   useEffect(() => {
-    console.log('🔄 useEffect triggered, user?.id:', user?.id);
-    
     const fetchGraphData = async () => {
       if (!user?.id) {
-        console.log('❌ No user ID found, user:', user);
         setLoading(false);
         return;
       }
-      
+
       setLoading(true);
       setError(null);
-      
+
       try {
-        console.log('🔄 Fetching graph data for user:', user?.id);
         const graphData = await apiFetch<GraphData>('/recommendations/graph', {
           noCache: true
         });
-        
-        console.log('📊 API Response:', graphData);
-        
+
         if (graphData && graphData.nodes && graphData.nodes.length > 0) {
-          console.log('✅ Graph data received:', graphData);
-          console.log('📚 Nodes:', graphData.nodes.length);
-          console.log('🔗 Edges:', graphData.edges?.length || 0);
-          console.log('Sample node:', graphData.nodes[0]);
-          console.log('Sample edge:', graphData.edges?.[0]);
-          
           setNodes(graphData.nodes);
           setEdges(graphData.edges || []);
         } else if (graphData && graphData.nodes && graphData.nodes.length === 0) {
-          console.log('📝 No user books found');
           setError('No books found in your library. Add some books and reviews to generate your personal recommendation graph!');
         } else {
-          console.log('❌ Invalid graph data received:', graphData);
           setError('No graph data available - please add books and reviews to your library');
         }
       } catch (err) {

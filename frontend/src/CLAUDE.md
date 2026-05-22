@@ -51,8 +51,11 @@ Custom React hooks
 ## Auth Flow (Frontend Side)
 
 1. Login → `POST /auth/token` → cookie set → `useAuthStore.setUser()` → redirect to `/books`
-2. Page load → `checkAuth()` → `GET /users/me` → 401? redirect to `/login`
-3. Logout → `POST /auth/logout` → clear state → redirect to `/login`
+2. Page load → `middleware.ts` checks `access_token` cookie → absent? redirect to `/login` at edge (before HTML)
+3. Server pages read `access_token` from cookies for API requests — guaranteed present by middleware
+4. Logout → `POST /auth/logout` → clear state → redirect to `/login`
+
+`src/middleware.ts` guards all routes under: library, books, profile, settings, admin, recommendation.
 
 ## Graph Visualization
 

@@ -2,9 +2,10 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Set the backend URL if needed
 ARG NEXT_PUBLIC_BACKEND_URL
+ARG BACKEND_INTERNAL_URL
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+ENV BACKEND_INTERNAL_URL=$BACKEND_INTERNAL_URL
 
 # Copy package files first (for better caching)
 COPY package.json package-lock.json ./

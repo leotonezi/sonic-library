@@ -4,6 +4,7 @@ from faker import Faker
 from email_validator import validate_email, EmailNotValidError
 from app.core.database import SessionLocal
 from app.models.user import User
+from app.core.config import settings
 import traceback
 
 fake = Faker()
@@ -73,3 +74,28 @@ def test_get_users():
     response = client.get("/users", cookies=cookies)
     assert response.status_code == 200
     assert isinstance(response.json()["data"], list)
+
+
+def test_me_is_admin_false_for_normal_user():
+    """Normal users should have is_admin: false on /users/me."""
+    cookies, _ = create_user_and_get_cookies()
+    response = client.get("/users/me", cookies=cookies)
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert "is_admin" in data
+    assert data["is_admin"] is False
+
+
+def test_me_is_admin_true_when_email_in_admin_emails(monkeypatch):
+    """Users whose email appears in ADMIN_EMAILS should have is_admin: true on /users/me."""
+    cookies, new_user = create_user_and_get_cookies()
+
+    # Patch settings so the freshly-created user is considered an admin.
+    admin_email = new_user["email"].strip().lower()
+    monkeypatch.setattr(type(settings), "ADMIN_EMAILS", property(lambda self: [admin_email]))
+
+    response = client.get("/users/me", cookies=cookies)
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert "is_admin" in data
+    assert data["is_admin"] is True

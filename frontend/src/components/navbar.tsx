@@ -9,7 +9,6 @@ import { Menu, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSearchBookStore } from "@/store/useSearchBookStore";
 import { toast } from "sonner";
-import { ADMIN_EMAILS } from "@/config";
 
 export default function NavBar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -18,7 +17,7 @@ export default function NavBar() {
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   const searchQuery = useSearchBookStore((state) => state.searchQuery);
   const setSearchQuery = useSearchBookStore((state) => state.setSearchQuery);
@@ -26,9 +25,8 @@ export default function NavBar() {
     (state) => state.fetchExternalBooksPaginated,
   );
 
-  // Don't render navbar if still loading or no user
-  if (isLoading || !user) {
-    return null;
+  if (!hasHydrated) {
+    return <div style={{ height: '64px' }} />;
   }
 
   const handleLogout = async () => {
@@ -118,7 +116,7 @@ export default function NavBar() {
 
       {/* Right-aligned Navigation Links and User Menu */}
       <div className="flex h-full">
-        {user && ADMIN_EMAILS.includes(user.email) && (
+        {user && user.is_admin && (
           <Link
             href="/admin"
             className="flex items-center justify-center h-full px-4 hover:bg-[#004aad] transition-all duration-500 ease-in-out text-orange-300 font-medium"

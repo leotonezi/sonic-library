@@ -38,9 +38,12 @@ export default function RecommendationPage() {
       if (idMatch) {
         if (currentBook.external_id && currentBook.title) {
           recommendations.push({
-            ...currentBook,
-            reasoning: reasoning.trim()
-          } as BookRecommendation);
+            external_id: currentBook.external_id,
+            title: currentBook.title,
+            authors: currentBook.authors ?? [],
+            description: currentBook.description ?? '',
+            reasoning: reasoning.trim(),
+          });
         }
         currentBook = { external_id: idMatch[1] };
         reasoning = '';
@@ -79,9 +82,12 @@ export default function RecommendationPage() {
     // Add the last book
     if (currentBook.external_id && currentBook.title) {
       recommendations.push({
-        ...currentBook,
-        reasoning: reasoning.trim()
-      } as BookRecommendation);
+        external_id: currentBook.external_id,
+        title: currentBook.title,
+        authors: currentBook.authors ?? [],
+        description: currentBook.description ?? '',
+        reasoning: reasoning.trim(),
+      });
     }
     
     return recommendations;
