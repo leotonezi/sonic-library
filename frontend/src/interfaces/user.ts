@@ -3,4 +3,5 @@ export default interface User {
   name: string;
   email: string;
   profile_picture?: string;
+  is_admin: boolean;
 }
