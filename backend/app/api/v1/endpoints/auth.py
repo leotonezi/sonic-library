@@ -89,10 +89,7 @@ async def signup(
         )
     
     if existing_user:
-        return RedirectResponse(
-            url=f"{settings.FRONTEND_URL}/signup?error=email_registered",
-            status_code=303
-        )
+        raise HTTPException(status_code=409, detail="Email already registered")
 
 
     user_obj = user_service.create(UserCreate(name=name, email=email, password=password))

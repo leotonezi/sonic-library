@@ -1,3 +1,5 @@
+import { AuthHydrator } from '@/components/auth-hydrator';
+
 export default function ProtectedLayout({
   children
 }: {
@@ -5,6 +7,7 @@ export default function ProtectedLayout({
 }) {
   return (
     <main className="min-h-screen bg-blue-950">
+      <AuthHydrator />
       {children}
     </main>
   );
