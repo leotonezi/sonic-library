@@ -21,6 +21,7 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
   isCheckingAuth: boolean;
+  hasHydrated: boolean;
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;

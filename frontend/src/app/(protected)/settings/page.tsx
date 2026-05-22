@@ -1,23 +1,19 @@
 'use client';
 
-import { Suspense, useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { User, Camera, Save, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { getBackendUrl } from '@/lib/api-client';
+import { useAuthStore } from '@/store/useAuthStore';
 import Image from 'next/image';
 
-interface UserProfile {
-  id: number;
-  name: string;
-  email: string;
-  profile_picture?: string;
-}
-
 function SettingsPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const storeUser = useAuthStore((state) => state.user);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState('');
@@ -25,36 +21,16 @@ function SettingsPageContent() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const fetchProfile = useCallback(async () => {
-    try {
-      const response = await fetch(`${getBackendUrl()}/users/me`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        router.push('/login');
-        return;
-      }
-
-      const { data } = await response.json();
-      setProfile(data);
-      setName(data.name);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      router.push('/login');
+  useEffect(() => {
+    if (storeUser) {
+      setName(storeUser.name);
     }
-  }, [router]);
+  }, [storeUser]);
 
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  useEffect(() => {
-    // Show success/error messages from URL params
     const success = searchParams.get('success');
     const error = searchParams.get('error');
-    
+
     if (success === 'true') {
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } else if (success === 'picture_uploaded') {
@@ -70,8 +46,6 @@ function SettingsPageContent() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      
-      // Create preview URL
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
     }
@@ -95,16 +69,11 @@ function SettingsPageContent() {
         throw new Error('Failed to upload profile picture');
       }
 
-      const { data } = await response.json();
-      setProfile(data);
       setSelectedFile(null);
       setPreviewUrl(null);
       setMessage({ type: 'success', text: 'Profile picture uploaded successfully!' });
-      
-      // Refresh the profile data
-      await fetchProfile();
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
+      await checkAuth();
+    } catch {
       setMessage({ type: 'error', text: 'Failed to upload profile picture. Please try again.' });
     } finally {
       setUploading(false);
@@ -128,11 +97,9 @@ function SettingsPageContent() {
         throw new Error('Failed to update profile');
       }
 
-      const { data } = await response.json();
-      setProfile(data);
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
-    } catch (error) {
-      console.error('Error updating profile:', error);
+      await checkAuth();
+    } catch {
       setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
     } finally {
       setSaving(false);
@@ -144,7 +111,7 @@ function SettingsPageContent() {
     return `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/profile_pictures/${filename}`;
   };
 
-  if (loading) {
+  if (!hasHydrated) {
     return (
       <div className="p-6 bg-blue-950 text-blue-50 min-h-screen flex items-center justify-center">
         <div className="text-xl">Loading...</div>
@@ -155,11 +122,10 @@ function SettingsPageContent() {
   return (
     <div className="p-6 bg-blue-950 text-blue-50 min-h-screen">
       <div className="max-w-2xl mx-auto">
-        {/* Message Display */}
         {message && (
           <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
-            message.type === 'success' 
-              ? 'bg-green-900 border border-green-600 text-green-200' 
+            message.type === 'success'
+              ? 'bg-green-900 border border-green-600 text-green-200'
               : 'bg-red-900 border border-red-600 text-red-200'
           }`}>
             {message.type === 'success' ? (
@@ -183,14 +149,13 @@ function SettingsPageContent() {
             User Settings
           </h1>
 
-          {/* Profile Picture Section */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-blue-400 mb-4">Profile Picture</h2>
             <div className="flex items-center gap-6">
               <div className="relative">
-                {profile?.profile_picture ? (
+                {storeUser?.profile_picture ? (
                   <Image
-                    src={getProfilePictureUrl(profile.profile_picture) || ''}
+                    src={getProfilePictureUrl(storeUser.profile_picture) || ''}
                     alt="Profile"
                     width={96}
                     height={96}
@@ -199,11 +164,11 @@ function SettingsPageContent() {
                 ) : (
                   <div className="w-24 h-24 bg-blue-800 border-2 border-blue-500 rounded-full flex items-center justify-center">
                     <span className="text-3xl text-blue-200">
-                      {profile?.name?.charAt(0).toUpperCase() || 'U'}
+                      {storeUser?.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>
                 )}
-                
+
                 {previewUrl && (
                   <div className="absolute inset-0 rounded-full overflow-hidden">
                     <Image
@@ -232,7 +197,7 @@ function SettingsPageContent() {
                   <Camera size={16} />
                   Choose Image
                 </label>
-                
+
                 {selectedFile && (
                   <div className="mt-2 flex gap-2">
                     <button
@@ -259,7 +224,6 @@ function SettingsPageContent() {
             </div>
           </div>
 
-          {/* Profile Information Section */}
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-blue-400 mb-4">Profile Information</h2>
             <form onSubmit={handleUpdateProfile}>
@@ -276,14 +240,14 @@ function SettingsPageContent() {
                     className="w-full bg-blue-800 border border-blue-600 rounded px-3 py-2 text-blue-100 focus:outline-none focus:border-blue-400"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-blue-200 mb-2">
                     Email
                   </label>
                   <input
                     type="email"
-                    value={profile?.email || ''}
+                    value={storeUser?.email || ''}
                     disabled
                     className="w-full bg-blue-700 border border-blue-600 rounded px-3 py-2 text-blue-300 cursor-not-allowed"
                   />
@@ -291,7 +255,6 @@ function SettingsPageContent() {
                 </div>
               </div>
 
-              {/* Save Button */}
               <div className="flex justify-end mt-6">
                 <button
                   type="submit"
