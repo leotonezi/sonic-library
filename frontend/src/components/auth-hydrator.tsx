@@ -1,22 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useLayoutEffect } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 
 export function AuthHydrator() {
-  const user = useAuthStore((state) => state.user);
   const isCheckingAuth = useAuthStore((state) => state.isCheckingAuth);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const checkAuth = useAuthStore((state) => state.checkAuth);
-  const router = useRouter();
 
-  useEffect(() => {
-    if (!user && !isCheckingAuth) {
-      checkAuth().then((isAuth) => {
-        if (!isAuth) {
-          router.replace('/login');
-        }
-      });
+  useLayoutEffect(() => {
+    if (!hasHydrated && !isCheckingAuth) {
+      checkAuth();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

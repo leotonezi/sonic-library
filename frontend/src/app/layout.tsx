@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Merriweather } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/navbar";
+import { AuthHydrator } from "@/components/auth-hydrator";
 import { Toaster } from 'sonner';
 
 
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${merriwether.variable} antialiased`}
       >
+        <AuthHydrator />
         <NavBar/>
           {children}
         <Toaster />

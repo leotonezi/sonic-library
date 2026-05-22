@@ -17,7 +17,7 @@ export default function NavBar() {
   const logout = useAuthStore((state) => state.logout);
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   const searchQuery = useSearchBookStore((state) => state.searchQuery);
   const setSearchQuery = useSearchBookStore((state) => state.setSearchQuery);
@@ -25,9 +25,8 @@ export default function NavBar() {
     (state) => state.fetchExternalBooksPaginated,
   );
 
-  // Don't render navbar if still loading or no user
-  if (isLoading || !user) {
-    return null;
+  if (!hasHydrated) {
+    return <div style={{ height: '64px' }} />;
   }
 
   const handleLogout = async () => {

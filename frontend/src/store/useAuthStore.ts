@@ -7,6 +7,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: false,
   isCheckingAuth: false,
+  hasHydrated: false,
 
   setUser: (user: User | null) => {
     set({ user });
@@ -41,16 +42,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       );
 
       if (!response.ok) {
-        set({ user: null, isCheckingAuth: false });
+        set({ user: null, isCheckingAuth: false, hasHydrated: true });
         return false;
       }
 
       const userData = await response.json();
-      set({ user: userData.data, isCheckingAuth: false });
+      set({ user: userData.data, isCheckingAuth: false, hasHydrated: true });
       return true;
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      set({ user: null, isCheckingAuth: false });
+    } catch {
+      set({ user: null, isCheckingAuth: false, hasHydrated: true });
       return false;
     } finally {
       set({ isLoading: false });
