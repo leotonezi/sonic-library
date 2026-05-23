@@ -1,4 +1,4 @@
-import Review from "@/interfaces/review";
+import { Review } from "@/types";
 import ReviewActions from "./review-actions";
 import { Star, User } from "lucide-react";
 import Image from "next/image";

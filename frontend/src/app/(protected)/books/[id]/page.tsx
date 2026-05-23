@@ -3,10 +3,10 @@ import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import AddReviewForm from "./add-review-form";
 import ReviewsList from "./review-list";
-import { Book, BookWithRating } from "@/interfaces/book";
-import Review from "@/interfaces/review";
-import { ApiResponse } from "@/interfaces/auth";
-import { serverSideApiFetch } from "@/utils/api";
+import { Book, BookWithRating } from "@/types";
+import { Review } from "@/types";
+import { ApiResponse } from "@/types";
+import { serverSideApiFetch } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
 

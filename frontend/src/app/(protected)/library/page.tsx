@@ -1,8 +1,8 @@
 // app/library/[user_id]/page.tsx
 
 import UserBookActions from "@/components/user-book-actions";
-import { UserBook, PaginatedResponse, PaginationMetadata } from "@/interfaces/book";
-import { serverSideApiFetch } from "@/utils/api";
+import { UserBook, PaginatedResponse, PaginationMetadata } from "@/types";
+import { serverSideApiFetch } from "@/lib/api-client";
 import { convertBookToExternalBook } from "@/utils/book";
 import { Metadata } from "next";
 import { cookies } from "next/headers";

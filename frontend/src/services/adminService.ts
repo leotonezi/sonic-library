@@ -1,6 +1,5 @@
-import { apiFetch, apiPut, apiDelete, apiPost } from "@/utils/api";
-import { handleTokenRefresh } from "@/utils/auth";
-import { getBackendUrl } from "@/lib/api-client";
+import { apiFetch, apiPut, apiDelete, apiPost, getBackendUrl } from "@/lib/api-client";
+import { handleTokenRefresh } from "@/lib/auth";
 import type {
   AdminUser,
   AdminUserDetail,
@@ -8,7 +7,7 @@ import type {
   AdminUserBook,
   AdminStats,
   PaginationResponse,
-} from "@/interfaces/admin";
+} from "@/types";
 
 const ADMIN_PREFIX = "/api/v1/admin";
 

@@ -2,14 +2,13 @@
 
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { ApiResponse } from "@/interfaces/auth";
-import { serverSideApiFetch } from "@/utils/api";
+import { ApiResponse } from "@/types";
+import { serverSideApiFetch } from "@/lib/api-client";
 import Image from "next/image";
 import ReviewsList from "../../[id]/review-list";
-import { ExternalBook, UserBook } from "@/interfaces/book";
+import { ExternalBook, UserBook, Review } from "@/types";
 import ExternalBookPageClient from "@/components/external-book-client";
 import UserBookActions from "@/components/user-book-actions";
-import Review from "@/interfaces/review";
 
 export const dynamic = "force-dynamic";
 

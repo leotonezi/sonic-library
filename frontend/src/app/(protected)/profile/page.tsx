@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { Mail, User as UserIcon, Settings } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import User from '@/interfaces/user';
+import { User } from '@/types';
 
 export default async function ProfilePage() {
   const cookieStore = await cookies();

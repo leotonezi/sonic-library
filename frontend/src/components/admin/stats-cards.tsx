@@ -1,7 +1,7 @@
 "use client";
 
 import { Users, UserCheck, BookOpen, MessageSquare, Library, Star } from "lucide-react";
-import type { AdminStats } from "@/interfaces/admin";
+import type { AdminStats } from "@/types";
 
 interface StatsCardsProps {
   stats: AdminStats | null | undefined;
