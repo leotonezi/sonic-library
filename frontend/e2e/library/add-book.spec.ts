@@ -8,15 +8,13 @@ test.describe('Add Book to Library', () => {
 
     await page.goto('/books');
 
-    // Wait for the popular books API response before checking the DOM.
-    // waitForLoadState('networkidle') fires before React's useEffect triggers
-    // the fetch, causing a race where the ul hasn't rendered yet.
+    // Wait for the /books/popular API response — the list renders only after
+    // React's useEffect fires, which can happen after networkidle.
     await page.waitForResponse(
       (res) => res.url().includes('/books/popular') && res.ok(),
       { timeout: 15000 },
     );
 
-    // Use a specific locator — generic `ul li a` is ambiguous across the page
     const firstBookLink = page.locator('a[href*="/books/external/"]').first();
     await expect(firstBookLink).toBeVisible({ timeout: 10000 });
 
