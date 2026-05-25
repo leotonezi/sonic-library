@@ -32,5 +32,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testMatch: '**/auth/**/*.spec.ts',
     },
+    {
+      name: 'admin',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/admin.json',
+      },
+      dependencies: ['setup'],
+      testMatch: '**/admin/**/*.spec.ts',
+    },
   ],
 });
