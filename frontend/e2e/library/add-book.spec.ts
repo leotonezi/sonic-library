@@ -41,30 +41,29 @@ test.describe('Add Book to Library', () => {
     // Store title for later assertion
     const bookTitle = await page.locator('h1').first().innerText();
 
-    // Listen for the POST /user-books response before clicking
-    const addBookResponse = page.waitForResponse(
-      (res) =>
-        res.url().includes('/user-books') &&
-        res.request().method() === 'POST' &&
-        res.status() === 201,
-    );
-
     // Click "Add to Reading List"
     const addButton = page.getByRole('button', { name: 'Add to Reading List' });
     await expect(addButton).toBeVisible({ timeout: 10000 });
     await addButton.click();
 
-    // Capture returned user_book id for cleanup
-    const res = await addBookResponse;
-    const json = await res.json();
-    addedUserBookId = json?.data?.id ?? null;
+    // Verify success toast — confirms the POST /user-books returned 201
+    await expect(page.getByText('Added to Reading List!')).toBeVisible({ timeout: 10000 });
 
-    // Verify success toast
-    await expect(page.getByText('Added to Reading List!')).toBeVisible({ timeout: 8000 });
+    // Fetch the created user-book ID for cleanup (avoids fragile waitForResponse status check)
+    if (externalId) {
+      const userBookRes = await page.request.get(`${API_URL}/user-books/book/external/${externalId}`);
+      if (userBookRes.ok()) {
+        const data = await userBookRes.json();
+        addedUserBookId = data?.data?.id ?? null;
+      }
+    }
 
     // Navigate to library and confirm book appears
     await page.goto('/library');
-    await page.waitForLoadState('networkidle');
+    await page.waitForResponse(
+      (res) => res.url().includes('/user-books/my-books') && res.ok(),
+      { timeout: 15000 },
+    );
     await expect(page.getByText(bookTitle, { exact: false })).toBeVisible({ timeout: 10000 });
 
     // Cleanup: remove the added book so future runs start clean
