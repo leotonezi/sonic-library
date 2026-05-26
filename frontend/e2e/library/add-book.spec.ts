@@ -4,8 +4,9 @@ import { API_URL } from '../fixtures';
 test.describe('Add Book to Library', () => {
   // TODO: flaky in CI — toast never appears after addButton.click(); needs Playwright trace
   // analysis to determine if it's a hydration race, cookie/auth issue on POST /user-books,
-  // or Sonner being cleared by router.refresh(). Tracked in GitHub issue.
-  // See: https://github.com/leotonezi/sonic-library/issues/166
+  // or Sonner being cleared by router.refresh(). Also needs page.route() mocking for
+  // GET /books/popular and GET /books/external/:id now that is_testing flag is removed.
+  // Tracked in GitHub issue: https://github.com/leotonezi/sonic-library/issues/166
   test.skip('should add a book from popular list to library and verify it appears', async ({ page }) => {
     let addedUserBookId: number | null = null;
     let externalId: string | null = null;

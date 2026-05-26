@@ -11,7 +11,7 @@ from app.schemas.review import ReviewResponse
 from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
-from app.core.config import settings, is_testing
+from app.core.config import settings
 from app.core.rate_limiter import RateLimiter
 from app.core.redis import get_redis
 from app.core.circuit_breaker import CircuitBreaker
@@ -294,29 +294,6 @@ def get_book_by_external_id(
     """
     Fetch a single book from Google Books API by its external (Google) ID.
     """
-    if is_testing:
-        user_book = user_book_service.get_by_external_book(external_id)
-        user_book_response = serialize_user_book(user_book) if user_book else None
-        return {
-            "data": {
-                "book": {
-                    "external_id": external_id,
-                    "title": "E2E Test Book",
-                    "authors": ["Test Author"],
-                    "publishedDate": "2024",
-                    "description": "A stable test book used in e2e tests.",
-                    "thumbnail": None,
-                    "pageCount": 100,
-                    "categories": ["Fiction"],
-                    "language": "en",
-                },
-                "userBook": user_book_response,
-                "reviews": [],
-            },
-            "message": "Book fetched successfully",
-            "status": "ok",
-        }
-
     cb = _get_google_books_circuit_breaker()
     GOOGLE_BOOKS_API_URL = f"https://www.googleapis.com/books/v1/volumes/{external_id}"
     GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
@@ -389,34 +366,6 @@ def get_popular_books(
     Fetch popular books using the Google Books API with curated search terms.
     Cached for 1 hour to improve performance.
     """
-    if is_testing:
-        test_book = {
-            "external_id": "test-e2e-book-001",
-            "title": "E2E Test Book",
-            "authors": ["Test Author"],
-            "publishedDate": "2024",
-            "description": "A stable test book used in e2e tests.",
-            "thumbnail": None,
-            "pageCount": 100,
-            "categories": ["Fiction"],
-            "language": "en",
-        }
-        return PaginationResponse(
-            data=[test_book],
-            pagination={
-                "current_page": page,
-                "total_pages": 1,
-                "total_count": 1,
-                "page_size": max_results,
-                "has_next": False,
-                "has_previous": False,
-                "start_index": 0,
-                "end_index": 1,
-            },
-            message="Popular books fetched (test mode)",
-            status="ok",
-        )
-
     # Check cache first
     cached_books = get_cached_popular_books(max_results)
     if cached_books:
