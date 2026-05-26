@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { ApiResponse } from "@/types";
-import { serverSideApiFetch } from "@/lib/api-client";
+import { getBackendUrl, serverSideApiFetch } from "@/lib/api-client";
 import Image from "next/image";
 import ReviewsList from "../../[id]/review-list";
 import { ExternalBook, UserBook, Review } from "@/types";
@@ -18,7 +18,7 @@ async function getExternalBookData(
 ): Promise<{ book: ExternalBook; userBook: UserBook; reviews: Review[] }> {
   try {
     const response = (await serverSideApiFetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/books/external/${externalId}`,
+      `${getBackendUrl()}/books/external/${externalId}`,
       accessToken,
       {
         cache: 'no-store',
