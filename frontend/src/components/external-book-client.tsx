@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { UserBook } from "@/interfaces/book";
+import { UserBook } from "@/types";
 import AddReviewModal from "@/app/(protected)/books/external/[externalId]/add-review-modal";
 
 type Props = {

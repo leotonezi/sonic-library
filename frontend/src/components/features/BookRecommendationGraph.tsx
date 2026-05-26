@@ -1,6 +1,6 @@
 'use client';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
-import { apiFetch } from '@/utils/api';
+import { apiFetch } from '@/lib/api-client';
 import { useAuthStore } from '@/store/useAuthStore';
 import { 
   ReactFlow, 

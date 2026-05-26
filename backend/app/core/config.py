@@ -25,6 +25,7 @@ class Settings:
     MAIL_FROM: str = os.getenv("MAIL_FROM", "")
     MAIL_PORT: int = int(os.getenv("MAIL_PORT", 587))
     MAIL_SERVER: str = os.getenv("MAIL_SERVER", "")
+    MAIL_DISABLED: bool = os.getenv("MAIL_DISABLED", "false").lower() == "true"
     ACCESS_TOKEN_COOKIE_NAME: str = "access_token"
     REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
     COOKIE_SECURE: bool = True

@@ -30,6 +30,7 @@ services:
       MAIL_FROM: noreply@example.com
       MAIL_DISABLED: "true"
       TESTING: "true"
+      ADMIN_EMAILS: admin@e2etest.example.com
     ports:
       - "8001:8000"  # Different port to avoid conflict with dev backend
     mem_limit: 2048m

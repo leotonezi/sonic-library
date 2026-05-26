@@ -6,7 +6,7 @@ import {
   searchExternalBooksLegacy, 
   getPopularBooksLegacy 
 } from "@/services/bookService";
-import { ExternalBook, PaginationMetadata } from "@/interfaces/book";
+import { ExternalBook, PaginationMetadata } from "@/types";
 
 interface SearchState {
   searchQuery: string;

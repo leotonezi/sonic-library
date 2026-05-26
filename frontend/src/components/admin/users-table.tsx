@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search } from "lucide-react";
-import type { AdminUser, PaginationResponse } from "@/interfaces/admin";
+import type { AdminUser, PaginationResponse } from "@/types";
 import { getUsers } from "@/services/adminService";
 import { Pagination } from "@/components/pagination";
 

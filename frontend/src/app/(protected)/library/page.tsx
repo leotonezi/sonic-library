@@ -1,8 +1,8 @@
 // app/library/[user_id]/page.tsx
 
 import UserBookActions from "@/components/user-book-actions";
-import { UserBook, PaginatedResponse, PaginationMetadata } from "@/interfaces/book";
-import { serverSideApiFetch } from "@/utils/api";
+import { UserBook, PaginatedResponse, PaginationMetadata } from "@/types";
+import { getBackendUrl, serverSideApiFetch } from "@/lib/api-client";
 import { convertBookToExternalBook } from "@/utils/book";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -22,10 +22,7 @@ async function getMyBooksPaginated(
   pageSize: number = 10,
   status?: string,
 ): Promise<PaginatedResponse<UserBook> | null> {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-  if (!backendUrl) throw new Error("NEXT_PUBLIC_BACKEND_URL is not set");
-
-  const url = new URL(`${backendUrl}/user-books/my-books/paginated`);
+  const url = new URL(`${getBackendUrl()}/user-books/my-books/paginated`);
   url.searchParams.append("page", page.toString());
   url.searchParams.append("page_size", pageSize.toString());
   if (status) {

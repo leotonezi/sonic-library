@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getBackendUrl } from "@/lib/api-client";
-import type User from "@/interfaces/user";
+import type { User } from "@/types";
 import AdminDashboard from "./admin-dashboard";
 
 interface ApiResponse<T> {

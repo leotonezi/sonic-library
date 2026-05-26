@@ -1,6 +1,5 @@
-import { Book, ExternalBook, PaginatedResponse } from "@/interfaces/book";
-import { apiFetch } from "@/utils/api";
-import { getBackendUrl } from "@/lib/api-client";
+import { Book, ExternalBook, PaginatedResponse, UserBook } from "@/types";
+import { apiFetch, getBackendUrl } from "@/lib/api-client";
 import { notFound } from "next/navigation";
 
 export async function getBooks(p0: string): Promise<Book[]> {
@@ -77,15 +76,15 @@ export const getUserBooksPaginated = async (
   page: number = 1,
   pageSize: number = 10,
   status?: string
-): Promise<PaginatedResponse<import("@/interfaces/book").UserBook> | null> => {
+): Promise<PaginatedResponse<UserBook> | null> => {
   const params = new URLSearchParams({
     page: page.toString(),
     page_size: pageSize.toString(),
   });
-  
+
   if (status) params.append('status', status);
 
-  const response = await apiFetch<PaginatedResponse<import("@/interfaces/book").UserBook>>(`/user-books/my-books/paginated?${params.toString()}`);
+  const response = await apiFetch<PaginatedResponse<UserBook>>(`/user-books/my-books/paginated?${params.toString()}`);
   return response;
 };
 

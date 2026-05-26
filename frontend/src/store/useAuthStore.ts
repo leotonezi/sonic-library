@@ -1,6 +1,5 @@
 import { create } from "zustand";
-import { AuthState } from "@/interfaces/auth";
-import User from "@/interfaces/user";
+import { AuthState, User } from "@/types";
 import { getBackendUrl } from "@/lib/api-client";
 
 export const useAuthStore = create<AuthState>((set, get) => ({

@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   devIndicators: false,
   async rewrites() {
     return [
@@ -19,22 +18,22 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: 'books.google.com',
         port: '',
-        pathname: '/**', // Allow any path
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'books.google.com',
         port: '',
-        pathname: '/**', // Allow any path
+        pathname: '/**',
       },
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '8000',
-        pathname: '/uploads/**', // Allow backend uploads
+        pathname: '/uploads/**',
       },
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

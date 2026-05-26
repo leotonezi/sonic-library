@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getStats } from "@/services/adminService";
-import type { AdminStats } from "@/interfaces/admin";
+import type { AdminStats } from "@/types";
 import { StatsCards } from "@/components/admin/stats-cards";
 import { AdminUsersTable } from "@/components/admin/users-table";
 import { AdminReviewsTable } from "@/components/admin/reviews-table";
@@ -24,7 +24,13 @@ function AdminDashboardContent() {
   const user = useAuthStore((state) => state.user);
   const [stats, setStats] = useState<AdminStats | null>(null);
 
-  const activeTab = (searchParams.get("tab") as TabKey) || "users";
+  const rawTab = searchParams.get("tab");
+  const VALID_TABS = TABS.map((t) => t.key);
+  const isValidTab = (v: string): v is TabKey =>
+    (VALID_TABS as string[]).includes(v);
+
+  const isInvalidTab = rawTab !== null && !isValidTab(rawTab);
+  const activeTab: TabKey = rawTab && isValidTab(rawTab) ? rawTab : "users";
 
   useEffect(() => {
     if (user && !user.is_admin) {
@@ -68,9 +74,22 @@ function AdminDashboardContent() {
         ))}
       </div>
 
-      {activeTab === "users" && <AdminUsersTable />}
-      {activeTab === "reviews" && <AdminReviewsTable />}
-      {activeTab === "user-books" && <AdminUserBooksTable />}
+      {isInvalidTab && (
+        <div className="flex flex-col items-start gap-4 py-8">
+          <p className="text-orange-300 text-sm font-medium">
+            Invalid tab: {rawTab}
+          </p>
+          <button
+            onClick={() => router.push("/admin")}
+            className="text-blue-400 hover:text-white text-sm underline transition-colors"
+          >
+            Go to dashboard
+          </button>
+        </div>
+      )}
+      {!isInvalidTab && activeTab === "users" && <AdminUsersTable />}
+      {!isInvalidTab && activeTab === "reviews" && <AdminReviewsTable />}
+      {!isInvalidTab && activeTab === "user-books" && <AdminUserBooksTable />}
     </div>
   );
 }

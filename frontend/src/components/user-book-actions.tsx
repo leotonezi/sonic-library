@@ -2,8 +2,8 @@
 
 "use client";
 
-import { ExternalBook, UserBook } from "@/interfaces/book";
-import { apiPost, apiPut } from "@/utils/api";
+import { ExternalBook, UserBook } from "@/types";
+import { apiPost, apiPut } from "@/lib/api-client";
 import { mapGoogleBookToBookCreate } from "@/utils/book";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

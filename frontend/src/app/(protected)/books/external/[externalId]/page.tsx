@@ -1,15 +1,14 @@
 // app/(protected)/books/external/[externalId]/page.tsx
 
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
-import { ApiResponse } from "@/interfaces/auth";
-import { serverSideApiFetch } from "@/utils/api";
+import { notFound, redirect } from "next/navigation";
+import { ApiResponse } from "@/types";
+import { getBackendUrl, serverSideApiFetch } from "@/lib/api-client";
 import Image from "next/image";
 import ReviewsList from "../../[id]/review-list";
-import { ExternalBook, UserBook } from "@/interfaces/book";
+import { ExternalBook, UserBook, Review } from "@/types";
 import ExternalBookPageClient from "@/components/external-book-client";
 import UserBookActions from "@/components/user-book-actions";
-import Review from "@/interfaces/review";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +18,7 @@ async function getExternalBookData(
 ): Promise<{ book: ExternalBook; userBook: UserBook; reviews: Review[] }> {
   try {
     const response = (await serverSideApiFetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/books/external/${externalId}`,
+      `${getBackendUrl()}/books/external/${externalId}`,
       accessToken,
       {
         cache: 'no-store',
@@ -66,7 +65,7 @@ export default async function ExternalBookPage({ params }: Props) {
             <div className="md:col-span-1">
               {book.thumbnail && (
                 <Image
-                  src={book?.thumbnail}
+                  src={book.thumbnail.replace(/^http:\/\//, 'https://')}
                   alt={book.title}
                   width={80}
                   height={80}
@@ -135,6 +134,9 @@ export default async function ExternalBookPage({ params }: Props) {
     );
   } catch (error) {
     console.error("Error in ExternalBookPage:", error);
+    if (error instanceof Error && error.message.includes('401')) {
+      redirect('/login');
+    }
     return (
       <div className="p-6 bg-blue-950 text-red-400 min-h-screen flex items-center justify-center">
         <div className="bg-red-900/50 p-4 rounded-lg max-w-md text-center">

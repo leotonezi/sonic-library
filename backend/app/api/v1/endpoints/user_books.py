@@ -18,7 +18,7 @@ def get_user_book_service(db: Session = Depends(get_db)) -> UserBookService:
 def get_book_service(db: Session = Depends(get_db)) -> BookService:
     return BookService(db)
 
-@router.post("/", response_model=ApiResponse[UserBookResponse], status_code=201)
+@router.post("", response_model=ApiResponse[UserBookResponse], status_code=201)
 @log_exceptions("POST /user-books")
 def create(
     user_book: UserBookCreate,

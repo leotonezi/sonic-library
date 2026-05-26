@@ -1,12 +1,12 @@
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Star } from "lucide-react";
 import AddReviewForm from "./add-review-form";
 import ReviewsList from "./review-list";
-import { Book, BookWithRating } from "@/interfaces/book";
-import Review from "@/interfaces/review";
-import { ApiResponse } from "@/interfaces/auth";
-import { serverSideApiFetch } from "@/utils/api";
+import { Book, BookWithRating } from "@/types";
+import { Review } from "@/types";
+import { ApiResponse } from "@/types";
+import { serverSideApiFetch, getBackendUrl } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +20,11 @@ async function getBookData(
   try {
     const [bookData, reviewsData] = (await Promise.all([
       serverSideApiFetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/books/${bookId}`,
+        `${getBackendUrl()}/books/${bookId}`,
         accessToken,
       ),
       serverSideApiFetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/reviews/book/${bookId}`,
+        `${getBackendUrl()}/reviews/book/${bookId}`,
         accessToken,
         {
           cache: 'no-store',
@@ -102,6 +102,9 @@ export default async function BookPage({
     );
   } catch (error) {
     console.error("Error in BookPage:", error);
+    if (error instanceof Error && error.message.includes('401')) {
+      redirect('/login');
+    }
     return (
       <div className="p-6 bg-blue-950 text-red-400 min-h-screen flex items-center justify-center">
         <div className="bg-red-900/50 p-4 rounded-lg max-w-md text-center">

@@ -269,3 +269,16 @@ export async function serverSideApiFetch(
 
 // Export singleton instance
 export const apiClient = new ApiClient();
+
+// Standalone wrappers for call-site compatibility
+export const apiFetch = <T>(url: string, options?: ExtendedRequestInit): Promise<T | null> =>
+  apiClient.get<T>(url, options);
+
+export const apiPost = <T, D = unknown>(url: string, data: D, options?: RequestInit): Promise<T> =>
+  apiClient.post<T, D>(url, data, options);
+
+export const apiPut = <T = unknown>(url: string, body: unknown, options?: RequestInit): Promise<T | null> =>
+  apiClient.put<T>(url, body, options);
+
+export const apiDelete = <T = unknown>(url: string, options?: RequestInit): Promise<T | null> =>
+  apiClient.delete<T>(url, options);

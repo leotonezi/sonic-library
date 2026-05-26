@@ -6,7 +6,7 @@ from app.core.config import settings, is_testing  # assuming you have a settings
 
 # Only create mail configuration if not in testing mode and mail settings are provided
 conf = None
-if not is_testing and settings.MAIL_FROM:
+if not is_testing and not settings.MAIL_DISABLED and settings.MAIL_FROM:
     conf = ConnectionConfig(
         MAIL_USERNAME=settings.MAIL_USERNAME,
         MAIL_PASSWORD=settings.MAIL_PASSWORD,
@@ -24,8 +24,8 @@ class EmailSchema(BaseModel):
 
 async def send_activation_email(email: EmailStr, activation_link: str):
     # Skip email sending during tests or if mail is not configured
-    if is_testing or conf is None:
-        print(f"[TEST] Email would be sent to {email} with activation link: {activation_link}")
+    if is_testing or settings.MAIL_DISABLED or conf is None:
+        print(f"[MAIL] Skipped (disabled/unconfigured) — activation link for {email}: {activation_link}")
         return
     
     message = MessageSchema(
@@ -40,4 +40,7 @@ async def send_activation_email(email: EmailStr, activation_link: str):
     )
 
     fm = FastMail(conf)
-    await fm.send_message(message)
+    try:
+        await fm.send_message(message)
+    except Exception as e:
+        print(f"[MAIL] Failed to send activation email to {email}: {e}")

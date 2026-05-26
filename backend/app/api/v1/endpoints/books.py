@@ -452,9 +452,9 @@ def get_popular_books(
             continue
 
     final_books = all_books[:max_results]
-    
-    # Cache the results
-    set_cached_popular_books(max_results, final_books)
+
+    if final_books:
+        set_cached_popular_books(max_results, final_books)
 
     # Apply pagination
     start_index = (page - 1) * max_results
