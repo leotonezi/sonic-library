@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetchFull } from "@/lib/api-client";
 import { useAuthStore } from "@/store/useAuthStore";
-import { getBackendUrl } from "@/lib/api-client";
 import Link from "next/link";
 import BookRecommendationGraph from '@/components/features/BookRecommendationGraph';
 
@@ -100,13 +99,13 @@ export default function RecommendationPage() {
       setLoadingRecommendations(true);
 
       try {
-        const rec = await apiFetch<string>(`/recommendations`, {
+        const rec = await apiFetchFull<string>('/recommendations', {
           noCache: true,
         });
 
-        if (rec) {
+        if (rec?.data) {
           setUnavailableMessage(null);
-          const cleanText = rec
+          const cleanText = rec.data
             .replace(/[*_~`>#-]/g, '')
             .replace(/$begin:math:display$(.*?)$end:math:display$$begin:math:text$.*?$end:math:text$/g, '$1')
             .replace(/\n{2,}/g, '\n\n');
@@ -115,21 +114,8 @@ export default function RecommendationPage() {
           // Try to parse structured recommendations
           const parsed = parseRecommendations(cleanText);
           setParsedRecommendations(parsed);
-        } else {
-          // Data is null - check if AI is unavailable by fetching full response
-          const BASE_URL = getBackendUrl();
-          if (BASE_URL) {
-            const fullRes = await fetch(`${BASE_URL}/recommendations`, {
-              credentials: 'include',
-              cache: 'no-store',
-            });
-            if (fullRes.ok) {
-              const json = await fullRes.json();
-              if (json.data === null && json.message) {
-                setUnavailableMessage(json.message);
-              }
-            }
-          }
+        } else if (rec?.message) {
+          setUnavailableMessage(rec.message);
         }
       } catch (error) {
         console.error("❌ Error fetching recommendations:", error);
