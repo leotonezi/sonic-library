@@ -74,8 +74,8 @@ function LoginPageContent() {
       const responseData = await loginRes.json();
 
       if (responseData.status === 'pending_activation') {
-        toast.info('Please check your email to activate your account.');
-        setError('Account not activated. Check your email for activation instructions.');
+        toast.info('A new activation email has been sent to your inbox.');
+        setError('Account not activated. A new activation email was sent — check your inbox.');
         return;
       }
 
