@@ -25,6 +25,8 @@ export interface AdminReview {
   created_at: string;
 }
 
+import { BookStatus } from './book';
+
 export interface AdminUserBook {
   id: number;
   user_id: number;
@@ -32,7 +34,7 @@ export interface AdminUserBook {
   book_id: number | null;
   external_book_id: string | null;
   book_title: string | null;
-  status: string;
+  status: BookStatus;
   created_at: string;
 }
 

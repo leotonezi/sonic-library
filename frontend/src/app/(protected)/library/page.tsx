@@ -1,7 +1,7 @@
 // app/library/[user_id]/page.tsx
 
 import UserBookActions from "@/components/user-book-actions";
-import { UserBook, PaginatedResponse, PaginationMetadata } from "@/types";
+import { BookStatus, UserBook, PaginatedResponse, PaginationMetadata } from "@/types";
 import { getBackendUrl, serverSideApiFetch } from "@/lib/api-client";
 import { convertBookToExternalBook } from "@/utils/book";
 import { Metadata } from "next";
@@ -16,11 +16,17 @@ export const metadata: Metadata = {
   description: "Your personal book library",
 };
 
+const VALID_STATUSES: BookStatus[] = ['TO_READ', 'READING', 'READ'];
+
+function parseStatus(raw?: string): BookStatus | undefined {
+  return VALID_STATUSES.find((s) => s === raw);
+}
+
 async function getMyBooksPaginated(
   accessToken: string,
   page: number = 1,
   pageSize: number = 10,
-  status?: string,
+  status?: BookStatus,
 ): Promise<PaginatedResponse<UserBook> | null> {
   const url = new URL(`${getBackendUrl()}/user-books/my-books/paginated`);
   url.searchParams.append("page", page.toString());
@@ -42,7 +48,7 @@ export default async function LibraryPage({
   searchParams: Promise<{ status?: string; page?: string; page_size?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const statusFilter = resolvedSearchParams.status;
+  const statusFilter = parseStatus(resolvedSearchParams.status);
   const page = parseInt(resolvedSearchParams.page || "1", 10);
   const pageSize = parseInt(resolvedSearchParams.page_size || "10", 10);
   const cookieStore = await cookies();
