@@ -100,7 +100,6 @@ async function getExternalBookData(
 
     return data;
   } catch (error) {
-    console.error("Error fetching external book data:", error);
     throw error;
   }
 }
@@ -197,7 +196,6 @@ export default async function ExternalBookPage({ params }: Props) {
       </div>
     );
   } catch (error) {
-    console.error("Error in ExternalBookPage:", error);
     if (error instanceof Error && error.message.includes('401')) {
       redirect('/login');
     }

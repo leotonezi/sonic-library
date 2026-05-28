@@ -22,6 +22,21 @@ test.describe('Submit Review', () => {
     }
   });
 
+  test('should render book info before reviews section streams in', async ({ page }) => {
+    await page.goto('/books');
+    const bookCard = page.locator('[data-testid="book-card"]').first();
+    if (!(await bookCard.isVisible())) return;
+    await bookCard.click();
+    await expect(page).toHaveURL(/.*\/books\/\d+/);
+
+    // Book title (server-renders without waiting for reviews)
+    const bookTitle = page.locator('h1').first();
+    await expect(bookTitle).toBeVisible({ timeout: 5000 });
+
+    // Reviews section eventually streams in (skeleton resolves)
+    await expect(page.getByText('Reviews')).toBeVisible({ timeout: 10000 });
+  });
+
   test('should submit a review', async ({ page }) => {
     await page.goto('/books');
     const bookCard = page.locator('[data-testid="book-card"]').first();
