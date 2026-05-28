@@ -1,10 +1,10 @@
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { Star } from "lucide-react";
 import AddReviewForm from "./add-review-form";
 import ReviewsList from "./review-list";
-import { Book, BookWithRating } from "@/types";
-import { Review } from "@/types";
+import ReviewsSkeleton from "./reviews-skeleton";
+import { Book } from "@/types";
 import { ApiResponse } from "@/types";
 import { serverSideApiFetch, getBackendUrl } from "@/lib/api-client";
 
@@ -13,47 +13,19 @@ export const dynamic = "force-dynamic";
 async function getBookData(
   bookId: string,
   accessToken: string,
-): Promise<{
-  book: BookWithRating;
-  reviews: Review[];
-}> {
-  try {
-    const [bookData, reviewsData] = (await Promise.all([
-      serverSideApiFetch(
-        `${getBackendUrl()}/books/${bookId}`,
-        accessToken,
-      ),
-      serverSideApiFetch(
-        `${getBackendUrl()}/reviews/book/${bookId}`,
-        accessToken,
-        {
-          cache: 'no-store',
-        },
-      ),
-    ])) as [ApiResponse<Book>, ApiResponse<Review[]>];
+): Promise<Book> {
+  const bookData = (await serverSideApiFetch(
+    `${getBackendUrl()}/books/${bookId}`,
+    accessToken,
+  )) as ApiResponse<Book>;
 
-    const book = bookData.data;
-    const reviews = reviewsData.data ?? [];
+  const book = bookData?.data;
 
-    if (!book || !book.id) {
-      throw new Error("Invalid book data received");
-    }
-
-    const averageRating =
-      reviews.length > 0
-        ? (
-            reviews.reduce((sum, r) => sum + r.rate, 0) / reviews.length
-          ).toFixed(1)
-        : null;
-
-    return {
-      book: { ...book, averageRating },
-      reviews,
-    };
-  } catch (error) {
-    console.error("Error fetching book data:", error);
-    throw error;
+  if (!book || !book.id) {
+    throw new Error("Invalid book data received");
   }
+
+  return book;
 }
 
 export default async function BookPage({
@@ -70,7 +42,7 @@ export default async function BookPage({
   }
 
   try {
-    const { book, reviews } = await getBookData(id, accessToken);
+    const book = await getBookData(id, accessToken);
 
     if (!book) {
       notFound();
@@ -83,12 +55,6 @@ export default async function BookPage({
             <h1 className="text-3xl font-bold text-blue-500 mb-2">
               {book.title}
             </h1>
-            {book.averageRating && (
-              <div className="flex items-center text-yellow-400 text-2xl ml-4">
-                {book.averageRating}
-                <Star className="ml-1" size={24} />
-              </div>
-            )}
           </div>
           <p className="text-sm italic text-blue-100 mb-4">By {book.author}</p>
           {book.description && (
@@ -97,17 +63,18 @@ export default async function BookPage({
         </div>
 
         <AddReviewForm bookId={book?.id} />
-        <ReviewsList reviews={reviews || []} />
+        <Suspense fallback={<ReviewsSkeleton />}>
+          <ReviewsList bookId={id} token={accessToken} />
+        </Suspense>
       </div>
     );
   } catch (error) {
-    console.error("Error in BookPage:", error);
     if (error instanceof Error && error.message.includes('401')) {
       redirect('/login');
     }
     return (
       <div className="p-6 bg-blue-950 text-red-400 min-h-screen flex items-center justify-center">
-        <div className="bg-red-900/50 p-4 rounded-lg max-w-md text-center">
+        <div className="bg-red-900/50 p-4 rounded-lg max-md text-center">
           <h2 className="text-xl font-semibold mb-2">Error Loading Book</h2>
           <p>
             We encountered an error while loading this book. Please try again
