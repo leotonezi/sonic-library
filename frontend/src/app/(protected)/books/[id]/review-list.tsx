@@ -1,7 +1,9 @@
 import { Review } from "@/types";
+import { ApiResponse } from "@/types";
 import ReviewActions from "./review-actions";
 import { Star, User } from "lucide-react";
 import Image from "next/image";
+import { serverSideApiFetch, getBackendUrl } from "@/lib/api-client";
 
 const renderStars = (rate: number) => {
   return Array.from({ length: 5 }, (_, i) => (
@@ -20,13 +22,36 @@ const getProfilePictureUrl = (filename?: string) => {
   return `${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/profile_pictures/${filename}`;
 };
 
-export default function ReviewsList({ reviews = [] }: { reviews?: Review[] }) {
-  if (!reviews) {
-    return null;
-  }
+type ReviewsListProps = {
+  bookId: string;
+  token: string;
+};
+
+export default async function ReviewsList({ bookId, token }: ReviewsListProps) {
+  const reviewsData = (await serverSideApiFetch(
+    `${getBackendUrl()}/reviews/book/${bookId}`,
+    token,
+    { cache: 'no-store' },
+  )) as ApiResponse<Review[]> | null;
+
+  const reviews: Review[] = reviewsData?.data ?? [];
+
+  const averageRating =
+    reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + r.rate, 0) / reviews.length).toFixed(1)
+      : null;
+
   return (
     <div className="bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full">
-      <h2 className="text-2xl font-semibold text-blue-500 mb-4">Reviews</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-semibold text-blue-500">Reviews</h2>
+        {averageRating && (
+          <div className="flex items-center text-yellow-400 text-xl">
+            {averageRating}
+            <Star className="ml-1" size={20} />
+          </div>
+        )}
+      </div>
       {reviews.length === 0 ? (
         <p className="text-blue-200 italic">No reviews yet.</p>
       ) : (
@@ -37,7 +62,7 @@ export default function ReviewsList({ reviews = [] }: { reviews?: Review[] }) {
               className="bg-blue-800 p-4 rounded shadow relative"
             >
               <ReviewActions review={review} />
-              
+
               {/* User Info with Profile Picture */}
               {review.user_name && (
                 <div className="flex items-center gap-3 mb-3">
@@ -62,7 +87,7 @@ export default function ReviewsList({ reviews = [] }: { reviews?: Review[] }) {
                   </div>
                 </div>
               )}
-              
+
               <p className="text-blue-200 my-2">{review.content}</p>
               <div className="flex justify-between items-center mt-3">
                 <p className="text-blue-100 text-sm flex items-center gap-1">
