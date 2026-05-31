@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { PaginationMetadata } from "@/types";
+import { BookStatus, PaginationMetadata } from "@/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface LibraryPaginationProps {
   pagination: PaginationMetadata;
-  statusFilter?: string;
+  statusFilter?: BookStatus;
 }
 
 export default function LibraryPagination({ 

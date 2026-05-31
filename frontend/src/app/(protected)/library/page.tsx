@@ -1,10 +1,11 @@
 // app/library/[user_id]/page.tsx
 
 import UserBookActions from "@/components/user-book-actions";
-import { UserBook, PaginatedResponse, PaginationMetadata } from "@/types";
+import { BookStatus, UserBook, PaginatedResponse, PaginationMetadata } from "@/types";
 import { getBackendUrl, serverSideApiFetch } from "@/lib/api-client";
 import { convertBookToExternalBook } from "@/utils/book";
 import { Metadata } from "next";
+import { redirect } from 'next/navigation';
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,11 +17,17 @@ export const metadata: Metadata = {
   description: "Your personal book library",
 };
 
+const VALID_STATUSES: BookStatus[] = ['TO_READ', 'READING', 'READ'];
+
+function parseStatus(raw?: string): BookStatus | undefined {
+  return VALID_STATUSES.find((s) => s === raw);
+}
+
 async function getMyBooksPaginated(
   accessToken: string,
   page: number = 1,
   pageSize: number = 10,
-  status?: string,
+  status?: BookStatus,
 ): Promise<PaginatedResponse<UserBook> | null> {
   const url = new URL(`${getBackendUrl()}/user-books/my-books/paginated`);
   url.searchParams.append("page", page.toString());
@@ -42,11 +49,15 @@ export default async function LibraryPage({
   searchParams: Promise<{ status?: string; page?: string; page_size?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const statusFilter = resolvedSearchParams.status;
+  const statusFilter = parseStatus(resolvedSearchParams.status);
   const page = parseInt(resolvedSearchParams.page || "1", 10);
   const pageSize = parseInt(resolvedSearchParams.page_size || "10", 10);
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value ?? '';
+
+  if (!accessToken) {
+    redirect('/login');
+  }
 
   let userBooks: UserBook[] = [];
   let paginationData: PaginationMetadata | null = null;
@@ -58,7 +69,9 @@ export default async function LibraryPage({
       paginationData = data.pagination;
     }
   } catch (error) {
-    console.error("Failed to fetch user books:", error);
+    if (error instanceof Error && error.message.includes('401')) {
+      redirect('/login');
+    }
   }
 
   function truncate(text: string, maxLength: number) {

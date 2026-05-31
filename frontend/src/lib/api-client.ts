@@ -2,9 +2,9 @@ import { handleTokenRefresh } from "./auth";
 import { handleRateLimitResponse } from "./rate-limit-toast";
 
 export interface ApiResponse<T> {
-  data: T;
+  data: T | null;
   status: string;
-  message: string;
+  message: string | null;
 }
 
 export interface ExtendedRequestInit extends RequestInit {
@@ -80,6 +80,51 @@ export class ApiClient {
     }
   }
 
+  async getFull<T>(endpoint: string, options?: ExtendedRequestInit): Promise<ApiResponse<T> | null> {
+    const noCache = options?.noCache;
+
+    try {
+      const res = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...baseFetchConfig,
+        ...options,
+        headers: {
+          ...(options?.headers instanceof Headers
+            ? Object.fromEntries(options.headers.entries())
+            : (options?.headers || {})),
+        },
+        cache: noCache === false ? "force-cache" : "no-store",
+      });
+
+      if (!res.ok) {
+        if (handleRateLimitResponse(res)) {
+          return null;
+        }
+
+        if (res.status === 401) {
+          try {
+            const refreshed = await handleTokenRefresh();
+            if (refreshed) {
+              return await this.getFull<T>(endpoint, options);
+            }
+          } catch (error) {
+            console.error("Token refresh failed:", error);
+            window.location.href = '/login';
+            return null;
+          }
+        }
+
+        console.warn(`⚠️ API error ${res.status} on ${endpoint}`);
+        return null;
+      }
+
+      const json: ApiResponse<T> = await res.json();
+      return json;
+    } catch (err) {
+      console.error(`❌ Failed to fetch ${endpoint}:`, err);
+      return null;
+    }
+  }
+
   async post<T, D = unknown>(
     endpoint: string,
     data: D,
@@ -135,7 +180,7 @@ export class ApiClient {
       }
 
       const json: ApiResponse<T> = await res.json();
-      return json.data;
+      return json.data as T;
     } catch (error) {
       console.error(`Error in POST ${endpoint}:`, error);
       throw error;
@@ -282,3 +327,6 @@ export const apiPut = <T = unknown>(url: string, body: unknown, options?: Reques
 
 export const apiDelete = <T = unknown>(url: string, options?: RequestInit): Promise<T | null> =>
   apiClient.delete<T>(url, options);
+
+export const apiFetchFull = <T>(url: string, options?: ExtendedRequestInit): Promise<ApiResponse<T> | null> =>
+  apiClient.getFull<T>(url, options);

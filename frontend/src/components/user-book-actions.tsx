@@ -2,7 +2,7 @@
 
 "use client";
 
-import { ExternalBook, UserBook } from "@/types";
+import { BookStatus, ExternalBook, UserBook } from "@/types";
 import { apiPost, apiPut } from "@/lib/api-client";
 import { mapGoogleBookToBookCreate } from "@/utils/book";
 import { useRouter } from "next/navigation";
@@ -20,7 +20,7 @@ export default function UserBookActions({
   userBook: initialUserBook,
   book,
 }: Props) {
-  const [status, setStatus] = useState<string | null>(
+  const [status, setStatus] = useState<BookStatus | null>(
     initialUserBook?.status || null,
   );
   const [userBook, setUserBook] = useState<UserBook | null>(initialUserBook);

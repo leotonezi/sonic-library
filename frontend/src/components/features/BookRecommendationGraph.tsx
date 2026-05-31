@@ -1,6 +1,7 @@
 'use client';
 import React, { useCallback, useState, useMemo, useEffect } from 'react';
 import { apiFetch } from '@/lib/api-client';
+import { BookStatus } from '@/types';
 import { useAuthStore } from '@/store/useAuthStore';
 import { 
   ReactFlow, 
@@ -26,7 +27,7 @@ interface BookData extends Record<string, unknown> {
   genre?: string;
   book_id?: number;
   external_id?: string;
-  status?: string;
+  status?: BookStatus;
   description?: string;
   is_recommendation?: boolean;
   reasoning?: string;
@@ -81,7 +82,7 @@ const CustomBookNode = ({ data }: { data: BookData }) => {
       {data.status && (
         <div className={`text-xs mt-1 px-2 py-1 rounded text-center ${
           data.status === 'READ' ? 'bg-green-600 text-white' :
-          data.status === 'reading' ? 'bg-blue-600 text-white' :
+          data.status === 'READING' ? 'bg-blue-600 text-white' :
           'bg-gray-600 text-white'
         }`}>
           {data.status.replace('_', ' ').toUpperCase()}
