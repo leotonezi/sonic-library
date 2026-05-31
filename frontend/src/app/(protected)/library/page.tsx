@@ -5,6 +5,7 @@ import { BookStatus, UserBook, PaginatedResponse, PaginationMetadata } from "@/t
 import { getBackendUrl, serverSideApiFetch } from "@/lib/api-client";
 import { convertBookToExternalBook } from "@/utils/book";
 import { Metadata } from "next";
+import { redirect } from 'next/navigation';
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
@@ -54,6 +55,10 @@ export default async function LibraryPage({
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value ?? '';
 
+  if (!accessToken) {
+    redirect('/login');
+  }
+
   let userBooks: UserBook[] = [];
   let paginationData: PaginationMetadata | null = null;
 
@@ -64,7 +69,9 @@ export default async function LibraryPage({
       paginationData = data.pagination;
     }
   } catch (error) {
-    console.error("Failed to fetch user books:", error);
+    if (error instanceof Error && error.message.includes('401')) {
+      redirect('/login');
+    }
   }
 
   function truncate(text: string, maxLength: number) {
