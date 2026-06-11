@@ -93,7 +93,7 @@ export default async function LibraryPage({
 
       <section className="mb-6 flex justify-center gap-4">
         {filterOptions.map(({ value, label }) => (
-          <a
+          <Link
             key={value}
             href={`?status=${value}`}
             className={`px-4 py-2 rounded cursor-pointer ${
@@ -103,9 +103,9 @@ export default async function LibraryPage({
             }`}
           >
             {label}
-          </a>
+          </Link>
         ))}
-        <a
+        <Link
           href="/library"
           className={`px-4 py-2 rounded cursor-pointer ${
             !statusFilter
@@ -114,7 +114,7 @@ export default async function LibraryPage({
           }`}
         >
           All
-        </a>
+        </Link>
       </section>
 
       <section className="space-y-6">
