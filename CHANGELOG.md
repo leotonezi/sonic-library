@@ -1,3 +1,10 @@
+## [0.7.1](https://github.com/leotonezi/sonic-library/compare/v0.7.0...v0.7.1) (2026-06-11)
+
+
+### Bug Fixes
+
+* **ci:** replace heredoc with grouped echo to fix YAML parse error ([c5c045b](https://github.com/leotonezi/sonic-library/commit/c5c045b826bca9665bc3bac39d7dd4d4c434cfe2))
+
 # [0.7.0](https://github.com/leotonezi/sonic-library/compare/v0.6.0...v0.7.0) (2026-06-11)
 
 
