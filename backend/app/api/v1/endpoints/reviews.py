@@ -8,7 +8,7 @@ from app.models.user import User
 from app.schemas.review import ReviewCreate, ReviewResponse, ReviewUpdate
 from app.core.logging_decorator import log_exceptions
 
-router = APIRouter()
+router = APIRouter(redirect_slashes=False)
 
 def get_review_service(
     db: Session = Depends(get_db),
@@ -17,7 +17,7 @@ def get_review_service(
     """Inject ReviewService, requiring authenticated user."""
     return ReviewService(db)
 
-@router.post("/", response_model=ApiResponse[ReviewResponse], status_code=201)
+@router.post("", response_model=ApiResponse[ReviewResponse], status_code=201)
 @log_exceptions("POST /reviews")
 def create(
     review: ReviewCreate,
@@ -29,7 +29,7 @@ def create(
     obj = review_service.create(review_data)
     return ApiResponse(data=ReviewResponse.model_validate(obj))
 
-@router.get("/", response_model=ApiResponse[list[ReviewResponse]])
+@router.get("", response_model=ApiResponse[list[ReviewResponse]])
 @log_exceptions("GET /reviews")
 def index(review_service: ReviewService = Depends(get_review_service)):
     reviews = review_service.get_all()
