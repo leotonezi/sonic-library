@@ -41,49 +41,40 @@ export default async function BookPage({
     notFound();
   }
 
+  let book: Book;
   try {
-    const book = await getBookData(id, accessToken);
-
-    if (!book) {
-      notFound();
-    }
-
-    return (
-      <div className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
-        <div className="relative bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full mb-6">
-          <div className="flex justify-between items-start">
-            <h1 className="text-3xl font-bold text-blue-500 mb-2">
-              {book.title}
-            </h1>
-          </div>
-          <p className="text-sm italic text-blue-100 mb-4">By {book.author}</p>
-          {book.description && (
-            <p className="text-blue-200 leading-relaxed">{book.description}</p>
-          )}
-        </div>
-
-        <AddReviewForm bookId={book?.id} />
-        <Suspense fallback={<ReviewsSkeleton />}>
-          <ReviewsList bookId={id} token={accessToken} />
-        </Suspense>
-      </div>
-    );
+    book = await getBookData(id, accessToken);
   } catch (error) {
     if (error instanceof Error && error.message.includes('401')) {
       redirect('/login');
     }
-    return (
-      <div className="p-6 bg-blue-950 text-red-400 min-h-screen flex items-center justify-center">
-        <div className="bg-red-900/50 p-4 rounded-lg max-md text-center">
-          <h2 className="text-xl font-semibold mb-2">Error Loading Book</h2>
-          <p>
-            We encountered an error while loading this book. Please try again
-            later.
-          </p>
-        </div>
-      </div>
-    );
+    throw error;
   }
+
+  if (!book) {
+    notFound();
+  }
+
+  return (
+    <div className="p-6 bg-blue-950 text-blue-50 min-h-screen flex flex-col items-center">
+      <div className="relative bg-blue-900 border border-blue-600 p-6 rounded-lg shadow-md max-w-2xl w-full mb-6">
+        <div className="flex justify-between items-start">
+          <h1 className="text-3xl font-bold text-blue-500 mb-2">
+            {book.title}
+          </h1>
+        </div>
+        <p className="text-sm italic text-blue-100 mb-4">By {book.author}</p>
+        {book.description && (
+          <p className="text-blue-200 leading-relaxed">{book.description}</p>
+        )}
+      </div>
+
+      <AddReviewForm bookId={book?.id} />
+      <Suspense fallback={<ReviewsSkeleton />}>
+        <ReviewsList bookId={id} token={accessToken} />
+      </Suspense>
+    </div>
+  );
 }
 
 export async function generateMetadata({

@@ -33,7 +33,6 @@ You are the PR creator for Sonic Library. You open pull requests using `gh pr cr
 ## Test plan
 - [ ] checklist of what to verify before merging
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
 ## Rules
