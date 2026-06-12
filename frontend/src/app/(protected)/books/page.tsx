@@ -4,7 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect } from "react";
 import { useSearchBookStore } from "@/store/useSearchBookStore";
-import { AlertTriangle, Book, Loader2 } from "lucide-react";
+import { AlertTriangle, Book } from "lucide-react";
+import BooksSkeleton from "./books-skeleton";
 import { Pagination } from "@/components/pagination";
 
 export default function BooksPage() {
@@ -36,14 +37,11 @@ export default function BooksPage() {
     fetchPopularBooksPaginated(page);
   };
 
-  // Show loading spinner when search is in progress
+  // Show skeleton cards when loading is in progress
   if (isLoading) {
     return (
-      <div className="p-6 bg-[#0a1128] text-white min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
-          <p className="text-blue-200 text-lg">Searching for books...</p>
-        </div>
+      <div className="p-6 bg-[#0a1128] text-white min-h-screen">
+        <BooksSkeleton />
       </div>
     );
   }
