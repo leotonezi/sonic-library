@@ -6,7 +6,7 @@ import ReviewsList from "./review-list";
 import ReviewsSkeleton from "./reviews-skeleton";
 import { Book } from "@/types";
 import { ApiResponse } from "@/types";
-import { serverSideApiFetch, getBackendUrl } from "@/lib/api-client";
+import { serverSideApiFetch, getBackendUrl, ApiError } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +37,10 @@ export default async function BookPage({
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value ?? '';
 
+  if (!accessToken) {
+    redirect('/login');
+  }
+
   if (!id || isNaN(Number(id))) {
     notFound();
   }
@@ -45,7 +49,7 @@ export default async function BookPage({
   try {
     book = await getBookData(id, accessToken);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('401')) {
+    if (error instanceof ApiError && error.status === 401) {
       redirect('/login');
     }
     throw error;
