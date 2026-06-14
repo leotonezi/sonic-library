@@ -2,7 +2,7 @@
 
 import UserBookActions from "@/components/user-book-actions";
 import { BookStatus, UserBook, PaginatedResponse, PaginationMetadata } from "@/types";
-import { getBackendUrl, serverSideApiFetch } from "@/lib/api-client";
+import { getBackendUrl, serverSideApiFetch, ApiError } from "@/lib/api-client";
 import { convertBookToExternalBook } from "@/utils/book";
 import { Metadata } from "next";
 import { redirect } from 'next/navigation';
@@ -69,9 +69,10 @@ export default async function LibraryPage({
       paginationData = data.pagination;
     }
   } catch (error) {
-    if (error instanceof Error && error.message.includes('401')) {
+    if (error instanceof ApiError && error.status === 401) {
       redirect('/login');
     }
+    throw error;
   }
 
   function truncate(text: string, maxLength: number) {

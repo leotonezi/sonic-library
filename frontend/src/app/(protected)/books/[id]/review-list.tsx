@@ -3,7 +3,8 @@ import { ApiResponse } from "@/types";
 import ReviewActions from "./review-actions";
 import { Star, User } from "lucide-react";
 import Image from "next/image";
-import { serverSideApiFetch, getBackendUrl } from "@/lib/api-client";
+import { redirect } from "next/navigation";
+import { serverSideApiFetch, getBackendUrl, ApiError } from "@/lib/api-client";
 
 const renderStars = (rate: number) => {
   return Array.from({ length: 5 }, (_, i) => (
@@ -28,11 +29,20 @@ type ReviewsListProps = {
 };
 
 export default async function ReviewsList({ bookId, token }: ReviewsListProps) {
-  const reviewsData = (await serverSideApiFetch(
-    `${getBackendUrl()}/reviews/book/${bookId}`,
-    token,
-    { cache: 'no-store' },
-  )) as ApiResponse<Review[]> | null;
+  let reviewsData: ApiResponse<Review[]> | null = null;
+
+  try {
+    reviewsData = (await serverSideApiFetch(
+      `${getBackendUrl()}/reviews/book/${bookId}`,
+      token,
+      { cache: 'no-store' },
+    )) as ApiResponse<Review[]> | null;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      redirect('/login');
+    }
+    throw error;
+  }
 
   const reviews: Review[] = reviewsData?.data ?? [];
 
