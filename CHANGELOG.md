@@ -1,3 +1,15 @@
+# [0.8.0](https://github.com/leotonezi/sonic-library/compare/v0.7.1...v0.8.0) (2026-06-17)
+
+
+### Bug Fixes
+
+* **frontend:** redirect to /login on 401 instead of silent empty state (closes [#172](https://github.com/leotonezi/sonic-library/issues/172)) ([08a51c3](https://github.com/leotonezi/sonic-library/commit/08a51c32dd16519b76d049eb92612faac2abc5cf))
+
+
+### Features
+
+* **frontend:** replace books page spinner with skeleton cards ([7891ac9](https://github.com/leotonezi/sonic-library/commit/7891ac990551275359bd59811b588e6b34d9a4b1))
+
 ## [0.7.1](https://github.com/leotonezi/sonic-library/compare/v0.7.0...v0.7.1) (2026-06-11)
 
 
