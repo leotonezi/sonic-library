@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { ApiResponse } from "@/types";
-import { getBackendUrl, serverSideApiFetch } from "@/lib/api-client";
+import { getBackendUrl, serverSideApiFetch, ApiError } from "@/lib/api-client";
 import Image from "next/image";
 import { Star, User } from "lucide-react";
 import { ExternalBook, UserBook, Review } from "@/types";
@@ -80,28 +80,24 @@ async function getExternalBookData(
   externalId: string,
   accessToken: string,
 ): Promise<{ book: ExternalBook; userBook: UserBook; reviews: Review[] }> {
-  try {
-    const response = (await serverSideApiFetch(
-      `${getBackendUrl()}/books/external/${externalId}`,
-      accessToken,
-      {
-        cache: 'no-store',
-      },
-    )) as ApiResponse<{
-      book: ExternalBook;
-      userBook: UserBook;
-      reviews: Review[];
-    }>;
-    const data = response.data;
+  const response = (await serverSideApiFetch(
+    `${getBackendUrl()}/books/external/${externalId}`,
+    accessToken,
+    {
+      cache: 'no-store',
+    },
+  )) as ApiResponse<{
+    book: ExternalBook;
+    userBook: UserBook;
+    reviews: Review[];
+  }>;
+  const data = response.data;
 
-    if (!data || !data.book || !data.book.external_id) {
-      throw new Error("Invalid book data received");
-    }
-
-    return data;
-  } catch (error) {
-    throw error;
+  if (!data || !data.book || !data.book.external_id) {
+    throw new Error("Invalid book data received");
   }
+
+  return data;
 }
 
 type Props = {
@@ -113,13 +109,17 @@ export default async function ExternalBookPage({ params }: Props) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value ?? '';
 
+  if (!accessToken) {
+    redirect('/login');
+  }
+
   let book: ExternalBook;
   let userBook: UserBook;
   let reviews: Review[];
   try {
     ({ book, userBook, reviews } = await getExternalBookData(externalId, accessToken));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('401')) {
+    if (error instanceof ApiError && error.status === 401) {
       redirect('/login');
     }
     throw error;

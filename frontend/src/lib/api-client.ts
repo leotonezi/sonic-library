@@ -1,6 +1,16 @@
 import { handleTokenRefresh } from "./auth";
 import { handleRateLimitResponse } from "./rate-limit-toast";
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 export interface ApiResponse<T> {
   data: T | null;
   status: string;
@@ -306,7 +316,7 @@ export async function serverSideApiFetch(
   }
 
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
+    throw new ApiError(response.status, `HTTP error! status: ${response.status}`);
   }
 
   return response.json();
