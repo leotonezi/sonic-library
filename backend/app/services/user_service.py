@@ -2,11 +2,14 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import timedelta
 from email_validator import validate_email, EmailNotValidError
+import logging
 
 from app.models.user import User
 from app.services.base_service import BaseService
 from app.schemas.user import UserCreate, UserUpdate, UserProfileUpdate
 from app.core.config import settings, is_testing
+
+logger = logging.getLogger(__name__)
 
 
 class UserService(BaseService[User]):
@@ -42,9 +45,8 @@ class UserService(BaseService[User]):
             self.db.refresh(db_user)
             return db_user
         except Exception as e:
-            print(f"Error in UserService.create: {str(e)}")
             import traceback
-            print(traceback.format_exc())
+            logger.error("Error in UserService.create: %s\n%s", str(e), traceback.format_exc())
             raise
 
     def authenticate_user(self, email: str, password: str):
@@ -93,6 +95,12 @@ class UserService(BaseService[User]):
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def get_all_paginated(
+        self, page: int = 1, page_size: int = 20
+    ) -> tuple[list[User], int]:
+        """Return a paginated list of all users and the total count."""
+        return self.get_paginated(page=page, page_size=page_size)
 
     def update_user(self, user_id: int, user_data: UserUpdate) -> User:
         """Update user information."""

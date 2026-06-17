@@ -1,5 +1,4 @@
-import { Review } from "@/types";
-import { ApiResponse } from "@/types";
+import { Review, PaginatedResponse } from "@/types";
 import ReviewActions from "./review-actions";
 import { Star, User } from "lucide-react";
 import Image from "next/image";
@@ -29,14 +28,14 @@ type ReviewsListProps = {
 };
 
 export default async function ReviewsList({ bookId, token }: ReviewsListProps) {
-  let reviewsData: ApiResponse<Review[]> | null = null;
+  let reviewsData: PaginatedResponse<Review> | null = null;
 
   try {
     reviewsData = (await serverSideApiFetch(
       `${getBackendUrl()}/reviews/book/${bookId}`,
       token,
       { cache: 'no-store' },
-    )) as ApiResponse<Review[]> | null;
+    )) as PaginatedResponse<Review> | null;
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       redirect('/login');

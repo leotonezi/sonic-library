@@ -1,9 +1,11 @@
 import pytest
 from sqlalchemy.orm import Session
 from app.models.book import Book
+from app.models.review import Review
 from app.models.user_book import UserBook, StatusEnum
 from app.core.database import SessionLocal
 from app.models.user import User
+from app.core.config import settings
 
 @pytest.fixture
 def test_user(client):
@@ -161,4 +163,211 @@ def test_popular_books_pagination(client):
         assert "pagination" in data
         assert "current_page" in data["pagination"]
         assert "total_pages" in data["pagination"]
-        assert "total_count" in data["pagination"] 
+        assert "total_count" in data["pagination"]
+
+
+# ---------------------------------------------------------------------------
+# New: /user-books/my-books (now paginated)
+# ---------------------------------------------------------------------------
+
+def test_my_books_is_now_paginated(client, test_user, test_books, test_user_books):
+    """GET /user-books/my-books must return PaginationResponse."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    response = client.get("/user-books/my-books?page=1&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    assert "pagination" in data
+    assert len(data["data"]) == 5
+    assert data["pagination"]["total_count"] == 15
+    assert data["pagination"]["has_next"] is True
+
+
+def test_my_books_page_size_clamped(client, test_user, test_books, test_user_books):
+    """page_size > MAX_PAGE_SIZE is clamped silently."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    huge = settings.MAX_PAGE_SIZE + 500
+    response = client.get(f"/user-books/my-books?page=1&page_size={huge}")
+    assert response.status_code == 200
+    data = response.json()
+    # Clamped: at most MAX_PAGE_SIZE items returned, all 15 fit within 100
+    assert len(data["data"]) == 15
+    assert data["pagination"]["page_size"] == settings.MAX_PAGE_SIZE
+
+
+# ---------------------------------------------------------------------------
+# New: /user-books/status/{status} (now paginated)
+# ---------------------------------------------------------------------------
+
+def test_status_endpoint_is_paginated(client, test_user, test_books, test_user_books):
+    """GET /user-books/status/{status} must return PaginationResponse."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    response = client.get("/user-books/status/TO_READ?page=1&page_size=3")
+    assert response.status_code == 200
+    data = response.json()
+    assert "pagination" in data
+    assert data["pagination"]["total_count"] == 5  # 15 books, every 3rd is TO_READ (indices 0,3,6,9,12)
+    assert data["pagination"]["total_pages"] == 2
+    assert len(data["data"]) == 3
+
+
+# ---------------------------------------------------------------------------
+# New: review endpoints
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def test_reviews(db_session: Session, test_books: list, test_user) -> list:
+    """Create reviews for the first test book (12 reviews for pagination testing)."""
+    user = db_session.query(User).filter_by(email="testuser@example.com").first()
+    if user is None:
+        raise RuntimeError("Test user not found.")
+
+    book = test_books[0]
+    reviews = []
+    for i in range(12):
+        review = Review(
+            book_id=book.id,
+            user_id=user.id,
+            content=f"Review content {i+1}",
+            rate=(i % 5) + 1,
+        )
+        db_session.add(review)
+        reviews.append(review)
+    db_session.commit()
+    for r in reviews:
+        db_session.refresh(r)
+    return reviews
+
+
+def test_reviews_list_is_paginated(client, test_user, test_books, test_reviews):
+    """GET /reviews returns PaginationResponse with correct structure."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    response = client.get("/reviews?page=1&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    assert "pagination" in data
+    assert len(data["data"]) == 5
+    assert data["pagination"]["current_page"] == 1
+    assert data["pagination"]["total_count"] == 12
+    assert data["pagination"]["total_pages"] == 3
+    assert data["pagination"]["has_next"] is True
+    assert data["pagination"]["has_previous"] is False
+
+
+def test_reviews_list_page_size_clamped(client, test_user, test_books, test_reviews):
+    """page_size > MAX_PAGE_SIZE is silently clamped on GET /reviews."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    huge = settings.MAX_PAGE_SIZE + 999
+    response = client.get(f"/reviews?page=1&page_size={huge}")
+    assert response.status_code == 200
+    data = response.json()
+    # All 12 reviews fit within the clamped MAX_PAGE_SIZE
+    assert len(data["data"]) == 12
+    assert data["pagination"]["page_size"] == settings.MAX_PAGE_SIZE
+
+
+def test_reviews_by_book_is_paginated(client, test_user, test_books, test_reviews):
+    """GET /reviews/book/{book_id} returns PaginationResponse."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    book_id = test_books[0].id
+    response = client.get(f"/reviews/book/{book_id}?page=1&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    assert "pagination" in data
+    assert len(data["data"]) == 5
+    assert data["pagination"]["total_count"] == 12
+    assert data["pagination"]["total_pages"] == 3
+    assert data["pagination"]["has_next"] is True
+
+
+def test_reviews_by_book_second_page(client, test_user, test_books, test_reviews):
+    """Page 2 of /reviews/book/{book_id} has correct state."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    book_id = test_books[0].id
+    response = client.get(f"/reviews/book/{book_id}?page=2&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["data"]) == 5
+    assert data["pagination"]["current_page"] == 2
+    assert data["pagination"]["has_next"] is True
+    assert data["pagination"]["has_previous"] is True
+
+
+def test_reviews_by_book_page_size_clamped(client, test_user, test_books, test_reviews):
+    """page_size > MAX_PAGE_SIZE is clamped on GET /reviews/book/{book_id}."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    book_id = test_books[0].id
+    huge = settings.MAX_PAGE_SIZE + 999
+    response = client.get(f"/reviews/book/{book_id}?page=1&page_size={huge}")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["data"]) == 12
+    assert data["pagination"]["page_size"] == settings.MAX_PAGE_SIZE
+
+
+# ---------------------------------------------------------------------------
+# New: /reviews/book/external/{id} pagination
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def test_external_reviews(db_session: Session, test_user) -> list:
+    """Create reviews for an external book id (8 reviews for pagination testing)."""
+    user = db_session.query(User).filter_by(email="testuser@example.com").first()
+    if user is None:
+        raise RuntimeError("Test user not found.")
+
+    external_id = "external-test-book-001"
+    reviews = []
+    for i in range(8):
+        review = Review(
+            external_book_id=external_id,
+            user_id=user.id,
+            content=f"External review content {i + 1}",
+            rate=(i % 5) + 1,
+        )
+        db_session.add(review)
+        reviews.append(review)
+    db_session.commit()
+    for r in reviews:
+        db_session.refresh(r)
+    return reviews
+
+
+def test_reviews_by_external_book_is_paginated(client, test_user, test_external_reviews):
+    """GET /reviews/book/external/{id} returns PaginationResponse with correct structure."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    response = client.get("/reviews/book/external/external-test-book-001?page=1&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    assert "pagination" in data
+    assert len(data["data"]) == 5
+    assert data["pagination"]["current_page"] == 1
+    assert data["pagination"]["total_count"] == 8
+    assert data["pagination"]["total_pages"] == 2
+    assert data["pagination"]["has_next"] is True
+    assert data["pagination"]["has_previous"] is False
+
+
+def test_reviews_by_external_book_second_page(client, test_user, test_external_reviews):
+    """Page 2 of /reviews/book/external/{id} returns the remaining items."""
+    access_token = test_user["access_token"]
+    client.cookies.set("access_token", access_token)
+    response = client.get("/reviews/book/external/external-test-book-001?page=2&page_size=5")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["data"]) == 3
+    assert data["pagination"]["current_page"] == 2
+    assert data["pagination"]["has_next"] is False
+    assert data["pagination"]["has_previous"] is True
