@@ -45,6 +45,8 @@ class Settings:
     CB_GOOGLE_RECOVERY_TIMEOUT: int = int(os.getenv("CB_GOOGLE_RECOVERY_TIMEOUT", 30))
     CB_OPENAI_FAILURE_THRESHOLD: int = int(os.getenv("CB_OPENAI_FAILURE_THRESHOLD", 5))
     CB_OPENAI_RECOVERY_TIMEOUT: int = int(os.getenv("CB_OPENAI_RECOVERY_TIMEOUT", 30))
+    MAX_PAGE_SIZE: int = int(os.getenv("MAX_PAGE_SIZE", 100))
+    DEFAULT_PAGE_SIZE: int = int(os.getenv("DEFAULT_PAGE_SIZE", 20))
 
 
 settings = Settings()

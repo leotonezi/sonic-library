@@ -1,10 +1,16 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { apiFetchFull } from "@/lib/api-client";
 import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
-import BookRecommendationGraph from '@/components/features/BookRecommendationGraph';
+import GraphSkeleton from "@/components/features/graph-skeleton";
+
+const BookRecommendationGraph = dynamic(
+  () => import("@/components/features/BookRecommendationGraph"),
+  { ssr: false, loading: () => <GraphSkeleton /> }
+);
 
 interface BookRecommendation {
   external_id: string;
@@ -117,8 +123,8 @@ export default function RecommendationPage() {
         } else if (rec?.message) {
           setUnavailableMessage(rec.message);
         }
-      } catch (error) {
-        console.error("❌ Error fetching recommendations:", error);
+      } catch {
+        // silent — UI already shows unavailable state
       } finally {
         setLoadingRecommendations(false);
       }

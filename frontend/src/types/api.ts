@@ -17,8 +17,8 @@ export interface PaginationMetadata {
   page_size: number;
   has_next: boolean;
   has_previous: boolean;
-  start_index: number;
-  end_index: number;
+  start_index?: number;
+  end_index?: number;
 }
 
 export interface PaginatedResponse<T> {

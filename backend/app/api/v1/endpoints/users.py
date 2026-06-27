@@ -1,14 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.user_service import UserService
 from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserProfileUpdate, MeResponse
 from app.core.config import settings
-from app.schemas.base_schema import ApiResponse
+from app.schemas.base_schema import ApiResponse, PaginationResponse
 from app.core.security import get_current_user
 from app.models.user import User
 from app.core.logging_decorator import log_exceptions
 from app.core.file_utils import save_profile_picture
+import logging
+import math
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -23,21 +27,40 @@ def create(user: UserCreate, user_service: UserService = Depends(get_user_servic
         user_obj = user_service.create(user)
         return ApiResponse(data=UserResponse.model_validate(user_obj))
     except Exception as e:
-        # Log the full error details
-        print(f"Error creating user: {str(e)}")
         import traceback
-        print(traceback.format_exc())
+        logger.error("Error creating user: %s\n%s", str(e), traceback.format_exc())
         raise
 
-@router.get("/", response_model=ApiResponse[list[UserResponse]])
+@router.get("/", response_model=PaginationResponse[UserResponse])
 @log_exceptions("GET /users")
 def index(
     user_service: UserService = Depends(get_user_service),
     current_user: User = Depends(get_current_user),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(
+        settings.DEFAULT_PAGE_SIZE,
+        ge=1,
+        description="Number of items per page (clamped to MAX_PAGE_SIZE)",
+    ),
 ):
-    """Get all users (Protected Route)"""
-    users = user_service.get_all()
-    return ApiResponse(data=[UserResponse.model_validate(u) for u in users])
+    """Get all users with pagination (Protected Route)"""
+    page_size = min(page_size, settings.MAX_PAGE_SIZE)
+    users, total_count = user_service.get_all_paginated(page=page, page_size=page_size)
+    total_pages = max(1, math.ceil(total_count / page_size)) if total_count > 0 else 1
+    pagination_info = {
+        "current_page": page,
+        "total_pages": total_pages,
+        "total_count": total_count,
+        "page_size": page_size,
+        "has_next": page < total_pages,
+        "has_previous": page > 1,
+    }
+    return PaginationResponse(
+        data=[UserResponse.model_validate(u) for u in users],
+        pagination=pagination_info,
+        message="Users fetched successfully",
+        status="ok",
+    )
 
 @router.get("/me", response_model=ApiResponse[MeResponse])
 def get_me(current_user: User = Depends(get_current_user)):
