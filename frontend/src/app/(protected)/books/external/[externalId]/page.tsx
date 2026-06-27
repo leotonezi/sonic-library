@@ -6,6 +6,7 @@ import { ApiResponse } from "@/types";
 import { getBackendUrl, serverSideApiFetch, ApiError } from "@/lib/api-client";
 import Image from "next/image";
 import { Star, User } from "lucide-react";
+import { BLUR_DATA_URL } from "@/lib/image-utils";
 import { ExternalBook, UserBook, Review } from "@/types";
 import ExternalBookPageClient from "@/components/external-book-client";
 import UserBookActions from "@/components/user-book-actions";
@@ -136,9 +137,12 @@ export default async function ExternalBookPage({ params }: Props) {
               <Image
                 src={book.thumbnail.replace(/^http:\/\//, 'https://')}
                 alt={book.title}
-                width={80}
-                height={80}
+                width={200}
+                height={300}
                 className="w-full rounded-md shadow-md"
+                priority={true}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
               />
             )}
           </div>
