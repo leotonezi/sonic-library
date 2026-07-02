@@ -8,6 +8,7 @@ import { Metadata } from "next";
 import { redirect } from 'next/navigation';
 import { cookies } from "next/headers";
 import Image from "next/image";
+import { BOOK_COVER_BLUR_DATA_URL } from "@/lib/image-utils";
 import Link from "next/link";
 import { Suspense } from "react";
 import LibraryPagination from "@/components/library-pagination";
@@ -136,8 +137,10 @@ export default async function LibraryPage({
                       alt={`Cover of ${book.title}`}
                       fill
                       style={{ objectFit: "cover" }}
-                      sizes="96px 144px"
+                      sizes="96px"
                       priority={false}
+                      placeholder="blur"
+                      blurDataURL={BOOK_COVER_BLUR_DATA_URL}
                     />
                   </div>
                 ) : (
