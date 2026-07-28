@@ -123,7 +123,7 @@ export default async function LibraryPage({
         {userBooks.length === 0 ? (
           <p>No books found.</p>
         ) : (
-          userBooks.map((userBook) => {
+          userBooks.map((userBook, index) => {
             const book = userBook.book;
             return (
               <article
@@ -138,7 +138,7 @@ export default async function LibraryPage({
                       fill
                       style={{ objectFit: "cover" }}
                       sizes="96px"
-                      priority={false}
+                      priority={index < 3}
                       placeholder="blur"
                       blurDataURL={BOOK_COVER_BLUR_DATA_URL}
                     />

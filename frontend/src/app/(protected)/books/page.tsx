@@ -71,7 +71,7 @@ export default function BooksPage() {
                         width={96}
                         height={128}
                         className="w-24 h-32 object-cover rounded mr-4"
-                        priority={index === 0}
+                        priority={index < 3}
                         placeholder="blur"
                         blurDataURL={BOOK_COVER_BLUR_DATA_URL}
                       />
@@ -102,7 +102,7 @@ export default function BooksPage() {
               </li>
             ))}
           </ul>
-          
+
           {/* Pagination for popular books */}
           {popularPagination && (
             <Pagination
@@ -125,7 +125,7 @@ export default function BooksPage() {
           )}
           <ul className="space-y-4">
             {searchResults && searchResults.length > 0 ? (
-              searchResults.map((book) => (
+              searchResults.map((book, index) => (
                 <li
                   key={book.external_id}
                   className="bg-blue-900 border border-blue-600 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-xl hover:bg-blue-800"
@@ -143,6 +143,7 @@ export default function BooksPage() {
                           height={128}
                           className="w-24 h-32 object-cover rounded mr-4"
                           placeholder="blur"
+                          priority={index < 3}
                           blurDataURL={BOOK_COVER_BLUR_DATA_URL}
                         />
                       )}
