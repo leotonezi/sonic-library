@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getStats } from "@/services/adminService";
@@ -79,12 +80,12 @@ function AdminDashboardContent() {
           <p className="text-orange-300 text-sm font-medium">
             Invalid tab: {rawTab}
           </p>
-          <button
-            onClick={() => router.push("/admin")}
+          <Link
+            href="/admin"
             className="text-blue-400 hover:text-white text-sm underline transition-colors"
           >
             Go to dashboard
-          </button>
+          </Link>
         </div>
       )}
       {!isInvalidTab && activeTab === "users" && <AdminUsersTable />}
