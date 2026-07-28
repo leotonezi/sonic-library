@@ -5,8 +5,8 @@ import { notFound, redirect } from "next/navigation";
 import { ApiResponse } from "@/types";
 import { getBackendUrl, serverSideApiFetch, ApiError } from "@/lib/api-client";
 import Image from "next/image";
+import { BOOK_COVER_BLUR_DATA_URL } from "@/lib/image-utils";
 import { Star, User } from "lucide-react";
-import { BLUR_DATA_URL } from "@/lib/image-utils";
 import { ExternalBook, UserBook, Review } from "@/types";
 import ExternalBookPageClient from "@/components/external-book-client";
 import UserBookActions from "@/components/user-book-actions";
@@ -134,16 +134,18 @@ export default async function ExternalBookPage({ params }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
             {book.thumbnail && (
-              <Image
-                src={book.thumbnail.replace(/^http:\/\//, 'https://')}
-                alt={book.title}
-                width={200}
-                height={300}
-                className="w-full rounded-md shadow-md"
-                priority={true}
-                placeholder="blur"
-                blurDataURL={BLUR_DATA_URL}
-              />
+              <div className="relative w-24 h-32 rounded-md shadow-md overflow-hidden">
+                <Image
+                  src={book.thumbnail.replace(/^http:\/\//, 'https://')}
+                  alt={book.title}
+                  fill
+                  sizes="96px"
+                  priority={true}
+                  placeholder="blur"
+                  blurDataURL={BOOK_COVER_BLUR_DATA_URL}
+                  style={{ objectFit: "cover" }}
+                />
+              </div>
             )}
           </div>
 

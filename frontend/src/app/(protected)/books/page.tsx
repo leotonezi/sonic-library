@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect } from "react";
-import { BLUR_DATA_URL } from "@/lib/image-utils";
+import { BOOK_COVER_BLUR_DATA_URL } from "@/lib/image-utils";
 import { useSearchBookStore } from "@/store/useSearchBookStore";
 import { AlertTriangle, Book } from "lucide-react";
 import BooksSkeleton from "./books-skeleton";
@@ -71,9 +71,9 @@ export default function BooksPage() {
                         width={96}
                         height={128}
                         className="w-24 h-32 object-cover rounded mr-4"
-                        placeholder="blur"
-                        blurDataURL={BLUR_DATA_URL}
                         priority={index < 3}
+                        placeholder="blur"
+                        blurDataURL={BOOK_COVER_BLUR_DATA_URL}
                       />
                     )}
                     <div>
@@ -143,8 +143,8 @@ export default function BooksPage() {
                           height={128}
                           className="w-24 h-32 object-cover rounded mr-4"
                           placeholder="blur"
-                          blurDataURL={BLUR_DATA_URL}
                           priority={index < 3}
+                          blurDataURL={BOOK_COVER_BLUR_DATA_URL}
                         />
                       )}
                       <div>
