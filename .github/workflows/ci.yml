@@ -90,7 +90,7 @@ jobs:
 
       - name: Drop test database
         if: always()
-        run: docker compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS fastlibrary_test;"
+        run: docker compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS fastlibrary_test;" || true
 
       - name: 🧹 Teardown
         if: always()

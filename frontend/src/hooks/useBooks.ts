@@ -30,17 +30,19 @@ export const useBooks = (params: BookSearchParams = {}) => {
         setBooks(response.data);
         setPagination(response.pagination);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to fetch books');
-      console.error('Error fetching books:', err);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const { q, page, page_size, author, genre, language } = params;
+
   useEffect(() => {
     fetchBooks(params);
-  }, [fetchBooks, params]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchBooks, q, page, page_size, author, genre, language]);
 
   return {
     books,

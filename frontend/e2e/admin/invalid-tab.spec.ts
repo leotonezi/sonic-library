@@ -5,14 +5,14 @@ test.describe('Admin dashboard tab validation', () => {
     await page.goto('/admin?tab=hax');
 
     await expect(page.getByText('Invalid tab: hax')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: 'Go to dashboard' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Go to dashboard' })).toBeVisible();
   });
 
   test('should reset to default when clicking Go to dashboard', async ({ page }) => {
     await page.goto('/admin?tab=hax');
 
     await expect(page.getByText('Invalid tab: hax')).toBeVisible({ timeout: 10000 });
-    await page.getByRole('button', { name: 'Go to dashboard' }).click();
+    await page.getByRole('link', { name: 'Go to dashboard' }).click();
 
     await expect(page).toHaveURL(/\/admin$/, { timeout: 10000 });
     await expect(page.getByText('Invalid tab: hax')).not.toBeVisible();
