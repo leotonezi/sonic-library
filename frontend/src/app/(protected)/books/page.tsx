@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect } from "react";
+import { BLUR_DATA_URL } from "@/lib/image-utils";
 import { useSearchBookStore } from "@/store/useSearchBookStore";
 import { AlertTriangle, Book } from "lucide-react";
 import BooksSkeleton from "./books-skeleton";
@@ -53,7 +54,7 @@ export default function BooksPage() {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-blue-400 mb-6">Popular Books</h2>
           <ul className="space-y-4">
-            {popularBooks.map((book) => (
+            {popularBooks.map((book, index) => (
               <li
                 key={book.external_id}
                 className="bg-blue-900 border border-blue-600 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-xl hover:bg-blue-800"
@@ -67,9 +68,12 @@ export default function BooksPage() {
                       <Image
                         src={book?.thumbnail}
                         alt={book.title}
-                        width={80}
-                        height={80}
+                        width={96}
+                        height={128}
                         className="w-24 h-32 object-cover rounded mr-4"
+                        placeholder="blur"
+                        blurDataURL={BLUR_DATA_URL}
+                        priority={index < 3}
                       />
                     )}
                     <div>
@@ -98,7 +102,7 @@ export default function BooksPage() {
               </li>
             ))}
           </ul>
-          
+
           {/* Pagination for popular books */}
           {popularPagination && (
             <Pagination
@@ -121,7 +125,7 @@ export default function BooksPage() {
           )}
           <ul className="space-y-4">
             {searchResults && searchResults.length > 0 ? (
-              searchResults.map((book) => (
+              searchResults.map((book, index) => (
                 <li
                   key={book.external_id}
                   className="bg-blue-900 border border-blue-600 p-4 rounded-lg shadow-md transition duration-300 hover:shadow-xl hover:bg-blue-800"
@@ -135,9 +139,12 @@ export default function BooksPage() {
                         <Image
                           src={book?.thumbnail}
                           alt={book.title}
-                          width={80}
-                          height={80}
+                          width={96}
+                          height={128}
                           className="w-24 h-32 object-cover rounded mr-4"
+                          placeholder="blur"
+                          blurDataURL={BLUR_DATA_URL}
+                          priority={index < 3}
                         />
                       )}
                       <div>

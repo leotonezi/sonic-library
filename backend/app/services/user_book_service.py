@@ -23,18 +23,21 @@ class UserBookService(BaseService[UserBook]):
         return query.all()
 
     def get_books_by_user_paginated(
-        self, 
-        user_id: int, 
-        page: int = 1, 
-        page_size: int = 10, 
+        self,
+        user_id: int,
+        page: int = 1,
+        page_size: int = 10,
         status: Optional[str] = None
     ) -> Tuple[List[UserBook], int, int, int]:
         """
         Get paginated books for a user.
-        
+
         Returns:
             Tuple of (books, total_count, total_pages, current_page)
         """
+        from app.core.config import settings
+
+        page_size = max(1, min(page_size, settings.MAX_PAGE_SIZE))
         query = (
             self.db.query(self.model)
             .options(joinedload(self.model.book))
@@ -107,16 +110,45 @@ class UserBookService(BaseService[UserBook]):
             .first()
         )
 
-    def get_by_user_and_status(self, user_id: int, status: StatusEnum):
-      return (
-          self.db.query(self.model)
-          .options(joinedload(self.model.book))
-          .filter(
-              self.model.user_id == user_id,
-              self.model.status == status
-          )
-          .all()
-      )
+    def get_by_user_and_status(self, user_id: int, status: StatusEnum) -> List[UserBook]:
+        return (
+            self.db.query(self.model)
+            .options(joinedload(self.model.book))
+            .filter(
+                self.model.user_id == user_id,
+                self.model.status == status,
+            )
+            .all()
+        )
+
+    def get_by_user_and_status_paginated(
+        self,
+        user_id: int,
+        status: StatusEnum,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> Tuple[List[UserBook], int, int, int]:
+        """Return paginated user books filtered by status.
+
+        Returns:
+            Tuple of (books, total_count, total_pages, current_page)
+        """
+        from app.core.config import settings
+
+        page_size = max(1, min(page_size, settings.MAX_PAGE_SIZE))
+        query = (
+            self.db.query(self.model)
+            .options(joinedload(self.model.book))
+            .filter(
+                self.model.user_id == user_id,
+                self.model.status == status,
+            )
+        )
+        total_count: int = query.count()
+        total_pages = max(1, -(-total_count // page_size))  # ceiling division
+        offset = (page - 1) * page_size
+        books = query.offset(offset).limit(page_size).all()
+        return books, total_count, total_pages, page
 
     def create(self, obj_in: dict):
         return super().create(obj_in)

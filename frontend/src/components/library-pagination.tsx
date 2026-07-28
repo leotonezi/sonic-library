@@ -53,7 +53,7 @@ export default function LibraryPagination({
   return (
     <div className="flex items-center justify-between bg-blue-900 border border-blue-600 rounded-lg p-4 mt-6">
       <div className="text-sm text-blue-300">
-        Showing {pagination.start_index + 1} to {pagination.end_index} of {total_count} books
+        Showing {(pagination.start_index ?? 0) + 1} to {pagination.end_index ?? total_count} of {total_count} books
       </div>
       
       <div className="flex items-center space-x-2">

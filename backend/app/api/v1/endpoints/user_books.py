@@ -9,6 +9,8 @@ from app.models.user import User
 from app.schemas.user_book import UserBookCreate, UserBookResponse, UserBookUpdate, serialize_user_book
 from app.core.logging_decorator import log_exceptions
 from app.models.user_book import StatusEnum
+from app.core.config import settings
+import math
 
 router = APIRouter()
 
@@ -75,16 +77,38 @@ def create(
     obj = user_book_service.create(data)
     return ApiResponse(data=serialize_user_book(obj))
 
-@router.get("/my-books", response_model=ApiResponse[list[UserBookResponse]])
+@router.get("/my-books", response_model=PaginationResponse[UserBookResponse])
 @log_exceptions("GET /user-books/my-books")
 def get_my_books(
     current_user: User = Depends(get_current_user),
     user_book_service: UserBookService = Depends(get_user_book_service),
-    status: str | None = Query(None, description="Filter by reading status: TO READ, READ, READING")
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(
+        settings.DEFAULT_PAGE_SIZE,
+        ge=1,
+        description="Number of items per page (clamped to MAX_PAGE_SIZE)",
+    ),
+    status: str | None = Query(None, description="Filter by reading status: TO READ, READ, READING"),
 ):
-    """Get all books in the user's library, optionally filtered by status."""
-    books = user_book_service.get_books_by_user(current_user.id, status=status)
-    return ApiResponse(data=[serialize_user_book(b) for b in books])
+    """Get paginated books in the user's library, optionally filtered by status."""
+    page_size = min(page_size, settings.MAX_PAGE_SIZE)
+    books, total_count, total_pages, current_page = user_book_service.get_books_by_user_paginated(
+        current_user.id, page=page, page_size=page_size, status=status
+    )
+    pagination_info = {
+        "current_page": current_page,
+        "total_pages": total_pages,
+        "total_count": total_count,
+        "page_size": page_size,
+        "has_next": current_page < total_pages,
+        "has_previous": current_page > 1,
+    }
+    return PaginationResponse(
+        data=[serialize_user_book(b) for b in books],
+        pagination=pagination_info,
+        message="Books fetched successfully",
+        status="ok",
+    )
 
 @router.get("/my-books/paginated", response_model=PaginationResponse[UserBookResponse])
 @log_exceptions("GET /user-books/my-books/paginated")
@@ -92,7 +116,7 @@ def get_my_books_paginated(
     current_user: User = Depends(get_current_user),
     user_book_service: UserBookService = Depends(get_user_book_service),
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+    page_size: int = Query(10, ge=1, le=settings.MAX_PAGE_SIZE, description="Number of items per page"),
     status: str | None = Query(None, description="Filter by reading status: TO READ, READ, READING")
 ):
     """Get paginated books in the user's library, optionally filtered by status."""
@@ -184,13 +208,35 @@ def delete(
     user_book_service.delete_by_id(user_book_id)
     return None
 
-@router.get("/status/{status}", response_model=ApiResponse[list[UserBookResponse]])
+@router.get("/status/{status}", response_model=PaginationResponse[UserBookResponse])
 @log_exceptions("GET /user-books/status/{status}")
 def get_by_status(
     status: StatusEnum,
     current_user: User = Depends(get_current_user),
-    user_book_service: UserBookService = Depends(get_user_book_service)
+    user_book_service: UserBookService = Depends(get_user_book_service),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(
+        settings.DEFAULT_PAGE_SIZE,
+        ge=1,
+        description="Number of items per page (clamped to MAX_PAGE_SIZE)",
+    ),
 ):
-    """Get all books with a specific status from user's library."""
-    books = user_book_service.get_by_user_and_status(current_user.id, status)
-    return ApiResponse(data=[UserBookResponse.model_validate(b) for b in books])
+    """Get paginated books with a specific status from user's library."""
+    page_size = min(page_size, settings.MAX_PAGE_SIZE)
+    books, total_count, total_pages, current_page = user_book_service.get_by_user_and_status_paginated(
+        current_user.id, status, page=page, page_size=page_size
+    )
+    pagination_info = {
+        "current_page": current_page,
+        "total_pages": total_pages,
+        "total_count": total_count,
+        "page_size": page_size,
+        "has_next": current_page < total_pages,
+        "has_previous": current_page > 1,
+    }
+    return PaginationResponse(
+        data=[UserBookResponse.model_validate(b) for b in books],
+        pagination=pagination_info,
+        message="Books fetched successfully",
+        status="ok",
+    )

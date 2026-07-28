@@ -9,6 +9,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
+import { BLUR_DATA_URL } from "@/lib/image-utils";
 import { Suspense } from "react";
 import LibraryPagination from "@/components/library-pagination";
 
@@ -122,7 +123,7 @@ export default async function LibraryPage({
         {userBooks.length === 0 ? (
           <p>No books found.</p>
         ) : (
-          userBooks.map((userBook) => {
+          userBooks.map((userBook, index) => {
             const book = userBook.book;
             return (
               <article
@@ -136,8 +137,10 @@ export default async function LibraryPage({
                       alt={`Cover of ${book.title}`}
                       fill
                       style={{ objectFit: "cover" }}
-                      sizes="96px 144px"
-                      priority={false}
+                      sizes="96px"
+                      priority={index < 3}
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
                     />
                   </div>
                 ) : (
